@@ -1,3 +1,4 @@
-exportPattern("^[[:alpha:]]+")
+useDynLib(CAclust)
+import(RcppEigen)
 importFrom(Rcpp, evalCpp)
-useDynLib(CAclust, .registration = TRUE)
+export("Rcpp.fake.fun")
