@@ -208,9 +208,8 @@ create_bigraph <- function(cell_dists,
                      decr = TRUE)
 
   if(isTRUE(select_genes)){
-    # sgg_nn <- as.matrix(sgg_nn)
+    
     idx <- Matrix::colSums(cgg_nn) > 0
-
     cgg_nn <- cgg_nn[,idx]
     gene_dists <- gene_dists[idx,idx]
     gene_cell_assr <- gene_cell_assr[idx,]
@@ -262,13 +261,100 @@ create_bigraph <- function(cell_dists,
   return(GSG)
 }
 
-#' Run SNN on graph
-create_SNN <- function(graph) {
+#' Create SNN graph from caobj
+#'
+#' @description 
+#' 
+#' @param caobj A cacomp object with standard and principal coordinates 
+#' calculated.
+#' @param k_c k for cell-cell kNN
+#' @param k_g k for gene-gene kNN
+#' @param k_cg k for cell-gene kNN
+#' @param k_gc k for gene-cell kNN
+#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
+#' an edge in the cell-gene kNN graph?
+#' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
+#' than `overlap` of genes with the nearest neighbours of the cell are removed.
+#' @param overlap Numeric between 0 and 1. Overlap cutoff if
+#' prune_overlap = TRUE.
+#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
+#' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+#' graph is transposed.
+#' 
+#' @returns 
+#' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
+#' are the Jaccard similarity between nodes in the graph. The range between 0
+#' and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means 
+#' all edges are shared between nodes.
+#' 
+create_SNN <- function(caobj, 
+                       k_c,
+                       k_g,
+                       k_cg,
+                       k_gc,
+                       select_genes = TRUE,
+                       prune_overlap = TRUE,
+                       overlap = 0.2,
+                       calc_gene_cell_kNN = FALSE) {
+  
+  cell_dists <- calc_euclidean(ca@prin_coords_cols)
+  gene_dists <- calc_euclidean(ca@prin_coords_rows)
+  cell_gene_assr <- calc_assR(ca, direction = "cells")
+  gene_cell_assr <- calc_assR(ca, direction = "genes")
 
+  adj <- create_bigraph(cell_dists = cell_dists,
+                        gene_dists = gene_dists,
+                        cell_gene_assr = cell_gene_assr,
+                        gene_cell_assr = gene_cell_assr,
+                        k_c = k_c,
+                        k_g = k_g,
+                        k_cg = k_cg,
+                        k_gc = k_gc,
+                        overlap = overlap,
+                        prune_overlap = prune_overlap,
+                        select_genes = select_genes,
+                        calc_cell_gene_kNN = calc_cell_gene_kNN)
+  
+  if(!is(adj, "dgCMatrix")){
+    adj <- as(adj, "dgCMatrix")  
+  }
+  
+  snn.matrix <- ComputeSNNasym(adj, prune_cutoff)
+  
+  rownames(snn.matrix) <- rownames(adj)
+  colnames(snn.matrix) <- rownames(adj)
+  return(snn.matrix)
 }
 
 #' Leiden clustering on bigraph
-run_leiden <- function() {
+#' 
+#' @description 
+#' 
+#' @param SNN dense or sparse matrix. A SNN graph.
+#' @param resolution resolution for leiden algorithm.
+#' @param n.int Number of iterations for leiden algorithm.
+#' @param seed Random seed.
+#' 
+#' @return 
+#' vector of type `factor.` Assigned clusters of cells and genes. 
+#' The names of cells and genes are saved in the names of the 
+#' vector. 
+#' 
+run_leiden <- function(SNN, resolution = 1, n.int = 10, seed = 2358) {
+  
+  clusters <- leiden(object = SNN,
+                     resolution_parameter = resolution,
+                     partition_type = "RBConfigurationVertexPartition",
+                     initial_membership = NULL,
+                     weights = NULL,
+                     node_sizes = NULL,
+                     n_iterations = n.int,
+                     seed = seed)
+  
+  
+  clusters <- as.factor(clusters)
+  names(clusters) <- rownames(SNN)
+  return(clusters)
 }
 
 #' run spectral clustering
@@ -276,5 +362,5 @@ run_spectral <- function() {
 }
 
 #' Run biclustering
-caclust <- function() {
+run_caclust <- function() {
 }

@@ -3,7 +3,18 @@
 using namespace Rcpp;
 // [[Rcpp::depends(RcppEigen)]]
 
-
+//' Calculates SNN from adjacency matrix with uneven number of neighbours per
+//' row.
+//' 
+//' @description
+//' Calculates SNN from adjacency matrix with uneven number of neighbours per
+//' row.
+//'
+//' @param SNN A sparse matrix (adjacency matrix)
+//' @param prune numeric. Below which Jaccard similarity edges should be 
+//' removed.
+//' 
+//' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN, double prune) {
 

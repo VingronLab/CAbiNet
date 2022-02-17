@@ -7,8 +7,11 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
+Encoding: UTF-8
 Imports: 
   Rcpp (>= 1.0.8),
   APL,
-  Matrix
+  Matrix,
+  leiden
 LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 7.1.2
