@@ -9,5 +9,11 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.8)
+Imports: 
+  Rcpp (>= 1.0.8),
+  APL,
+  Matrix
 LinkingTo: Rcpp
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
