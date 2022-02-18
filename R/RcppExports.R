@@ -14,6 +14,6 @@
 #' 
 #' @export
 ComputeSNNasym <- function(SNN, prune) {
-    .Call(`_CAclust_ComputeSNNasym`, SNN, prune)
+    .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune)
 }
 

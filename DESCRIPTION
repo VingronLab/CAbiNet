@@ -12,6 +12,7 @@ Imports:
   Rcpp (>= 1.0.8),
   APL,
   Matrix,
-  leiden
+  leiden,
+  umap
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
