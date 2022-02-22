@@ -1,0 +1,50 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+  d = read.csv('testdata/Mat8x10.csv')
+  dim(d)
+  d = as.matrix(d)
+  t = Sys.time()
+  dist = calc_euclidean(d)
+  t.matop = Sys.time() -t
+  print(t.matop)
+  
+  t = Sys.time()
+  dist = dist(d)
+  t.matop = Sys.time() -t
+  print(t.matop)
+```
+
+```{r}
+  files = list.files('/home/zhao/02.Projects/CAclust/paper-revision0/data/simulated/blockconst', pattern = '.rds', full.names = T)
+  df = data.frame()
+  for (file in files) {
+    sce = readRDS(file)
+    filename = stringr::str_split(file, '/', simplify = T)
+    filename = filename[,ncol(filename)]
+    filename = stringr::word(filename,1,1, sep = '[.]')
+    d = as.matrix(SingleCellExperiment::counts(sce))
+    dim(d)
+    t = Sys.time()
+    dist = calc_euclidean(d)
+    t.matop = Sys.time() -t
+    print(t.matop)
+    
+    t = Sys.time()
+    dist = dist(d)
+    t.dist = Sys.time() -t
+    temp = data.frame(dataset = filename, t.matop = t.matop, t.dist = t.dist, diff = t.matop - t.dist)
+    df = rbind(df, temp)
+  }
+  print(df)
+```
+The 'calc_euclidean' function works faster than r base function 'dist'.
+However, 'dist' only outputs the lower/upper triangluar matrix which saves memory for large data.
+
