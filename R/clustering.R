@@ -34,9 +34,9 @@ calc_assR <- function(caobj, direction = "cells"){
   stopifnot(is(caobj, "cacomp"))
 
   if (direction == "cells") {
-    assR <- ca@std_coords_cols %*% t(ca@prin_coords_rows)
+    assR <- caobj@std_coords_cols %*% t(caobj@prin_coords_rows)
   } else if (direction == "genes"){
-    assR <- ca@std_coords_rows %*% t(ca@prin_coords_cols)
+    assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
   } else {
     stop("Please choose a valid direction. Either 'cells' or 'genes'")
   }
@@ -65,7 +65,7 @@ calc_distances <- function(caobj){
   cell_gene_assr <- calc_assR(caobj, direction = "cells")
 #   gene_cell_assr <- calc_assR(caobj, direction = "genes")
     # no need to calculate again, just take the transpose
-  gene_cell_assr <- t(cell_gene_ass) 
+  gene_cell_assr <- t(cell_gene_assr) 
 
   return(list("cc" = cell_dists,
               "gg" = gene_dists,
