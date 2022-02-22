@@ -1,5 +1,5 @@
 
-# library(APL)
+library(APL)
 df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB"),
                  "B Cell"     = c(4, 0, 0, 0, 0),
                  "CD8 T Cell" = c(0, 5, 0, 8, 8),

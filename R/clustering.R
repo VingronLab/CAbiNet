@@ -65,7 +65,7 @@ calc_distances <- function(caobj){
   cell_gene_assr <- calc_assR(caobj, direction = "cells")
 #   gene_cell_assr <- calc_assR(caobj, direction = "genes")
     # no need to calculate again, just take the transpose
-  gene_cell_assr <- t(cell_gene_ass) 
+  gene_cell_assr <- t(cell_gene_assr) 
 
   return(list("cc" = cell_dists,
               "gg" = gene_dists,
