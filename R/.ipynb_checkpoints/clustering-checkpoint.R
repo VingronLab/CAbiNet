@@ -116,10 +116,10 @@ make_knn <- function(dists,
   j <- as.numeric(t(nn.ranked))
   i <- ((1:length(j)) - 1) %/% k + 1
 
-  nn.matrix <- Matrix::sparseMatrix(i = i,
-                                    j = j,
-                                    x = 1,
-                                    dims = c(nrow(x = dists), ncol(x = dists)))
+  nn.matrix <- sparseMatrix(i = i,
+                            j = j,
+                            x = 1,
+                            dims = c(nrow(x = dists), ncol(x = dists)))
   rownames(nn.matrix) <- rownames(dists)
   colnames(nn.matrix) <- colnames(dists)
   return(nn.matrix)
@@ -333,7 +333,6 @@ create_SNN <- function(caobj,
                        k_g,
                        k_cg,
                        k_gc,
-                       SNN_prune = 1/15,
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
@@ -353,13 +352,13 @@ create_SNN <- function(caobj,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
-                        calc_gene_cell_kNN = calc_gene_cell_kNN)
+                        calc_cell_gene_kNN = calc_cell_gene_kNN)
   
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")  
   }
   
-  snn.matrix <- ComputeSNNasym(adj, SNN_prune)
+  snn.matrix <- ComputeSNNasym(adj, prune_cutoff)
   
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)
@@ -438,7 +437,6 @@ run_caclust <- function(caobj,
                         k_sym,
                         k_asym = k_sym,
                         algorithm = "leiden",
-                        SNN_prune = 1/15,
                         select_genes = TRUE,
                         prune_overlap = TRUE,
                         overlap = 0.2,
@@ -457,7 +455,6 @@ run_caclust <- function(caobj,
                     k_g = k_sym,
                     k_cg = k_asym,
                     k_gc = k_asym,
-                    SNN_prune = SNN_prune,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
                     overlap = overlap,
