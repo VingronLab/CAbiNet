@@ -82,6 +82,7 @@ calc_distances <- function(caobj){
 #' @param k numeric. Number of nearest neighbours.
 #' @param decr boolean. Whether the the values in `dists` should be sorted into
 #' decreasing (TRUE) or increasing (FALSE) order.
+#' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
 #'
 #' @return
 #' adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".
@@ -89,7 +90,8 @@ calc_distances <- function(caobj){
 #' @export
 make_knn <- function(dists,
                      k,
-                     decr = TRUE) {
+                     decr = TRUE,
+                     loops = FALSE) {
 
   n.row <- nrow(dists)
   n.col <- ncol(dists)
@@ -103,17 +105,27 @@ make_knn <- function(dists,
   }
   knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
   # knd.mat <- knn.mat
+  
+  if (isTRUE(loops)){
+    nns <- seq_len(k)
+  } else if (isFALSE(loops)) {
+    nns <- seq_len(k)+1
+  } else {
+    stop()
+  }
+  
   for (i in 1:n.row) {
-    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[1:k]
+    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[nns]
     # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
   }
 #     knn.mat <- do.call(rbind, lapply(1:n.row, function(i){
 #             order(dists[i,], decreasing = decr)[1:k]
 #     }))
-  nn.ranked <- knn.mat[, 1:k]
+  # nn.ranked <- knn.mat
+  # nn.ranked <- knn.mat[,seq_len(k)]
 
   # convert nn.ranked into a Graph
-  j <- as.numeric(t(nn.ranked))
+  j <- as.numeric(t(knn.mat))
   i <- ((1:length(j)) - 1) %/% k + 1
 
   nn.matrix <- Matrix::sparseMatrix(i = i,
@@ -206,13 +218,14 @@ determine_overlap <- function(cg_adj, cc_adj){
 #' @param k_g k for gene-gene kNN
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
+#' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
 #' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
 #' @param overlap Numeric between 0 and 1. Overlap cutoff if
 #' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
+#' @param calc_gene_cell_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
 #' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 #' graph is transposed.
 #'
@@ -229,6 +242,7 @@ create_bigraph <- function(cell_dists,
                            k_g,
                            k_cg,
                            k_gc,
+                           loops = FALSE,
                            select_genes = TRUE,
                            prune_overlap = TRUE,
                            overlap = 0.2,
@@ -236,7 +250,8 @@ create_bigraph <- function(cell_dists,
 
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
-                     decr = TRUE)
+                     decr = TRUE,
+                     loops = loops)
 
   if(isTRUE(select_genes)){
     
@@ -249,7 +264,8 @@ create_bigraph <- function(cell_dists,
 
   ccg_nn <- make_knn(cell_dists,
                      k = k_c,
-                     decr = FALSE)
+                     decr = FALSE,
+                     loops = loops)
 
 
   if(isTRUE(prune_overlap)){
@@ -270,7 +286,8 @@ create_bigraph <- function(cell_dists,
 
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
-                     decr = FALSE)
+                     decr = FALSE,
+                     loops = loops)
 
   if(isFALSE(calc_gene_cell_kNN)){
     gcg_nn <- Matrix::t(cgg_nn)
@@ -278,7 +295,8 @@ create_bigraph <- function(cell_dists,
   } else if(isTRUE(calc_gene_cell_kNN)){
     gcg_nn <- make_knn(gene_cell_assr,
                        k = k_gc,
-                       decr = TRUE)
+                       decr = TRUE,
+                       loops = loops)
   } else {
     stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
   }
@@ -305,19 +323,12 @@ create_bigraph <- function(cell_dists,
 #' * "gg": gene-gene euclidean distances
 #' * "cg": cell-gene association ratio
 #' * "gc": gene-cell association ratio
-#' @param k_c k for cell-cell kNN
-#' @param k_g k for gene-gene kNN
-#' @param k_cg k for cell-gene kNN
-#' @param k_gc k for gene-cell kNN
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
-#' an edge in the cell-gene kNN graph?
-#' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
-#' than `overlap` of genes with the nearest neighbours of the cell are removed.
-#' @param overlap Numeric between 0 and 1. Overlap cutoff if
-#' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
-#' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
-#' graph is transposed.
+#' @param SNN_prune numeric. Value between 0-1. Entries in SNN-graph lower than 
+#' SNN_prune are set to 0.
+#' @param mode "out" or "all". If mode = "out" only outgoing edges are 
+#' considered for SNN construction. If mode = "all" in- AND outgoing edges 
+#' are considered.
+#' @inheritParams create_bigraph
 #' 
 #' @returns 
 #' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
@@ -334,6 +345,8 @@ create_SNN <- function(caobj,
                        k_cg,
                        k_gc,
                        SNN_prune = 1/15,
+                       loops = FALSE,
+                       mode = "out",
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
@@ -350,6 +363,7 @@ create_SNN <- function(caobj,
                         k_g = k_g,
                         k_cg = k_cg,
                         k_gc = k_gc,
+                        loops = loops,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
@@ -357,6 +371,10 @@ create_SNN <- function(caobj,
   
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")  
+  }
+  
+  if (mode == "all"){
+    adj <- as(as(adj + Matrix::t(adj), "lgCMatrix"), "dgCMatrix")
   }
   
   snn.matrix <- ComputeSNNasym(adj, SNN_prune)
@@ -374,7 +392,7 @@ create_SNN <- function(caobj,
 #' @param SNN dense or sparse matrix. A SNN graph.
 #' @param resolution resolution for leiden algorithm.
 #' @param n.int Number of iterations for leiden algorithm.
-#' @param seed Random seed.
+#' @param rand_seed Random seed.
 #' 
 #' @return 
 #' vector of type `factor.` Assigned clusters of cells and genes. 
@@ -439,6 +457,8 @@ run_caclust <- function(caobj,
                         k_asym = k_sym,
                         algorithm = "leiden",
                         SNN_prune = 1/15,
+                        loops = FALSE,
+                        mode = "out",
                         select_genes = TRUE,
                         prune_overlap = TRUE,
                         overlap = 0.2,
@@ -457,6 +477,8 @@ run_caclust <- function(caobj,
                     k_g = k_sym,
                     k_cg = k_asym,
                     k_gc = k_asym,
+                    loops = loops,
+                    mode = mode,
                     SNN_prune = SNN_prune,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
