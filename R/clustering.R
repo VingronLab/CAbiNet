@@ -404,7 +404,7 @@ run_leiden <- function(SNN,
                        n.int = 10, 
                        rand_seed = 2358) {
   
-  clusters <- leiden(object = SNN,
+  clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -512,9 +512,10 @@ run_caclust <- function(caobj,
                 "umap_coords" = umap_out))
   } 
   
-  
-  return(list("cell_clusters" = cell_clusters,
-              "gene_clusters" = gene_clusters))
+  caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
+                                           "gene_clusters" = gene_clusters,
+                                           "SNN" = SNN))
+  return(caclust_res)
 }
 
 
