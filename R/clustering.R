@@ -223,6 +223,7 @@ determine_overlap <- function(cg_adj, cc_adj){
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
+#' Pruning is only performed if select_genes = TRUE.
 #' @param overlap Numeric between 0 and 1. Overlap cutoff if
 #' prune_overlap = TRUE.
 #' @param calc_gene_cell_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
@@ -268,7 +269,7 @@ create_bigraph <- function(cell_dists,
                      loops = loops)
 
 
-  if(isTRUE(prune_overlap)){
+  if(isTRUE(select_genes) & isTRUE(prune_overlap)){
 
     overlap_mat <- determine_overlap(cg_adj = cgg_nn,
                                      cc_adj = ccg_nn)
@@ -434,8 +435,6 @@ run_spectral <- function() {
 #' @param k_sym k for cell-cell and gene-gene kNN graph
 #' @param k_asym k for cell-gene and gene-cell kNN graph
 #' @param algorithm Algorithm for clustering. Options are "leiden" or "spectral".
-#' @param return_umap TRUE/FALSE. Whether umap coordinates should be returned.
-#' @param k_umap k for UMAP.
 #' @inheritParams create_bigraph
 #' @inheritParams create_SNN
 #' @inheritParams run_leiden
@@ -465,9 +464,7 @@ run_caclust <- function(caobj,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
                         n.int = 10,
-                        rand_seed = 2358,
-                        return_umap = TRUE,
-                        k_umap = k_sym) {
+                        rand_seed = 2358) {
   
   distances <- calc_distances(caobj = caobj)
   
@@ -496,21 +493,14 @@ run_caclust <- function(caobj,
     stop("Spectral clustering not yet implemented. sorry :(")
   }
 
+  cell_idx <- match(rownames(caobj@prin_coords_cols), names(clusters))
+  gene_idx <- match(rownames(caobj@prin_coords_rows), names(clusters))
   
-  cell_clusters <- clusters[1:nrow(ca@prin_coords_cols)]
-  gene_clusters <- clusters[-(1:nrow(ca@prin_coords_cols))]
-  
-  if (isTRUE(return_umap)) {
-    
-    umap_out <- run_biUMAP_leiden(caobj = caobj,
-                                  SNN = SNN,
-                                  k_umap = ,
-                                  rand_seed = rand_seed)
-    
-    return(list("cell_clusters" = cell_clusters,
-                "gene_clusters" = gene_clusters,
-                "umap_coords" = umap_out))
-  } 
+  cell_clusters <- na.omit(clusters[cell_idx])
+  gene_clusters <- na.omit(clusters[gene_idx])
+  # 
+  # cell_clusters <- clusters[1:nrow(caobj@prin_coords_cols)]
+  # gene_clusters <- clusters[-(1:nrow(caobj@prin_coords_cols))]
   
   caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
                                            "gene_clusters" = gene_clusters,
@@ -526,7 +516,7 @@ run_caclust <- function(caobj,
 #' 
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
-#' @param SNN dense or sparse matrix. A SNN graph.
+#' @param caclust_obj results from biclustering of class "caclust"
 #' @param k_umap Number of nearest neighbours to use from the SNN graph for
 #' UMAP
 #' @param rand_seed Random seed for UMAP.
@@ -535,7 +525,16 @@ run_caclust <- function(caobj,
 #' data frame containing the UMAP coordinates of cells and genes.
 #' 
 #' @export 
-run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
+run_biUMAP_leiden <- function(caobj,
+                              caclust_obj,
+                              k_umap,
+                              rand_seed = 2358){
+  stopifnot(is(caobj, "cacomp"))
+  stopifnot(is(caclust_obj, "caclust"))
+  
+  SNN <- get_snn(caclust_obj)
+  cellc <- cell_clusters(caclust_obj)
+  genec <- gene_clusters(caclust_obj)
   
   k_snn = ncol(SNN)
   SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
@@ -552,13 +551,13 @@ run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
   rownames(SNN_idx) <- rownames(SNN)
   rownames(SNN_jacc) <- rownames(SNN)
   
-  custom.config = umap.defaults
+  custom.config = umap::umap.defaults
   custom.config$random_state = rand_seed
   
   snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
-                                  distances = SNN_jac)
+                                  distances = SNN_jacc)
   
-  assym <- rbind(caobj@std_coords_cols, cobja@prin_coords_rows)
+  assym <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
   assym <- assym[rownames(assym) %in% rownames(SNN),]
   
   caclust_umap = umap::umap(assym,
@@ -566,13 +565,25 @@ run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
                             n_neighbors = k_umap, 
                             knn = snn_umap_graph)
   
+  
+  
   umap_coords <- as.data.frame(caclust_umap$layout)
   colnames(umap_coords) <- c("x", "y")
-  umap_coords$type <- "gene"
-  umap_coords$type[1:nrow(ca@std_coords_cols)] <- "cell"
-  umap_coords$cluster <- as.factor(clusters)
   umap_coords$name <- rownames(umap_coords)
-  umap_coords <- umap_coords %>% arrange(desc(type))
+  
+  umap_coords$type <- NA
+  umap_coords$type[umap_coords$name %in% names(cellc)] <- "cell" 
+  umap_coords$type[umap_coords$name %in% names(genec)] <- "gene" 
+
+  umap_coords$cluster <- NA
+  cell_idx <- na.omit(match(names(cellc), umap_coords$name))
+  gene_idx <- na.omit(match(names(genec), umap_coords$name))
+  
+  umap_coords$cluster[cell_idx] <- cell_clusters(caclust_obj)
+  umap_coords$cluster[gene_idx] <- gene_clusters(caclust_obj)
+  umap_coords$cluster <- as.factor(clusters)
+
+  umap_coords <- umap_coords %>% dplyr::arrange(desc(type))
 
   
   return(umap_coords)

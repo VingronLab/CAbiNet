@@ -18,9 +18,7 @@ run_caclust(
   calc_gene_cell_kNN = FALSE,
   resolution = 1,
   n.int = 10,
-  rand_seed = 2358,
-  return_umap = TRUE,
-  k_umap = k_sym
+  rand_seed = 2358
 )
 }
 \arguments{
@@ -46,7 +44,8 @@ are considered.}
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.}
+than `overlap` of genes with the nearest neighbours of the cell are removed.
+Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff if
 prune_overlap = TRUE.}
@@ -60,10 +59,6 @@ graph is transposed.}
 \item{n.int}{Number of iterations for leiden algorithm.}
 
 \item{rand_seed}{Random seed.}
-
-\item{return_umap}{TRUE/FALSE. Whether umap coordinates should be returned.}
-
-\item{k_umap}{k for UMAP.}
 }
 \value{
 Returns list:

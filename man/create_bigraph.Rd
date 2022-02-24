@@ -43,7 +43,8 @@ create_bigraph(
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.}
+than `overlap` of genes with the nearest neighbours of the cell are removed.
+Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff if
 prune_overlap = TRUE.}

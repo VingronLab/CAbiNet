@@ -4,13 +4,13 @@
 \alias{run_biUMAP_leiden}
 \title{Plots UMAP depicting both cells and genes.}
 \usage{
-run_biUMAP_leiden(caobj, SNN, k_umap, rand_seed = 2358)
+run_biUMAP_leiden(caobj, caclust_obj, k_umap, rand_seed = 2358)
 }
 \arguments{
 \item{caobj}{A cacomp object with principal and standard coordinates 
 calculated.}
 
-\item{SNN}{dense or sparse matrix. A SNN graph.}
+\item{caclust_obj}{results from biclustering of class "caclust"}
 
 \item{k_umap}{Number of nearest neighbours to use from the SNN graph for
 UMAP}
