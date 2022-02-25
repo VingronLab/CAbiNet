@@ -18,5 +18,8 @@ the names attribute.}
 
 \item{\code{SNN}}{sparse shared nearest neighbours matrix. Values indicate the
 jaccard similarity.}
+
+\item{\code{parameters}}{List of used parameters and function name with which results
+were generated.}
 }}
 

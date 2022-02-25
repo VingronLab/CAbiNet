@@ -1,6 +1,6 @@
 
 data_dir <- file.path("./testdata")
-data <- readRDS("~/PhD/gits/CAclust/tests/testthat/testdata/mini_lympho_example.rds")
+data <- readRDS("./testdata/mini_lympho_example.rds")
 
 ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3, ntop = nrow(df)))
 ca_dists <- calc_distances(caobj = ca)

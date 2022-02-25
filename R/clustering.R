@@ -466,6 +466,9 @@ run_caclust <- function(caobj,
                         n.int = 10,
                         rand_seed = 2358) {
   
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "Call"
+  
   distances <- calc_distances(caobj = caobj)
   
   SNN <- create_SNN(caobj = caobj, 
@@ -493,18 +496,16 @@ run_caclust <- function(caobj,
     stop("Spectral clustering not yet implemented. sorry :(")
   }
 
-  cell_idx <- match(rownames(caobj@prin_coords_cols), names(clusters))
-  gene_idx <- match(rownames(caobj@prin_coords_rows), names(clusters))
+  cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
   
-  cell_clusters <- na.omit(clusters[cell_idx])
-  gene_clusters <- na.omit(clusters[gene_idx])
-  # 
-  # cell_clusters <- clusters[1:nrow(caobj@prin_coords_cols)]
-  # gene_clusters <- clusters[-(1:nrow(caobj@prin_coords_cols))]
+  cell_clusters <- clusters[cell_idx]
+  gene_clusters <- clusters[gene_idx]
   
   caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
                                            "gene_clusters" = gene_clusters,
-                                           "SNN" = SNN))
+                                           "SNN" = SNN,
+                                           "parameters" = call_params))
   return(caclust_res)
 }
 
@@ -589,42 +590,6 @@ run_biUMAP_leiden <- function(caobj,
   return(umap_coords)
 }
 
-#' Plot biUMAP
-#' 
-#' @param umap_coords data frame as outputted by `run_biUMAP_*`
-#' @param color_by Either "type" or "cluster". "type" colors by the type 
-#' (cell or gene) while "cluster" colors by the assigned cluster.
-#' 
-#' @return 
-#' ggplot of UMAP
-#' 
-#' @export
-plot_biUMAP <- function(umap_coords, color_by = "type"){
-  
-  if(color_by == "type"){
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster))) +
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else if (color_by == "cluster"){
-    
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = cluster,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else {
-    stop("color_by has to be either 'type' or 'cluster'.")
-  }
 
-  
-  return(p)
-  
-}
 
 

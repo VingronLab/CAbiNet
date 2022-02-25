@@ -67,12 +67,15 @@ check_caclust <- function(object){
 #' the names attribute.
 #' @slot SNN sparse shared nearest neighbours matrix. Values indicate the
 #' jaccard similarity.
+#' @slot parameters List of used parameters and function name with which results
+#' were generated.
 #' @export
 setClass("caclust",
          representation(
            cell_clusters = "factor",
            gene_clusters = "factor",
-           SNN = "dgCMatrix"
+           SNN = "dgCMatrix",
+           parameters = "list"
          ),
          validity = check_caclust
 )
@@ -143,6 +146,14 @@ get_snn <- function(object){
   slot(object, "SNN")
 }
 
+#' Get parameters for generating clustering
+#' @param object caclust object
+#' @export
+get_params <- function(object){
+  stopifnot(is(object, "caclust"))
+  slot(object, "parameters")
+}
+
 #' Print caclust object in console
 #' @param object a caclust object
 show.caclust <- function(object){
@@ -171,3 +182,36 @@ setMethod(f = "show",
           function(object) {
   show.caclust(object)
 })
+
+
+#' Converts CAclust results to biclustlib results
+#'
+#'@param caclust A caclust object
+#'
+#'@return 
+#' An object of type "Biclust".
+#'@export
+convert_to_biclust <- function(caclust){
+  
+  stopifnot(is(caclust, "caclust"))
+  
+  cc <- cell_clusters(caclust)
+  gc <- gene_clusters(caclust)
+  params <- get_params(caclust)
+  
+  ctypes = unique(cc)
+  gtypes = unique(gc)
+  bitypes = intersect(ctypes, gtypes)
+  
+  Number = length(bitypes)
+  NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
+  RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
+  
+  bic <- new("Biclust", "Parameters" = params,
+                       "RowxNumber" = RowxNumber,
+                       "NumberxCol" = NumberxCol,
+                       "Number" = Number,
+                       "info" = list("Output of CAclust package"))
+  
+  return(bic)
+}

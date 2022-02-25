@@ -18,9 +18,10 @@ Imports:
   ggplot2,
   magrittr,
   methods,
-  RcppEigen
+  RcppEigen,
+  biclust
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
