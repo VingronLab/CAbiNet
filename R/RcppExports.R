@@ -17,3 +17,51 @@ ComputeSNNasym <- function(SNN, prune) {
     .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune)
 }
 
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#' 
+#' @description
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#'
+#' @param SNN A sparse matrix (adjacency matrix)
+#' @param prune numeric. Below which Jaccard similarity edges should be 
+#' removed.
+#' 
+#' @export
+ComputeSNNasymOut <- function(SNN, prune) {
+    .Call('_CAclust_ComputeSNNasymOut', PACKAGE = 'CAclust', SNN, prune)
+}
+
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#'
+#' @description
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#'
+#' @param SNN A sparse matrix (adjacency matrix)
+#' @param prune numeric. Below which Jaccard similarity edges should be
+#' removed.
+#'
+#' @export
+ComputeSNNasymIn <- function(SNN, prune) {
+    .Call('_CAclust_ComputeSNNasymIn', PACKAGE = 'CAclust', SNN, prune)
+}
+
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#'
+#' @description
+#' Calculates SNN from adjacency matrix with uneven number of neighbours per
+#' row.
+#'
+#' @param SNN A sparse matrix (adjacency matrix)
+#' @param prune numeric. Below which Jaccard similarity edges should be
+#' removed.
+#'
+#' @export
+ComputeSNNasymAll <- function(SNN, prune) {
+    .Call('_CAclust_ComputeSNNasymAll', PACKAGE = 'CAclust', SNN, prune)
+}
+

@@ -39,12 +39,17 @@ ncommon <- adj %*% t(adj)
 
 stopifnot(isSymmetric(ncommon))
 
+adj.all = adj + t(adj)
+adj.all[adj.all>0] = 1
+comm.all = adj.all %*% t(adj.all)
+
+
 
 stopifnot(nrow(adj) == ncol(adj))
 snn_to_test <- matrix(NA, nrow = nrow(adj), ncol = nrow(adj))
 for(i in seq_len(nrow(adj))){
   for (j in seq_len(nrow(adj))){
-    snn_to_test[i,j] <- jaccard(adj[i,], adj[j,], ncommon[i,j]) 
+    snn_to_test[i,j] <- jaccard(adj[i,], adj[j,], ncommon[i,j])
   }
 }
 
@@ -52,11 +57,32 @@ snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
   method = c("jaccard"),
   loops = TRUE,
-  mode = "total"
+  mode = "out"
 )
 
-snn.matrix <- ComputeSNNasym( as(adj, "dgCMatrix"), 0)
+snn.matrix <- ComputeSNNasymOut( as(adj, "dgCMatrix"), 0)
+stopifnot(sum(snn_igraph != snn.matrix) == 0)
 
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "in"
+)
+
+snn.matrix <- ComputeSNNasymIn( as(adj, "dgCMatrix"), 0)
+stopifnot(sum(snn_igraph != snn.matrix) == 0)
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "all"
+)
+snn.testall <- ComputeSNNasymAll( as(adj, "dgCMatrix"), 0)
+snn.testall = as.matrix(snn.testall)
+# identical(snn_igraph, snn.testall)
+stopifnot(sum(snn_igraph != snn.testall) == 0)
 
 stopifnot(length(unique(rowSums(adj)))==1)
 k.param <- sum(adj[1,])
@@ -75,7 +101,7 @@ snn.matrix.seu <- Seurat:::ComputeSNN(
 
 identical(snn.matrix, snn.matrix.seu)
 # if(!is(adj, "dgCMatrix")){
-#   adj <- as(adj, "dgCMatrix")  
+#   adj <- as(adj, "dgCMatrix")
 # }
 
 View(as.matrix(adj))
@@ -99,7 +125,7 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
 readr::write_csv(as.data.frame(adj), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
 # if(!is(adj, "dgCMatrix")){
-#   adj <- as(adj, "dgCMatrix")  
+#   adj <- as(adj, "dgCMatrix")
 # }
 
 View(as.matrix(adj))
@@ -111,7 +137,7 @@ isSymmetric(as.matrix(adj))
 rownames(snn.matrix) <- rownames(adj)
 colnames(snn.matrix) <- rownames(adj)
 
-SNN <- create_SNN(caobj = ca, 
+SNN <- create_SNN(caobj = ca,
                   distances = ca_dists,
                   k_c = 2,
                   k_g = 2,
@@ -127,7 +153,7 @@ View(as.matrix(SNN))
 
 
 
-adj_handmade <- 
+adj_handmade <-
 test_that("Correct symmetric SNN graph", {
   expect_equal(2 * 2, 4)
 })

@@ -107,9 +107,7 @@ make_knn <- function(dists,
     knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[1:k]
     # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
   }
-#     knn.mat <- do.call(rbind, lapply(1:n.row, function(i){
-#             order(dists[i,], decreasing = decr)[1:k]
-#     }))
+
   nn.ranked <- knn.mat[, 1:k]
 
   # convert nn.ranked into a Graph
