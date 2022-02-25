@@ -1,5 +1,5 @@
 
-# library(APL)
+library(APL)
 df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB"),
                  "B Cell"     = c(4, 0, 0, 0, 0),
                  "CD8 T Cell" = c(0, 5, 0, 8, 8),
@@ -9,12 +9,10 @@ df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB"),
 df <- as.matrix(df)
 
 
-jaccard <- function(a,b, common_edges) {
+jaccard <- function(a, b, common_edges) {
   union = sum(a) + sum(b) - common_edges
   return (common_edges/union)
 }
-
-
 
 ca <- suppressWarnings(APL::cacomp(df, princ_coords = 3, ntop = nrow(df)))
 
@@ -33,9 +31,107 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
                       select_genes = FALSE,
                       calc_gene_cell_kNN = TRUE)
 
-readr::write_csv(as.data.frame(adj), "./tests/testthat/testdata/handmade_gcKNN_adj.csv")
+saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_adj.rds")
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "out"
+)
+
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_withLoops_gcKNN.rds")
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "out"
+)
+
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_gcKNN.rds")
+
+
+
+stopifnot(length(unique(rowSums(adj)))==1)
+k.param <- sum(adj[1,])
+
+GSG.idx <- matrix(NA, nrow = nrow(adj), ncol = k.param)
+rownames(GSG.idx) <- rownames(adj)
+
+for (r in 1:nrow(adj)){
+  GSG.idx[r,] <- which(adj[r,] == 1)
+}
+
+snn_matrix_seu <- Seurat:::ComputeSNN(
+  nn_ranked = GSG.idx,
+  prune = 1/15)
+
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
+
+
+
+stopifnot(length(unique(rowSums(adj)))==1)
+k.param <- sum(adj[1,])
+
+GSG.idx <- matrix(NA, nrow = nrow(adj), ncol = k.param)
+rownames(GSG.idx) <- rownames(adj)
+
+for (r in 1:nrow(adj)){
+  GSG.idx[r,] <- which(adj[r,] == 1)
+}
+
+snn_matrix_seu <- Seurat:::ComputeSNN(
+  nn_ranked = GSG.idx,
+  prune = 1/15)
+
+saveRDS(snn_matrix_seu, "./tests/testthat/testdata/SNN_seurat_outgoing_nodiag_gcKNN.rds")
+
+####################
+
+adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+                      gene_dists = ca_dists[["gg"]],
+                      cell_gene_assr = ca_dists[["cg"]],
+                      gene_cell_assr = ca_dists[["gc"]],
+                      k_c = 2,
+                      k_g = 2,
+                      k_cg = 2,
+                      k_gc = 2,
+                      overlap = 0,
+                      prune_overlap = FALSE,
+                      select_genes = FALSE,
+                      calc_gene_cell_kNN = FALSE)
+
+saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.rds")
+
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "out"
+)
+
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_withLoops_transpose_gcKNN.rds")
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "out"
+)
+
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
+
+######################
+######################
+
+gcKNN_adj <- readRDS("./tests/testthat/testdata/handmade_gcKNN_adj.rds") %>%
+gcKNN_transpose_adj <- readRDS("./tests/testthat/testdata/handmade_gcKNN_transpose_adj.rds")
+
 adj <- as.matrix(adj)
 ncommon <- adj %*% t(adj)
+ncommon_in <- t(adj) %*% adj
 
 stopifnot(isSymmetric(ncommon))
 
@@ -47,6 +143,7 @@ comm.all = adj.all %*% t(adj.all)
 
 stopifnot(nrow(adj) == ncol(adj))
 snn_to_test <- matrix(NA, nrow = nrow(adj), ncol = nrow(adj))
+
 for(i in seq_len(nrow(adj))){
   for (j in seq_len(nrow(adj))){
     snn_to_test[i,j] <- jaccard(adj[i,], adj[j,], ncommon[i,j])
@@ -69,6 +166,8 @@ snn_igraph <- igraph::similarity(
   loops = TRUE,
   mode = "in"
 )
+rownames(snn_igraph) <- gcKNN_adj
+readr::write_csv(as.data.frame(snn_igraph), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
 snn.matrix <- ComputeSNNasymIn( as(adj, "dgCMatrix"), 0)
 stopifnot(sum(snn_igraph != snn.matrix) == 0)
@@ -109,20 +208,6 @@ View(as.matrix(adj))
 isSymmetric(as.matrix(adj))
 
 
-adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
-                      gene_dists = ca_dists[["gg"]],
-                      cell_gene_assr = ca_dists[["cg"]],
-                      gene_cell_assr = ca_dists[["gc"]],
-                      k_c = 2,
-                      k_g = 2,
-                      k_cg = 2,
-                      k_gc = 2,
-                      overlap = 0,
-                      prune_overlap = FALSE,
-                      select_genes = FALSE,
-                      calc_gene_cell_kNN = FALSE)
-
-readr::write_csv(as.data.frame(adj), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
 # if(!is(adj, "dgCMatrix")){
 #   adj <- as(adj, "dgCMatrix")
