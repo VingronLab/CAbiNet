@@ -12,59 +12,21 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // ComputeSNNasym
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN, double prune);
-RcppExport SEXP _CAclust_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP) {
+Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN, double prune, String mode);
+RcppExport SEXP _CAclust_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type SNN(SNNSEXP);
     Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
-    rcpp_result_gen = Rcpp::wrap(ComputeSNNasym(SNN, prune));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ComputeSNNasymOut
-Eigen::SparseMatrix<double> ComputeSNNasymOut(Eigen::SparseMatrix<double> SNN, double prune);
-RcppExport SEXP _CAclust_ComputeSNNasymOut(SEXP SNNSEXP, SEXP pruneSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type SNN(SNNSEXP);
-    Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
-    rcpp_result_gen = Rcpp::wrap(ComputeSNNasymOut(SNN, prune));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ComputeSNNasymIn
-Eigen::SparseMatrix<double> ComputeSNNasymIn(Eigen::SparseMatrix<double> SNN, double prune);
-RcppExport SEXP _CAclust_ComputeSNNasymIn(SEXP SNNSEXP, SEXP pruneSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type SNN(SNNSEXP);
-    Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
-    rcpp_result_gen = Rcpp::wrap(ComputeSNNasymIn(SNN, prune));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ComputeSNNasymAll
-Eigen::SparseMatrix<double> ComputeSNNasymAll(Eigen::SparseMatrix<double> SNN, double prune);
-RcppExport SEXP _CAclust_ComputeSNNasymAll(SEXP SNNSEXP, SEXP pruneSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type SNN(SNNSEXP);
-    Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
-    rcpp_result_gen = Rcpp::wrap(ComputeSNNasymAll(SNN, prune));
+    Rcpp::traits::input_parameter< String >::type mode(modeSEXP);
+    rcpp_result_gen = Rcpp::wrap(ComputeSNNasym(SNN, prune, mode));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CAclust_ComputeSNNasym", (DL_FUNC) &_CAclust_ComputeSNNasym, 2},
-    {"_CAclust_ComputeSNNasymOut", (DL_FUNC) &_CAclust_ComputeSNNasymOut, 2},
-    {"_CAclust_ComputeSNNasymIn", (DL_FUNC) &_CAclust_ComputeSNNasymIn, 2},
-    {"_CAclust_ComputeSNNasymAll", (DL_FUNC) &_CAclust_ComputeSNNasymAll, 2},
+    {"_CAclust_ComputeSNNasym", (DL_FUNC) &_CAclust_ComputeSNNasym, 3},
     {NULL, NULL, 0}
 };
 

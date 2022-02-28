@@ -13,7 +13,13 @@ Imports:
   APL,
   Matrix,
   leiden,
-  umap
+  umap,
+  dplyr,
+  ggplot2,
+  magrittr,
+  methods,
+  RcppEigen,
+  biclust
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
 Suggests: 

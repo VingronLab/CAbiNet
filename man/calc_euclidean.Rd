@@ -7,7 +7,7 @@
 calc_euclidean(mat)
 }
 \arguments{
-\item{mat}{symmetric matrix.}
+\item{mat}{matrix.}
 }
 \value{
 Matrix with pairwise euclidean distances.

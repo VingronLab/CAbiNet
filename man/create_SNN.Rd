@@ -6,10 +6,14 @@
 \usage{
 create_SNN(
   caobj,
+  distances,
   k_c,
   k_g,
   k_cg,
   k_gc,
+  SNN_prune = 1/15,
+  loops = FALSE,
+  mode = "out",
   select_genes = TRUE,
   prune_overlap = TRUE,
   overlap = 0.2,
@@ -17,8 +21,17 @@ create_SNN(
 )
 }
 \arguments{
-\item{caobj}{A cacomp object with standard and principal coordinates 
+\item{caobj}{A cacomp object with standard and principal coordinates
 calculated.}
+
+\item{distances}{A list containing the cell-cell, gene-gene, cell-gene and
+gene-cell distances/association ratios. Must be named list as follows:
+\itemize{
+\item "cc": cell-cell euclidean distances
+\item "gg": gene-gene euclidean distances
+\item "cg": cell-gene association ratio
+\item "gc": gene-cell association ratio
+}}
 
 \item{k_c}{k for cell-cell kNN}
 
@@ -28,25 +41,35 @@ calculated.}
 
 \item{k_gc}{k for gene-cell kNN}
 
+\item{SNN_prune}{numeric. Value between 0-1. Entries in SNN-graph lower than
+SNN_prune are set to 0.}
+
+\item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
+
+\item{mode}{"out" or "all". If mode = "out" only outgoing edges are
+considered for SNN construction. If mode = "all" in- AND outgoing edges
+are considered.}
+
 \item{select_genes}{TRUE/FALSE. Should genes be selected by wether they have
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.}
+than `overlap` of genes with the nearest neighbours of the cell are removed.
+Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff if
 prune_overlap = TRUE.}
 
-\item{calc_cell_gene_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
+\item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 }
 \value{
 A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
 are the Jaccard similarity between nodes in the graph. The range between 0
-and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means 
+and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means
 all edges are shared between nodes.
 }
 \description{
-
+TODO
 }

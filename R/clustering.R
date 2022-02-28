@@ -82,6 +82,7 @@ calc_distances <- function(caobj){
 #' @param k numeric. Number of nearest neighbours.
 #' @param decr boolean. Whether the the values in `dists` should be sorted into
 #' decreasing (TRUE) or increasing (FALSE) order.
+#' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
 #'
 #' @return
 #' adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".
@@ -89,7 +90,8 @@ calc_distances <- function(caobj){
 #' @export
 make_knn <- function(dists,
                      k,
-                     decr = TRUE) {
+                     decr = TRUE,
+                     loops = FALSE) {
 
   n.row <- nrow(dists)
   n.col <- ncol(dists)
@@ -103,15 +105,23 @@ make_knn <- function(dists,
   }
   knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
   # knd.mat <- knn.mat
+  
+  if (isTRUE(loops)){
+    nns <- seq_len(k)
+  } else if (isFALSE(loops)) {
+    nns <- seq_len(k)+1
+  } else {
+    stop()
+  }
+  
   for (i in 1:n.row) {
-    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[1:k]
+    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[nns]
     # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
   }
-
-  nn.ranked <- knn.mat[, 1:k]
+  nn.ranked <- knn.mat[,seq_len(k)]
 
   # convert nn.ranked into a Graph
-  j <- as.numeric(t(nn.ranked))
+  j <- as.numeric(t(knn.mat))
   i <- ((1:length(j)) - 1) %/% k + 1
 
   nn.matrix <- Matrix::sparseMatrix(i = i,
@@ -204,13 +214,15 @@ determine_overlap <- function(cg_adj, cc_adj){
 #' @param k_g k for gene-gene kNN
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
+#' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
 #' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
+#' Pruning is only performed if select_genes = TRUE.
 #' @param overlap Numeric between 0 and 1. Overlap cutoff if
 #' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
+#' @param calc_gene_cell_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
 #' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 #' graph is transposed.
 #'
@@ -227,6 +239,7 @@ create_bigraph <- function(cell_dists,
                            k_g,
                            k_cg,
                            k_gc,
+                           loops = FALSE,
                            select_genes = TRUE,
                            prune_overlap = TRUE,
                            overlap = 0.2,
@@ -234,7 +247,8 @@ create_bigraph <- function(cell_dists,
 
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
-                     decr = TRUE)
+                     decr = TRUE,
+                     loops = loops)
 
   if(isTRUE(select_genes)){
     
@@ -247,10 +261,11 @@ create_bigraph <- function(cell_dists,
 
   ccg_nn <- make_knn(cell_dists,
                      k = k_c,
-                     decr = FALSE)
+                     decr = FALSE,
+                     loops = loops)
 
 
-  if(isTRUE(prune_overlap)){
+  if(isTRUE(select_genes) & isTRUE(prune_overlap)){
 
     overlap_mat <- determine_overlap(cg_adj = cgg_nn,
                                      cc_adj = ccg_nn)
@@ -268,7 +283,8 @@ create_bigraph <- function(cell_dists,
 
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
-                     decr = FALSE)
+                     decr = FALSE,
+                     loops = loops)
 
   if(isFALSE(calc_gene_cell_kNN)){
     gcg_nn <- Matrix::t(cgg_nn)
@@ -276,7 +292,8 @@ create_bigraph <- function(cell_dists,
   } else if(isTRUE(calc_gene_cell_kNN)){
     gcg_nn <- make_knn(gene_cell_assr,
                        k = k_gc,
-                       decr = TRUE)
+                       decr = TRUE,
+                       loops = loops)
   } else {
     stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
   }
@@ -289,48 +306,6 @@ create_bigraph <- function(cell_dists,
   GSG <- rbind(GSG_1, GSG_2)
   return(GSG)
 }
-
-#' Calculate SNN
-#'
-#' @description 
-#' TODO
-#' 
-#' @param adj Adjacency Matrix of graph which is supposed to be a sparse matrix 
-#' of type "dgCMatrix"; 
-#' #' @param SNN_prune Sets cutoff of acceptable jaccard similarity scores for neighborhood 
-#' overlap of vertices in SNN. Edges with values less than this cutoff will be set as 0. 
-#' The default value is 1/15.
-#' @param mode The type of neighboring vertices to use for calculating similarity
-#'  scores(Jaccard Index). Three options: "out", "in" and "all":
-#' * "out": Select neighbouring vertices by out-going edges;
-#' * "in": Selecting neighbouring vertices by in-coming edges;
-#' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
-#' @returns 
-#' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
-#' are the Jaccard similarity between nodes in the graph. The range between 0
-#' and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means 
-#' all edges are shared between nodes.
-#' 
-ComputeSNNjaccard <- function(adj, SNN_prune = 1/15, mode = 'out'){
-  
-  stopifnot(mode %in% c("out", "in", "all"))
-  if(!is(adj, "dgCMatrix")){
-    warning("The input matrix should be a 'dgCMatrix' object! Trying to convert
-            it automatically....")
-    adj = as(adj, "dgCMatrix")
-  }
-  
-  if (mode == 'out'){
-    snn.matrix <- ComputeSNNasymOut(adj, SNN_prune)
-  }else if (mode == 'in'){
-    snn.matrix <- ComputeSNNasymIn(adj, SNN_prune)
-  }else if (mode == 'all'){
-    snn.matrix <- ComputeSNNasymAll(adj, SNN_prune)
-  }
-  
-  return(snn.matrix)
-}
-
 
 
 #' Create SNN graph from caobj
@@ -350,9 +325,9 @@ ComputeSNNjaccard <- function(adj, SNN_prune = 1/15, mode = 'out'){
 #' @param k_g k for gene-gene kNN
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
-#' @param SNN_prune Sets cutoff of acceptable jaccard similarity scores for neighborhood 
-#' overlap of vertices in SNN. Edges with values less than this cutoff will be set as 0. 
-#' The default value is 1/15.
+#' @param SNN_prune numeric. Value between 0-1. Sets cutoff of acceptable jaccard 
+#' similarity scores for neighborhood overlap of vertices in SNN. Edges with values 
+#' less than this will be set as 0. The default value is 1/15.
 #' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
@@ -362,6 +337,12 @@ ComputeSNNjaccard <- function(adj, SNN_prune = 1/15, mode = 'out'){
 #' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
 #' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 #' graph is transposed.
+#' @param mode The type of neighboring vertices to use for calculating similarity
+#'  scores(Jaccard Index). Three options: "out", "in" and "all":
+#' * "out": Selecting neighbouring vertices by out-going edges;
+#' * "in": Selecting neighbouring vertices by in-coming edges;
+#' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
+#' @inheritParams create_bigraph
 #' 
 #' @returns 
 #' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
@@ -378,14 +359,16 @@ create_SNN <- function(caobj,
                        k_cg,
                        k_gc,
                        SNN_prune = 1/15,
+                       loops = FALSE,
+                       mode = "out",
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE,
-                       mode = "out") {
+                       calc_gene_cell_kNN = FALSE) {
   
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
+  stopifnot(mode %in% c("out", "in", "all"))
   
   adj <- create_bigraph(cell_dists = distances[["cc"]],
                         gene_dists = distances[["gg"]],
@@ -395,6 +378,7 @@ create_SNN <- function(caobj,
                         k_g = k_g,
                         k_cg = k_cg,
                         k_gc = k_gc,
+                        loops = loops,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
@@ -404,7 +388,8 @@ create_SNN <- function(caobj,
     adj <- as(adj, "dgCMatrix")  
   }
   
-  snn.matrix <- ComputeSNNjaccard(adj, SNN_prune, mode = mode)
+  
+  snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
   
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)
@@ -419,7 +404,7 @@ create_SNN <- function(caobj,
 #' @param SNN dense or sparse matrix. A SNN graph.
 #' @param resolution resolution for leiden algorithm.
 #' @param n.int Number of iterations for leiden algorithm.
-#' @param seed Random seed.
+#' @param rand_seed Random seed.
 #' 
 #' @return 
 #' vector of type `factor.` Assigned clusters of cells and genes. 
@@ -431,7 +416,7 @@ run_leiden <- function(SNN,
                        n.int = 10, 
                        rand_seed = 2358) {
   
-  clusters <- leiden(object = SNN,
+  clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -461,8 +446,6 @@ run_spectral <- function() {
 #' @param k_sym k for cell-cell and gene-gene kNN graph
 #' @param k_asym k for cell-gene and gene-cell kNN graph
 #' @param algorithm Algorithm for clustering. Options are "leiden" or "spectral".
-#' @param return_umap TRUE/FALSE. Whether umap coordinates should be returned.
-#' @param k_umap k for UMAP.
 #' @inheritParams create_bigraph
 #' @inheritParams create_SNN
 #' @inheritParams run_leiden
@@ -484,15 +467,18 @@ run_caclust <- function(caobj,
                         k_asym = k_sym,
                         algorithm = "leiden",
                         SNN_prune = 1/15,
+                        loops = FALSE,
+                        mode = "out",
                         select_genes = TRUE,
                         prune_overlap = TRUE,
                         overlap = 0.2,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
                         n.int = 10,
-                        rand_seed = 2358,
-                        return_umap = TRUE,
-                        k_umap = k_sym) {
+                        rand_seed = 2358) {
+  
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "Call"
   
   distances <- calc_distances(caobj = caobj)
   
@@ -502,6 +488,8 @@ run_caclust <- function(caobj,
                     k_g = k_sym,
                     k_cg = k_asym,
                     k_gc = k_asym,
+                    loops = loops,
+                    mode = mode,
                     SNN_prune = SNN_prune,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
@@ -519,25 +507,17 @@ run_caclust <- function(caobj,
     stop("Spectral clustering not yet implemented. sorry :(")
   }
 
+  cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
   
-  cell_clusters <- clusters[1:nrow(ca@prin_coords_cols)]
-  gene_clusters <- clusters[-(1:nrow(ca@prin_coords_cols))]
+  cell_clusters <- clusters[cell_idx]
+  gene_clusters <- clusters[gene_idx]
   
-  if (isTRUE(return_umap)) {
-    
-    umap_out <- run_biUMAP_leiden(caobj = caobj,
-                                  SNN = SNN,
-                                  k_umap = ,
-                                  rand_seed = rand_seed)
-    
-    return(list("cell_clusters" = cell_clusters,
-                "gene_clusters" = gene_clusters,
-                "umap_coords" = umap_out))
-  } 
-  
-  
-  return(list("cell_clusters" = cell_clusters,
-              "gene_clusters" = gene_clusters))
+  caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
+                                           "gene_clusters" = gene_clusters,
+                                           "SNN" = SNN,
+                                           "parameters" = call_params))
+  return(caclust_res)
 }
 
 
@@ -548,7 +528,7 @@ run_caclust <- function(caobj,
 #' 
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
-#' @param SNN dense or sparse matrix. A SNN graph.
+#' @param caclust_obj results from biclustering of class "caclust"
 #' @param k_umap Number of nearest neighbours to use from the SNN graph for
 #' UMAP
 #' @param rand_seed Random seed for UMAP.
@@ -557,7 +537,16 @@ run_caclust <- function(caobj,
 #' data frame containing the UMAP coordinates of cells and genes.
 #' 
 #' @export 
-run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
+run_biUMAP_leiden <- function(caobj,
+                              caclust_obj,
+                              k_umap,
+                              rand_seed = 2358){
+  stopifnot(is(caobj, "cacomp"))
+  stopifnot(is(caclust_obj, "caclust"))
+  
+  SNN <- get_snn(caclust_obj)
+  cellc <- cell_clusters(caclust_obj)
+  genec <- gene_clusters(caclust_obj)
   
   k_snn = ncol(SNN)
   SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
@@ -574,13 +563,13 @@ run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
   rownames(SNN_idx) <- rownames(SNN)
   rownames(SNN_jacc) <- rownames(SNN)
   
-  custom.config = umap.defaults
+  custom.config = umap::umap.defaults
   custom.config$random_state = rand_seed
   
   snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
-                                  distances = SNN_jac)
+                                  distances = SNN_jacc)
   
-  assym <- rbind(caobj@std_coords_cols, cobja@prin_coords_rows)
+  assym <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
   assym <- assym[rownames(assym) %in% rownames(SNN),]
   
   caclust_umap = umap::umap(assym,
@@ -588,54 +577,30 @@ run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
                             n_neighbors = k_umap, 
                             knn = snn_umap_graph)
   
+  
+  
   umap_coords <- as.data.frame(caclust_umap$layout)
   colnames(umap_coords) <- c("x", "y")
-  umap_coords$type <- "gene"
-  umap_coords$type[1:nrow(ca@std_coords_cols)] <- "cell"
-  umap_coords$cluster <- as.factor(clusters)
   umap_coords$name <- rownames(umap_coords)
-  umap_coords <- umap_coords %>% arrange(desc(type))
+  
+  umap_coords$type <- NA
+  umap_coords$type[umap_coords$name %in% names(cellc)] <- "cell" 
+  umap_coords$type[umap_coords$name %in% names(genec)] <- "gene" 
+
+  umap_coords$cluster <- NA
+  cell_idx <- na.omit(match(names(cellc), umap_coords$name))
+  gene_idx <- na.omit(match(names(genec), umap_coords$name))
+  
+  umap_coords$cluster[cell_idx] <- cell_clusters(caclust_obj)
+  umap_coords$cluster[gene_idx] <- gene_clusters(caclust_obj)
+  umap_coords$cluster <- as.factor(clusters)
+
+  umap_coords <- umap_coords %>% dplyr::arrange(desc(type))
 
   
   return(umap_coords)
 }
 
-#' Plot biUMAP
-#' 
-#' @param umap_coords data frame as outputted by `run_biUMAP_*`
-#' @param color_by Either "type" or "cluster". "type" colors by the type 
-#' (cell or gene) while "cluster" colors by the assigned cluster.
-#' 
-#' @return 
-#' ggplot of UMAP
-#' 
-#' @export
-plot_biUMAP <- function(umap_coords, color_by = "type"){
-  
-  if(color_by == "type"){
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster))) +
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else if (color_by == "cluster"){
-    
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = cluster,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else {
-    stop("color_by has to be either 'type' or 'cluster'.")
-  }
 
-  
-  return(p)
-  
-}
 
 

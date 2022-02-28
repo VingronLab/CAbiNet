@@ -4,7 +4,7 @@
 \alias{make_knn}
 \title{Make a kNN graph}
 \usage{
-make_knn(dists, k, decr = TRUE)
+make_knn(dists, k, decr = TRUE, loops = FALSE)
 }
 \arguments{
 \item{dists}{distance matrix}
@@ -13,6 +13,8 @@ make_knn(dists, k, decr = TRUE)
 
 \item{decr}{boolean. Whether the the values in `dists` should be sorted into
 decreasing (TRUE) or increasing (FALSE) order.}
+
+\item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
 }
 \value{
 adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".

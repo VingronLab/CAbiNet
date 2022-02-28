@@ -4,8 +4,73 @@
 \alias{run_caclust}
 \title{Run biclustering}
 \usage{
-run_caclust()
+run_caclust(
+  caobj,
+  k_sym,
+  k_asym = k_sym,
+  algorithm = "leiden",
+  SNN_prune = 1/15,
+  loops = FALSE,
+  mode = "out",
+  select_genes = TRUE,
+  prune_overlap = TRUE,
+  overlap = 0.2,
+  calc_gene_cell_kNN = FALSE,
+  resolution = 1,
+  n.int = 10,
+  rand_seed = 2358
+)
+}
+\arguments{
+\item{caobj}{A cacomp object with principal and standard coordinates
+calculated.}
+
+\item{k_sym}{k for cell-cell and gene-gene kNN graph}
+
+\item{k_asym}{k for cell-gene and gene-cell kNN graph}
+
+\item{algorithm}{Algorithm for clustering. Options are "leiden" or "spectral".}
+
+\item{SNN_prune}{numeric. Value between 0-1. Entries in SNN-graph lower than
+SNN_prune are set to 0.}
+
+\item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
+
+\item{mode}{"out" or "all". If mode = "out" only outgoing edges are
+considered for SNN construction. If mode = "all" in- AND outgoing edges
+are considered.}
+
+\item{select_genes}{TRUE/FALSE. Should genes be selected by wether they have
+an edge in the cell-gene kNN graph?}
+
+\item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
+than `overlap` of genes with the nearest neighbours of the cell are removed.
+Pruning is only performed if select_genes = TRUE.}
+
+\item{overlap}{Numeric between 0 and 1. Overlap cutoff if
+prune_overlap = TRUE.}
+
+\item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
+by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+graph is transposed.}
+
+\item{resolution}{resolution for leiden algorithm.}
+
+\item{n.int}{Number of iterations for leiden algorithm.}
+
+\item{rand_seed}{Random seed.}
+}
+\value{
+Returns list:
+\itemize{
+\item 'cell_clusters': factor vector containing assigned clusters for the cell
+specified in the elements name.
+\item 'gene_clusters': factor vector containing assigned clusters for the genes
+specified in the elements name.
+\item 'umap_coords': If \code{return_umap = TRUE} additionally a data frame with
+the umap_coordinates of cells and genes is returned.
+}
 }
 \description{
-Run biclustering
+TODO
 }

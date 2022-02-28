@@ -30,7 +30,7 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
                       prune_overlap = FALSE,
                       select_genes = FALSE,
                       calc_gene_cell_kNN = TRUE)
-saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_adj.rds")
+saveRDS(adj, "tests/testthat/testdata/handmade_gcKNN_adj.rds")
 
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
@@ -152,7 +152,7 @@ snn_igraph <- igraph::similarity(
 rownames(snn_igraph) <- gcKNN_adj
 readr::write_csv(as.data.frame(snn_igraph), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
-snn.matrix <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "out")
+snn.matrix <- ComputeSNNasym( as(adj, "dgCMatrix"), 0, mode = "out")
 stopifnot(sum(snn_igraph != snn.matrix) == 0)
 
 #################
@@ -163,7 +163,7 @@ snn_igraph <- igraph::similarity(
   mode = "in"
 )
 
-snn.matrix <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "in")
+snn.matrix <- ComputeSNNasym( as(adj, "dgCMatrix"), 0, mode = "in")
 stopifnot(sum(snn_igraph != snn.matrix) == 0)
 #################
 snn_igraph <- igraph::similarity(
@@ -172,7 +172,7 @@ snn_igraph <- igraph::similarity(
   loops = TRUE,
   mode = "all"
 )
-snn.testall <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "all")
+snn.testall <- ComputeSNNasym( as(adj, "dgCMatrix"), 0, mode = "all")
 snn.testall = as.matrix(snn.testall)
 # identical(snn_igraph, snn.testall)
 stopifnot(sum(snn_igraph != snn.testall) == 0)

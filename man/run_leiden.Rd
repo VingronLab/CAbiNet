@@ -4,7 +4,7 @@
 \alias{run_leiden}
 \title{Leiden clustering on bigraph}
 \usage{
-run_leiden(SNN, resolution = 1, n.int = 10, seed = 2358)
+run_leiden(SNN, resolution = 1, n.int = 10, rand_seed = 2358)
 }
 \arguments{
 \item{SNN}{dense or sparse matrix. A SNN graph.}
@@ -13,7 +13,7 @@ run_leiden(SNN, resolution = 1, n.int = 10, seed = 2358)
 
 \item{n.int}{Number of iterations for leiden algorithm.}
 
-\item{seed}{Random seed.}
+\item{rand_seed}{Random seed.}
 }
 \value{
 vector of type `factor.` Assigned clusters of cells and genes. 
@@ -21,5 +21,5 @@ The names of cells and genes are saved in the names of the
 vector.
 }
 \description{
-
+TODO
 }
