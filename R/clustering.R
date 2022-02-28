@@ -290,6 +290,49 @@ create_bigraph <- function(cell_dists,
   return(GSG)
 }
 
+#' Calculate SNN
+#'
+#' @description 
+#' TODO
+#' 
+#' @param adj Adjacency Matrix of graph which is supposed to be a sparse matrix 
+#' of type "dgCMatrix"; 
+#' #' @param SNN_prune Sets cutoff of acceptable jaccard similarity scores for neighborhood 
+#' overlap of vertices in SNN. Edges with values less than this cutoff will be set as 0. 
+#' The default value is 1/15.
+#' @param mode The type of neighboring vertices to use for calculating similarity
+#'  scores(Jaccard Index). Three options: "out", "in" and "all":
+#' * "out": Select neighbouring vertices by out-going edges;
+#' * "in": Selecting neighbouring vertices by in-coming edges;
+#' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
+#' @returns 
+#' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
+#' are the Jaccard similarity between nodes in the graph. The range between 0
+#' and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means 
+#' all edges are shared between nodes.
+#' 
+ComputeSNNjaccard <- function(adj, SNN_prune = 1/15, mode = 'out'){
+  
+  stopifnot(mode %in% c("out", "in", "all"))
+  if(!is(adj, "dgCMatrix")){
+    warning("The input matrix should be a 'dgCMatrix' object! Trying to convert
+            it automatically....")
+    adj = as(adj, "dgCMatrix")
+  }
+  
+  if (mode == 'out'){
+    snn.matrix <- ComputeSNNasymOut(adj, SNN_prune)
+  }else if (mode == 'in'){
+    snn.matrix <- ComputeSNNasymIn(adj, SNN_prune)
+  }else if (mode == 'all'){
+    snn.matrix <- ComputeSNNasymAll(adj, SNN_prune)
+  }
+  
+  return(snn.matrix)
+}
+
+
+
 #' Create SNN graph from caobj
 #'
 #' @description 
@@ -307,6 +350,9 @@ create_bigraph <- function(cell_dists,
 #' @param k_g k for gene-gene kNN
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
+#' @param SNN_prune Sets cutoff of acceptable jaccard similarity scores for neighborhood 
+#' overlap of vertices in SNN. Edges with values less than this cutoff will be set as 0. 
+#' The default value is 1/15.
 #' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
@@ -335,7 +381,8 @@ create_SNN <- function(caobj,
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE) {
+                       calc_gene_cell_kNN = FALSE,
+                       mode = "out") {
   
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
@@ -357,7 +404,7 @@ create_SNN <- function(caobj,
     adj <- as(adj, "dgCMatrix")  
   }
   
-  snn.matrix <- ComputeSNNasym(adj, SNN_prune)
+  snn.matrix <- ComputeSNNjaccard(adj, SNN_prune, mode = mode)
   
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)

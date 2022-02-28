@@ -30,7 +30,6 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
                       prune_overlap = FALSE,
                       select_genes = FALSE,
                       calc_gene_cell_kNN = TRUE)
-
 saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_adj.rds")
 
 snn_igraph <- igraph::similarity(
@@ -121,6 +120,7 @@ snn_igraph <- igraph::similarity(
   mode = "out"
 )
 
+
 saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
 
 ######################
@@ -131,14 +131,7 @@ gcKNN_transpose_adj <- readRDS("./tests/testthat/testdata/handmade_gcKNN_transpo
 
 adj <- as.matrix(adj)
 ncommon <- adj %*% t(adj)
-ncommon_in <- t(adj) %*% adj
-
 stopifnot(isSymmetric(ncommon))
-
-adj.all = adj + t(adj)
-adj.all[adj.all>0] = 1
-comm.all = adj.all %*% t(adj.all)
-
 
 
 stopifnot(nrow(adj) == ncol(adj))
@@ -149,40 +142,41 @@ for(i in seq_len(nrow(adj))){
     snn_to_test[i,j] <- jaccard(adj[i,], adj[j,], ncommon[i,j])
   }
 }
-
+##################
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
   method = c("jaccard"),
   loops = TRUE,
   mode = "out"
 )
+rownames(snn_igraph) <- gcKNN_adj
+readr::write_csv(as.data.frame(snn_igraph), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
-snn.matrix <- ComputeSNNasymOut( as(adj, "dgCMatrix"), 0)
+snn.matrix <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "out")
 stopifnot(sum(snn_igraph != snn.matrix) == 0)
 
+#################
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
   method = c("jaccard"),
   loops = TRUE,
   mode = "in"
 )
-rownames(snn_igraph) <- gcKNN_adj
-readr::write_csv(as.data.frame(snn_igraph), "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.csv")
 
-snn.matrix <- ComputeSNNasymIn( as(adj, "dgCMatrix"), 0)
+snn.matrix <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "in")
 stopifnot(sum(snn_igraph != snn.matrix) == 0)
-
+#################
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj,diag = TRUE),
   method = c("jaccard"),
   loops = TRUE,
   mode = "all"
 )
-snn.testall <- ComputeSNNasymAll( as(adj, "dgCMatrix"), 0)
+snn.testall <- ComputeSNNjaccard( as(adj, "dgCMatrix"), 0, mode = "all")
 snn.testall = as.matrix(snn.testall)
 # identical(snn_igraph, snn.testall)
 stopifnot(sum(snn_igraph != snn.testall) == 0)
-
+#################
 stopifnot(length(unique(rowSums(adj)))==1)
 k.param <- sum(adj[1,])
 
