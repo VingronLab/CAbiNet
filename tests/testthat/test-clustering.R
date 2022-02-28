@@ -26,11 +26,12 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
                       k_g = 2,
                       k_cg = 2,
                       k_gc = 2,
+                      loops = TRUE,
                       overlap = 0,
                       prune_overlap = FALSE,
                       select_genes = FALSE,
                       calc_gene_cell_kNN = TRUE)
-saveRDS(adj, "tests/testthat/testdata/handmade_gcKNN_adj.rds")
+saveRDS(adj, "tests/testthat/testdata/handmade_gcKNN_withloops_adj.rds")
 
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
@@ -38,8 +39,47 @@ snn_igraph <- igraph::similarity(
   loops = TRUE,
   mode = "out"
 )
-
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
 saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_withLoops_gcKNN.rds")
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "in"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_withLoops_gcKNN.rds")
+
+#######################
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "all"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_alledges_withLoops_gcKNN.rds")
+
+
+############### no loops, no transpose
+adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+                      gene_dists = ca_dists[["gg"]],
+                      cell_gene_assr = ca_dists[["cg"]],
+                      gene_cell_assr = ca_dists[["gc"]],
+                      k_c = 2,
+                      k_g = 2,
+                      k_cg = 2,
+                      k_gc = 2,
+                      loops = FALSE,
+                      overlap = 0,
+                      prune_overlap = FALSE,
+                      select_genes = FALSE,
+                      calc_gene_cell_kNN = TRUE)
+saveRDS(adj, "tests/testthat/testdata/handmade_gcKNN_noloops_adj.rds")
 
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
@@ -47,10 +87,31 @@ snn_igraph <- igraph::similarity(
   loops = FALSE,
   mode = "out"
 )
-
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
 saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_gcKNN.rds")
+#######################
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "in"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_noLoops_gcKNN.rds")
 
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "all"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_alledges_noLoops_gcKNN.rds")
 
+############
 
 stopifnot(length(unique(rowSums(adj)))==1)
 k.param <- sum(adj[1,])
@@ -66,7 +127,7 @@ snn_matrix_seu <- Seurat:::ComputeSNN(
   nn_ranked = GSG.idx,
   prune = 1/15)
 
-saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
+# saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
 
 
 
@@ -96,12 +157,13 @@ adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
                       k_g = 2,
                       k_cg = 2,
                       k_gc = 2,
+                      loops = TRUE,
                       overlap = 0,
                       prune_overlap = FALSE,
                       select_genes = FALSE,
                       calc_gene_cell_kNN = FALSE)
 
-saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_transpose_adj.rds")
+saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_withloops_transpose_adj.rds")
 
 
 snn_igraph <- igraph::similarity(
@@ -110,8 +172,48 @@ snn_igraph <- igraph::similarity(
   loops = TRUE,
   mode = "out"
 )
-
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
 saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_withLoops_transpose_gcKNN.rds")
+
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "in"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_withLoops_transpose_gcKNN.rds")
+
+
+################
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = TRUE),
+  method = c("jaccard"),
+  loops = TRUE,
+  mode = "all"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_alledges_withLoops_transpose_gcKNN.rds")
+
+#######################no loops, with transpose
+adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+                      gene_dists = ca_dists[["gg"]],
+                      cell_gene_assr = ca_dists[["cg"]],
+                      gene_cell_assr = ca_dists[["gc"]],
+                      k_c = 2,
+                      k_g = 2,
+                      k_cg = 2,
+                      k_gc = 2,
+                      loops = FALSE,
+                      overlap = 0,
+                      prune_overlap = FALSE,
+                      select_genes = FALSE,
+                      calc_gene_cell_kNN = FALSE)
+
+saveRDS(adj, "./tests/testthat/testdata/handmade_gcKNN_noloops_transpose_adj.rds")
 
 snn_igraph <- igraph::similarity(
   igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
@@ -119,9 +221,35 @@ snn_igraph <- igraph::similarity(
   loops = FALSE,
   mode = "out"
 )
-
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
 
 saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds")
+################
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "in"
+)
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_noLoops_transpose_gcKNN.rds")
+#################
+snn_igraph <- igraph::similarity(
+  igraph::graph_from_adjacency_matrix(adj, diag = FALSE),
+  method = c("jaccard"),
+  loops = FALSE,
+  mode = "all"
+)
+
+rownames(snn_igraph) = rownames(adj)
+colnames(snn_igraph) = colnames(adj)
+saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_alledges_noLoops_transpose_gcKNN.rds")
+
+
+
+
 
 ######################
 ######################

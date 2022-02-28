@@ -108,6 +108,7 @@ make_knn <- function(dists,
   
   if (isTRUE(loops)){
     nns <- seq_len(k)
+    
   } else if (isFALSE(loops)) {
     nns <- seq_len(k)+1
   } else {
@@ -390,6 +391,9 @@ create_SNN <- function(caobj,
   
   
   snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
+  
+  ## to coincide with output of "igraph"
+  diag(snn.matrix) = 1
   
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)
