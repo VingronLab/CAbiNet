@@ -435,9 +435,128 @@ run_leiden <- function(SNN,
   return(clusters)
 }
 
+#' Calculate Normalized Graph Laplacian
+#' @description 
+#' Calculate Normalized graph laplacian of the input adjacency matrix, the graph laplacian
+#' L = I-D^(-1/2)AD^(-1/2), where D is a diagonal matrix with row sums of A as entries.
+#' @param adj The adjacency matix of type 'matrix/array'
+#' @return 
+#' A sparsed normalized graph laplacian matrix of type "dgCmatrix".
+#' 
+NormLaplacian = function(adj){
+  
+  D = Matrix::rowSums(adj)
+  mat_D = Matrix::sparseMatrix(i = seq_len(length(D)),
+                       j = seq_len(length(D)),
+                       x = 1/sqrt(D),
+                       dims =c(nrow(adj), ncol(adj)) )
+  mat_D[is.na(mat_D)] = 0
+  mat_D[is.infinite(mat_D)] = 0
+  
+  I = Matrix::sparseMatrix(i = seq_len(length(D)),
+                           j = seq_len(length(D)),
+                           x = 1,
+                           dims =c(nrow(adj), ncol(adj)) )
+  
+  L = I - mat_D %*% adj %*% mat_D
+  
+  return(L)
+}
+
+#' Detecting eigengap.
+#' @description 
+#' Searching for the largest gap between conjuncted eigenvalues which are sorted 
+#' in an ascending order, the most important eigenvalues and eigenvectors are the ones 
+#' before the detected eigengap.
+#' @param e Eigenvalues of type 'vector'
+#' @param v Eigenvector matirx of type 'matrix/array' whose columns are single eigenvectors.
+#' @return 
+#' The selected most important eigenvectors for downstream clustering, of type 'matrix/array'.
+#' 
+eigengap = function(e, v){
+  # e is eigenvalues, v is eigenvector
+  
+  idx = order(e, decreasing = FALSE)
+  
+  # order eigenvalues and eigenvectors
+  v = v[, idx]
+  e = e[idx]
+  
+  n = length(e)
+  gaps = abs(e[1:(n-1)] - e[2:n])
+  idx = which(gaps == max(gaps))[1]
+  cat('eigengap idx',idx,'\n')
+  if ( idx <2){
+    selected_eigen = v[, 1:2]
+  }else{
+    selected_eigen = v[, 1:idx]
+  }
+  
+  return(selected_eigen)
+}
+
 #' run spectral clustering
-run_spectral <- function() {
-  #TODO
+#' @description 
+#' This function is designed for detecting clusters from input graph adjacency 
+#' matrix by using spectral clustering with normalized graph laplacian.
+#' @param SNN The adjacency matrix of graph
+#' @param use_gap TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+#' most important eigenvector automatically, and the number of output clusters 
+#' equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+#' The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+#' selcted and 'nclust' clusters will be detected by skmeans.
+#' @param python TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
+#' decompositon, else R-base function 'svd' will be used for calculation. 
+#' @return 
+#' The clustering results
+#' 
+run_spectral <- function(SNN, 
+                         use_gap = TRUE, 
+                         nclust = NULL,
+                         python = TRUE) {
+  diag(SNN) = 0
+  L = NormLaplacian(SNN)
+  if (python == TRUE){
+    svd_torch <- NULL
+    L = as.matrix(L)
+    # require(reticulate)
+    # source_python('./python_svd.py')
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
+    SVD <- eig_torch(L)
+    names(SVD) <- c("D", "U")
+    if (sum(SVD$D[,2]^2)>0){
+      stop("eigenvalues are not real values...")
+    }else{
+      SVD$D <- as.vector(SVD$D[,1])
+    }
+    
+  } else {
+    SVD <- svd(L)
+    names(SVD) <- c("D", "U", "V")
+    SVD <- SVD[c(2, 1, 3)]
+    # if(length(SVD$D) > dims) SVD$D <- SVD$D[seq_len(dims)]
+  }
+
+  idx = order(SVD$D, decreasing = TRUE)
+  eigenvalues = SVD$D[idx]
+  eigenvectors = SVD$U[,idx]
+  cat('SVD for graph laplacian is done....\n')
+  
+  if (use_gap == FALSE){
+    # fixSCskmeans
+    if (is.null(nclust)){
+      stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
+    }else{
+      fixeig = eigenvectors[,(ncol(eigenvectors)- nclust + 1):ncol(eigenvectors)]
+      cat('skmeans....\n')
+      clusters = skmeans::skmeans(fixeig, k = ncol(fixeig))$cluster
+    }
+  } else if (use_gap == TRUE){
+    gapeig = eigengap(eigenvalues, eigenvectors)
+    clusters = skmeans(gapeig, k = ncol(gapeig))$cluster
+  }
+  names(clusters) <- rownames(SNN)
+  return(clusters)
 }
 
 #' Run biclustering
@@ -479,7 +598,10 @@ run_caclust <- function(caobj,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
                         n.int = 10,
-                        rand_seed = 2358) {
+                        rand_seed = 2358,
+                        use_gap = TRUE,
+                        nclust = NULL,
+                        python = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
@@ -508,7 +630,11 @@ run_caclust <- function(caobj,
                            rand_seed = rand_seed)
     
   } else if (algorithm == "spectral"){
-    stop("Spectral clustering not yet implemented. sorry :(")
+    # stop("Spectral clustering not yet implemented. sorry :(")
+    clusters <- run_spectral(SNN = SNN,
+                             use_gap = use_gap,
+                             nclust = nclust,
+                             python = python)
   }
 
   cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))

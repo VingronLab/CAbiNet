@@ -1,7 +1,11 @@
-data_dir <- file.path("./tests/testthat/testdata")
-data <- readRDS("./tests/testthat/testdata/mini_lympho_example.rds")
-
-ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3, ntop = nrow(df)))
+# data_dir <- file.path("./tests/testthat/testdata")
+# data <- readRDS("./tests/testthat/testdata/mini_lympho_example.rds")
+data_dir <- file.path("./testdata")
+data <- readRDS("./testdata/mini_lympho_example.rds")
+# data <-read.csv('tests/testthat/testdata/Mat8x10.csv')
+# rownames(data) = paste0('gene', 1:nrow(data))
+# data = as.matrix(data)
+ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3,dims = 4, ntop = nrow(df)))
 ca_dists <- calc_distances(caobj = ca)
 
 #####################
