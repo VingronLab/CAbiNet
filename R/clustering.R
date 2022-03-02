@@ -572,6 +572,7 @@ run_spectral <- function(SNN,
 #' @inheritParams create_bigraph
 #' @inheritParams create_SNN
 #' @inheritParams run_leiden
+#' @inheritParams run_spectral
 #' 
 #' @return
 #' Returns list:
@@ -630,11 +631,14 @@ run_caclust <- function(caobj,
                            rand_seed = rand_seed)
     
   } else if (algorithm == "spectral"){
-    # stop("Spectral clustering not yet implemented. sorry :(")
+    
     clusters <- run_spectral(SNN = SNN,
                              use_gap = use_gap,
                              nclust = nclust,
                              python = python)
+    
+  } else{
+    stop("algorithm should choose from 'leiden' and 'spectral'!")
   }
 
   cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
@@ -642,6 +646,7 @@ run_caclust <- function(caobj,
   
   cell_clusters <- clusters[cell_idx]
   gene_clusters <- clusters[gene_idx]
+  
   
   caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
                                            "gene_clusters" = gene_clusters,
