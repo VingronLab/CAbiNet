@@ -87,10 +87,11 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
 #' ca <- cacomp(obj = cnts, princ_coords = 3)
 #'
 #' ca_biplot(ca)
-setGeneric("bicplot", function(obj,
+setGeneric("bicplot", function(caobj,
+                               caclust,
                                  xdim = 1,
                                  ydim = 2,
-                                 princ_coords = 1,
+                                 coords = 1,
                                  row_labels = NULL,
                                  col_labels = NULL,
                                  type = "plotly",
@@ -103,35 +104,54 @@ setGeneric("bicplot", function(obj,
 #' @rdname bicplot
 #' @export
 setMethod(f = "bicplot",
-          signature=(obj="cabicomp"),
-          function(obj,
+          signature(caobj = "cacomp", caclust = "caclust"),
+          function(caobj, 
+                   caclust,
                    xdim = 1,
                    ydim = 2,
-                   princ_coords = 1,
+                   coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "plotly",
                    ...){
             
-            if (!is(obj,"cacomp")){
+            if (!is(caobj,"cacomp")){
               stop("Not a CA object. Please run cacomp() first!")
             }
             
-            if (princ_coords == 1){
+            ngenes <- nrow(caobj@std_coords_rows)
+            ncells <- nrow(caobj@std_coords_cols)
+            gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
+            cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
+            
+            cells <- data.frame(clusters = rep(NA, ncells)) 
+            genes <- data.frame(clusters = rep(NA, ngenes))
+            
+            cells[cell.idx,] <- as.vector(cell_clusters(caclust))
+            genes[gene.idx,] <- as.vector(gene_clusters(caclust))
+            
+            if (coords == 1){
               
-              if(sum(!is.null(obj@prin_coords_rows), !is.null(obj@std_coords_cols)) != 2){
+              if(sum(!is.null(caobj@prin_coords_rows), !is.null(caobj@std_coords_cols)) != 2){
                 stop("Principal and/or standard coordinates not found, ",
                      "please run ca_coords() first!")
               }
-              rows <- obj@prin_coords_rows
-              cols <- obj@std_coords_cols
-            } else if (princ_coords == 2){
-              if(sum(!is.null(obj@prin_coords_cols), !is.null(obj@std_coords_rows)) != 2){
+              rows <- cbind(caobj@prin_coords_rows, genes)
+              cols <- cbind(caobj@std_coords_cols, cells)
+            } else if (coords == 2){
+              if(sum(!is.null(caobj@prin_coords_cols), !is.null(caobj@std_coords_rows)) != 2){
                 stop("Principal and/or standard coordinates not found, ",
                      "please run ca_coords() first!")
               }
-              rows <- obj@std_coords_rows
-              cols <- obj@prin_coords_cols
+              rows <- cbind(caobj@std_coords_rows, genes)
+              cols <- cbind(caobj@prin_coords_cols, cells)
+            }else if (coords == 3){
+              if(sum(!is.null(caobj@U), !is.null(caobj@V)) != 2){
+                stop("Singular eigenvectors not found, ",
+                     "please run ca_coords() first!")
+              }
+              rows <- cbind(caobj@U, genes)
+              cols <- cbind(caobj@V, cells)
             } else {
               stop("princ_coords must be either 1 for rows or 2 for columns.")
             }
@@ -150,13 +170,15 @@ setMethod(f = "bicplot",
               
               p <- ggplot2::ggplot()+
                 ggplot2::geom_point(data=rows,
-                                    ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy)),
+                                    ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy),
+                                                  colour= rows$clusters),
                                     # colour = "#0066FF",
                                     alpha = 0.7, 
                                     shape = 1) +
                 ggplot2::geom_point(data=cols,
-                                    ggplot2::aes_(x = as.name(cnmx), y = as.name(cnmy)),
-                                    colour = "#990000",
+                                    ggplot2::aes_(x = as.name(cnmx), y = as.name(cnmy),
+                                                  colour= cols$clusters),
+                                    # colour = "#990000",
                                     shape = 4) +
                 ggplot2::theme_bw()
               
@@ -164,28 +186,32 @@ setMethod(f = "bicplot",
                 p <- p +
                   ggplot2::geom_point(data=rows[row_labels,],
                                       ggplot2::aes_(x = as.name(rnmx),
-                                                    y = as.name(rnmy)),
-                                      colour = "#FF0000",
+                                                    y = as.name(rnmy),
+                                                    colour= rows$clusters),
+                                      # colour = "#FF0000",
                                       shape = 16) +
                   ggrepel::geom_text_repel(data=rows[row_labels,],
                                            ggplot2::aes_(x = as.name(rnmx),
                                                          y = as.name(rnmy),
+                                                         colour= rows[row_labels,]$clusters,
                                                          label=rownames(rows[row_labels,])),
-                                           colour = "#FF0000",
+                                           # colour = "#FF0000",
                                            max.overlaps = Inf)
               }
               if (!is.null(col_labels)){
                 p <- p +
                   ggplot2::geom_point(data=cols[col_labels,],
                                       ggplot2::aes_(x = as.name(cnmx),
-                                                    y = as.name(cnmy)),
-                                      colour = "#990000",
+                                                    y = as.name(cnmy),
+                                                    colour= cols[col_labels,]$clusters),
+                                      # colour = "#990000",
                                       shape = 1) +
                   ggrepel::geom_text_repel(data=cols[col_labels,],
                                            ggplot2::aes_(x = as.name(cnmx),
                                                          y = as.name(cnmy),
+                                                         colour= cols[col_labels,]$clusters,
                                                          label=rownames(cols[col_labels,])),
-                                           colour = "#990000",
+                                           # colour = "#990000",
                                            max.overlaps = Inf)
               }
             } else if (type == "plotly"){
@@ -198,7 +224,7 @@ setMethod(f = "bicplot",
                                   text = rownames(cols),
                                   textposition = "left",
                                   opacity = 1,
-                                  marker = list(color = '#990000',
+                                  marker = list(color = cols$clusters, # '#990000',
                                                 symbol = 'x',
                                                 size = 5),
                                   name = 'Columns',
@@ -209,7 +235,7 @@ setMethod(f = "bicplot",
                                   mode = 'markers',
                                   text = rownames(rows),
                                   opacity = 0.7,
-                                  marker = list(color ='#0066FF',
+                                  marker = list(color = rows$clusters, #'#0066FF',
                                                 symbol = 'circle-open',
                                                 size = 2.5),
                                   name = 'genes',
@@ -223,7 +249,7 @@ setMethod(f = "bicplot",
                                     mode = 'markers+text',
                                     text = rownames(rows)[row_labels],
                                     textposition = "left",
-                                    textfont = list(color='#FF0000'),
+                                    textfont = list(color= rows$clusters), #'#FF0000'),
                                     marker = list(symbol = 'circle',
                                                   color ='#FF0000',
                                                   size = 5),
@@ -239,9 +265,9 @@ setMethod(f = "bicplot",
                                     mode = 'markers+text',
                                     text = rownames(cols)[col_labels],
                                     textposition = "left",
-                                    textfont = list(color='#990000'),
+                                    textfont = list(color= cols$clusters), #'#990000'),
                                     marker = list(symbol = 'circle-open',
-                                                  color ='#990000',
+                                                  color = cols$clusters, #'#990000',
                                                   size = 6.5),
                                     name = 'marked column(s)',
                                     hoverinfo = 'text',
