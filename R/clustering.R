@@ -519,8 +519,6 @@ run_spectral <- function(SNN,
   if (python == TRUE){
     svd_torch <- NULL
     L = as.matrix(L)
-    # require(reticulate)
-    # source_python('./python_svd.py')
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
     SVD <- eig_torch(L)
     names(SVD) <- c("D", "U")
@@ -630,7 +628,6 @@ run_caclust <- function(caobj,
                            rand_seed = rand_seed)
     
   } else if (algorithm == "spectral"){
-    # stop("Spectral clustering not yet implemented. sorry :(")
     clusters <- run_spectral(SNN = SNN,
                              use_gap = use_gap,
                              nclust = nclust,
