@@ -420,7 +420,7 @@ run_leiden <- function(SNN,
                        n.int = 10, 
                        rand_seed = 2358) {
   
-  clusters <- leiden::leiden(object = SNN,
+  clusters <- leiden::leiden(object = as.matrix(SNN),
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -517,24 +517,32 @@ run_spectral <- function(SNN,
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   if (python == TRUE){
+    
     eig_torch <- NULL
     L = as.matrix(L)
     # require(reticulate)
     # source_python('./python_svd.py')
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
+    
     SVD <- eig_torch(L)
     names(SVD) <- c("D", "U")
     if (sum(SVD$D[,2]^2)>0){
+      
       stop("eigenvalues are not real values...")
+      
     }else{
+      
       SVD$D <- as.vector(SVD$D[,1])
+      
     }
     
   } else {
+    
     SVD <- svd(L)
     names(SVD) <- c("D", "U", "V")
     SVD <- SVD[c(2, 1, 3)]
     # if(length(SVD$D) > dims) SVD$D <- SVD$D[seq_len(dims)]
+    
   }
 
   idx = order(SVD$D, decreasing = TRUE)
@@ -545,15 +553,21 @@ run_spectral <- function(SNN,
   if (use_gap == FALSE){
     # fixSCskmeans
     if (is.null(nclust)){
+      
       stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
-    }else{
+    
+      }else{
+        
       fixeig = eigenvectors[,(ncol(eigenvectors)- nclust + 1):ncol(eigenvectors)]
       cat('skmeans....\n')
       clusters = skmeans::skmeans(fixeig, k = ncol(fixeig))$cluster
+      
     }
   } else if (use_gap == TRUE){
+    
     gapeig = eigengap(eigenvalues, eigenvectors)
     clusters = skmeans::skmeans(gapeig, k = ncol(gapeig))$cluster
+    
   }
   clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
