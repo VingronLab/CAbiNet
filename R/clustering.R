@@ -216,7 +216,7 @@ determine_overlap <- function(cg_adj, cc_adj){
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
 #' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
+#' @param select_genes TRUE/FALSE. Should genes be selected by whether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
@@ -517,11 +517,11 @@ run_spectral <- function(SNN,
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   if (python == TRUE){
-    svd_torch <- NULL
+    eig_torch <- NULL
     L = as.matrix(L)
     # require(reticulate)
     # source_python('./python_svd.py')
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
     SVD <- eig_torch(L)
     names(SVD) <- c("D", "U")
     if (sum(SVD$D[,2]^2)>0){
@@ -553,8 +553,9 @@ run_spectral <- function(SNN,
     }
   } else if (use_gap == TRUE){
     gapeig = eigengap(eigenvalues, eigenvectors)
-    clusters = skmeans(gapeig, k = ncol(gapeig))$cluster
+    clusters = skmeans::skmeans(gapeig, k = ncol(gapeig))$cluster
   }
+  clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
   return(clusters)
 }

@@ -204,9 +204,13 @@ convert_to_biclust <- function(caclust){
   bitypes = intersect(ctypes, gtypes)
   
   Number = length(bitypes)
-  NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
-  RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
-  
+  if (Number == 0){
+    NumberxCol = matrix(0)
+    RowxNumber = matrix(0)
+  }else{
+    NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
+    RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
+  }
   bic <- new("Biclust", "Parameters" = params,
                        "RowxNumber" = RowxNumber,
                        "NumberxCol" = NumberxCol,
