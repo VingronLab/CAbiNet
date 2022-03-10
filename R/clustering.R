@@ -216,7 +216,7 @@ determine_overlap <- function(cg_adj, cc_adj){
 #' @param k_cg k for cell-gene kNN
 #' @param k_gc k for gene-cell kNN
 #' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
+#' @param select_genes TRUE/FALSE. Should genes be selected by whether they have
 #' an edge in the cell-gene kNN graph?
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
@@ -420,7 +420,7 @@ run_leiden <- function(SNN,
                        n.int = 10, 
                        rand_seed = 2358) {
   
-  clusters <- leiden::leiden(object = SNN,
+  clusters <- leiden::leiden(object = as.matrix(SNN),
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -517,22 +517,31 @@ run_spectral <- function(SNN,
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   if (python == TRUE){
-    svd_torch <- NULL
+    
+    eig_torch <- NULL
     L = as.matrix(L)
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
+
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
+
     SVD <- eig_torch(L)
     names(SVD) <- c("D", "U")
     if (sum(SVD$D[,2]^2)>0){
+      
       stop("eigenvalues are not real values...")
+      
     }else{
+      
       SVD$D <- as.vector(SVD$D[,1])
+      
     }
     
   } else {
+    
     SVD <- svd(L)
     names(SVD) <- c("D", "U", "V")
     SVD <- SVD[c(2, 1, 3)]
     # if(length(SVD$D) > dims) SVD$D <- SVD$D[seq_len(dims)]
+    
   }
 
   idx = order(SVD$D, decreasing = TRUE)
@@ -543,16 +552,23 @@ run_spectral <- function(SNN,
   if (use_gap == FALSE){
     # fixSCskmeans
     if (is.null(nclust)){
+      
       stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
-    }else{
+    
+      }else{
+        
       fixeig = eigenvectors[,(ncol(eigenvectors)- nclust + 1):ncol(eigenvectors)]
       cat('skmeans....\n')
       clusters = skmeans::skmeans(fixeig, k = ncol(fixeig))$cluster
+      
     }
   } else if (use_gap == TRUE){
+    
     gapeig = eigengap(eigenvalues, eigenvectors)
-    clusters = skmeans(gapeig, k = ncol(gapeig))$cluster
+    clusters = skmeans::skmeans(gapeig, k = ncol(gapeig))$cluster
+    
   }
+  clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
   return(clusters)
 }
@@ -570,6 +586,7 @@ run_spectral <- function(SNN,
 #' @inheritParams create_bigraph
 #' @inheritParams create_SNN
 #' @inheritParams run_leiden
+#' @inheritParams run_spectral
 #' 
 #' @return
 #' Returns list:
@@ -628,10 +645,14 @@ run_caclust <- function(caobj,
                            rand_seed = rand_seed)
     
   } else if (algorithm == "spectral"){
+
     clusters <- run_spectral(SNN = SNN,
                              use_gap = use_gap,
                              nclust = nclust,
                              python = python)
+    
+  } else{
+    stop("algorithm should choose from 'leiden' and 'spectral'!")
   }
 
   cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
@@ -639,6 +660,7 @@ run_caclust <- function(caobj,
   
   cell_clusters <- clusters[cell_idx]
   gene_clusters <- clusters[gene_idx]
+  
   
   caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
                                            "gene_clusters" = gene_clusters,

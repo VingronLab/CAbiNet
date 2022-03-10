@@ -15,8 +15,11 @@ def svd_torch(x):
 def eig_torch(x):
 	x1 = torch.from_numpy(numpy.array(x))
 	e, u = torch.eig(x1,eigenvectors=True)
+	# e, u = torch.linalg.eig(x1)
 	e = e.numpy()
 	u = u.numpy()
+	# e = e.real()
+	# u = u.real()
 	return e, u
 
 def eigsh_scipy(x, k=6,which = 'SM'):

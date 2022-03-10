@@ -204,15 +204,20 @@ convert_to_biclust <- function(caclust){
   bitypes = intersect(ctypes, gtypes)
   
   Number = length(bitypes)
-  NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
-  RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
+
+  if (Number == 0){
+    NumberxCol = matrix(0)
+    RowxNumber = matrix(0)
+  }else{
+    NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
+    RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
+  }
   
   rownames(RowxNumber) <- names(gc)
   colnames(RowxNumber) <- paste0("BC", bitypes)
 
   rownames(NumberxCol) <- paste0("BC", bitypes)
   colnames(NumberxCol) <- names(cc)
-
 
   bic <- new("Biclust", "Parameters" = params,
                        "RowxNumber" = RowxNumber,
@@ -222,3 +227,40 @@ convert_to_biclust <- function(caclust){
   
   return(bic)
 }
+
+#' #' Create new cabicomp object
+#' #'
+#' #' @param ... arguments forwarded to new. Should be named slots of a caclust
+#' #' object
+#' #' @description
+#' #' TODO
+#' new_cabicomp <- function(...) new("cabicomp",...)
+#' 
+#' 
+#' create_cabicomp <- function(caobj,
+#'                      caclust,
+#'                      subset = TRUE){
+#'   
+#'   ngenes <- nrow(caobj@std_coords_rows)
+#'   ncells <- nrow(caobj@std_coords_cols)
+#'   gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
+#'   cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
+#'   
+#'   cells <- data.frame(clusters = rep(NA, ncells)) 
+#'   genes <- data.frame(clusters = rep(NA, ngenes))
+#'   
+#'   cells[cell.idx,] <- as.vector(cell_clusters(caclust))
+#'   genes[gene.idx,] <- as.vector(gene_clusters(caclust))
+#'   
+#'   # ncaobj = list()
+#'   # ncaobj$U <- cbind(caobj@U, genes) # converted to data.frame
+#'   # ncaobj <- do.call(new_cabicomp, ncaobj)
+#'   caobj$U <- cbind(caobj@U, genes) # converted to data.frame
+#'   caobj@V <- cbind(caobj@V, cells)
+#'   caobj@std_coords_rows <- cbind(caobj@std_coords_rows, genes)
+#'   caobj@prin_coords_rows <- cbind(caobj@prin_coords_rows, genes)
+#'   caobj@std_coords_cols <- cbind(caobj@std_coords_cols, cells)
+#'   caobj@prin_coords_cols <- cbind(caobj@prin_coords_cols, cells)
+#'   
+#'   return(caobj)
+#' }
