@@ -207,6 +207,13 @@ convert_to_biclust <- function(caclust){
   NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
   RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
   
+  rownames(RowxNumber) <- names(gc)
+  colnames(RowxNumber) <- paste0("BC", bitypes)
+
+  rownames(NumberxCol) <- paste0("BC", bitypes)
+  colnames(NumberxCol) <- names(cc)
+
+
   bic <- new("Biclust", "Parameters" = params,
                        "RowxNumber" = RowxNumber,
                        "NumberxCol" = NumberxCol,
