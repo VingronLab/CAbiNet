@@ -5,13 +5,19 @@
 \title{Calculates SNN from adjacency matrix with uneven number of neighbours per
 row.}
 \usage{
-ComputeSNNasym(SNN, prune)
+ComputeSNNasym(SNN, prune, mode)
 }
 \arguments{
 \item{SNN}{A sparse matrix (adjacency matrix)}
 
 \item{prune}{numeric. Below which Jaccard similarity edges should be 
 removed.}
+
+\item{mode}{The type of neighboring vertices to use for calculating similarity
+ scores(Jaccard Index). Three options: "out", "in" and "all":
+* "out": Select neighbouring vertices by out-going edges;
+* "in": Selecting neighbouring vertices by in-coming edges;
+* "all": Selecting neigbouring vertices by both in-coming and out-going edges.}
 }
 \description{
 Calculates SNN from adjacency matrix with uneven number of neighbours per

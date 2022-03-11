@@ -18,7 +18,10 @@ run_caclust(
   calc_gene_cell_kNN = FALSE,
   resolution = 1,
   n.int = 10,
-  rand_seed = 2358
+  rand_seed = 2358,
+  use_gap = TRUE,
+  nclust = NULL,
+  python = TRUE
 )
 }
 \arguments{
@@ -31,16 +34,21 @@ calculated.}
 
 \item{algorithm}{Algorithm for clustering. Options are "leiden" or "spectral".}
 
-\item{SNN_prune}{numeric. Value between 0-1. Entries in SNN-graph lower than
-SNN_prune are set to 0.}
+\item{SNN_prune}{numeric. Value between 0-1. Sets cutoff of acceptable jaccard
+similarity scores for neighborhood overlap of vertices in SNN. Edges with values
+less than this will be set as 0. The default value is 1/15.}
 
 \item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
 
-\item{mode}{"out" or "all". If mode = "out" only outgoing edges are
-considered for SNN construction. If mode = "all" in- AND outgoing edges
-are considered.}
+\item{mode}{The type of neighboring vertices to use for calculating similarity
+scores(Jaccard Index). Three options: "out", "in" and "all":
+\itemize{
+\item "out": Selecting neighbouring vertices by out-going edges;
+\item "in": Selecting neighbouring vertices by in-coming edges;
+\item "all": Selecting neigbouring vertices by both in-coming and out-going edges.
+}}
 
-\item{select_genes}{TRUE/FALSE. Should genes be selected by wether they have
+\item{select_genes}{TRUE/FALSE. Should genes be selected by whether they have
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
@@ -59,6 +67,15 @@ graph is transposed.}
 \item{n.int}{Number of iterations for leiden algorithm.}
 
 \item{rand_seed}{Random seed.}
+
+\item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+most important eigenvector automatically, and the number of output clusters 
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+selcted and 'nclust' clusters will be detected by skmeans.}
+
+\item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
+decompositon, else R-base function 'svd' will be used for calculation.}
 }
 \value{
 Returns list:

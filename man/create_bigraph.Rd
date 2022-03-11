@@ -39,7 +39,7 @@ create_bigraph(
 
 \item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
 
-\item{select_genes}{TRUE/FALSE. Should genes be selected by wether they have
+\item{select_genes}{TRUE/FALSE. Should genes be selected by whether they have
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less

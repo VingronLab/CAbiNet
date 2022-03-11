@@ -199,9 +199,9 @@ convert_to_biclust <- function(caclust){
   gc <- gene_clusters(caclust)
   params <- get_params(caclust)
   
-  ctypes = unique(cc)
-  gtypes = unique(gc)
-  bitypes = intersect(ctypes, gtypes)
+  ctypes = sort(unique(cc))
+  gtypes = sort(unique(gc))
+  bitypes = union(ctypes, gtypes)
   
   Number = length(bitypes)
 
@@ -228,39 +228,24 @@ convert_to_biclust <- function(caclust){
   return(bic)
 }
 
-#' #' Create new cabicomp object
-#' #'
-#' #' @param ... arguments forwarded to new. Should be named slots of a caclust
-#' #' object
-#' #' @description
-#' #' TODO
-#' new_cabicomp <- function(...) new("cabicomp",...)
+#' Remove clusters only consisting of cells/genes
 #' 
+#' @description 
+#' Takes an object of class biclust and removes all clusters that only consist
+#' of cells or genes.
 #' 
-#' create_cabicomp <- function(caobj,
-#'                      caclust,
-#'                      subset = TRUE){
-#'   
-#'   ngenes <- nrow(caobj@std_coords_rows)
-#'   ncells <- nrow(caobj@std_coords_cols)
-#'   gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
-#'   cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
-#'   
-#'   cells <- data.frame(clusters = rep(NA, ncells)) 
-#'   genes <- data.frame(clusters = rep(NA, ngenes))
-#'   
-#'   cells[cell.idx,] <- as.vector(cell_clusters(caclust))
-#'   genes[gene.idx,] <- as.vector(gene_clusters(caclust))
-#'   
-#'   # ncaobj = list()
-#'   # ncaobj$U <- cbind(caobj@U, genes) # converted to data.frame
-#'   # ncaobj <- do.call(new_cabicomp, ncaobj)
-#'   caobj$U <- cbind(caobj@U, genes) # converted to data.frame
-#'   caobj@V <- cbind(caobj@V, cells)
-#'   caobj@std_coords_rows <- cbind(caobj@std_coords_rows, genes)
-#'   caobj@prin_coords_rows <- cbind(caobj@prin_coords_rows, genes)
-#'   caobj@std_coords_cols <- cbind(caobj@std_coords_cols, cells)
-#'   caobj@prin_coords_cols <- cbind(caobj@prin_coords_cols, cells)
-#'   
-#'   return(caobj)
-#' }
+#' @param bic object of class biclust
+#' 
+#' @return 
+#' biclust object with monoclusters removed.
+#' @export
+rm_monoclusters <- function(bic){
+  keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
+  bic@RowxNumber <- bic@RowxNumber[,keep]
+  bic@NumberxCol <- bic@NumberxCol[keep, ]
+  bic@Number <- sum(keep)
+  
+  return(bic)
+}
+
+

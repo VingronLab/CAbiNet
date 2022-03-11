@@ -521,7 +521,7 @@ run_spectral <- function(SNN,
     eig_torch <- NULL
     L = as.matrix(L)
 
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
 
     SVD <- eig_torch(L)
     names(SVD) <- c("D", "U")

@@ -56,10 +56,11 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
 #' @return
 #' Plot of class "plotly" or "ggplot".
 #'
-#' @param obj An object of class "cacomp" with the relevant standardized and 
+#' @param caobj An object of class "cacomp" with the relevant standardized and 
 #' principal coordinates calculated,
 #'  or alternatively an object of class "Seurat" or "SingleCellExperiment" 
 #'  with a dim. reduction named "CA" saved.
+#' @param caclust caclust object containing clustering results.
 #' @param xdim Integer. The dimension for the x-axis. Default 1.
 #' @param ydim Integer. The dimension for the y-axis. Default 2.
 #' @param princ_coords Integer. If 1 then principal coordinates are used for 
@@ -76,17 +77,6 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
 #' Default "plotly".
 #' @param ... Further arguments.
 #' @export
-#' @examples
-#' # Simulate counts
-#' cnts <- mapply(function(x){rpois(n = 500, lambda = x)},
-#'                x = sample(1:100, 50, replace = TRUE))
-#' rownames(cnts) <- paste0("gene_", 1:nrow(cnts))
-#' colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
-#'
-#' # Run correspondence analysis
-#' ca <- cacomp(obj = cnts, princ_coords = 3)
-#'
-#' ca_biplot(ca)
 setGeneric("bicplot", function(caobj,
                                caclust,
                                  xdim = 1,
@@ -100,7 +90,7 @@ setGeneric("bicplot", function(caobj,
 })
 
 
-
+#TODO lots of new dependencies. Better way?
 #' @rdname bicplot
 #' @export
 setMethod(f = "bicplot",

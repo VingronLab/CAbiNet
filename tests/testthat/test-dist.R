@@ -1,6 +1,6 @@
 
 data <- readRDS("./testdata/mini_lympho_example.rds")
-eudist <- readRDS("./testdata/handmade_Euclidean_dist.rds")
+eudist <- readRDS("./testdata/testdata_Euclidean_dist.rds")
 
 test_that("Euclidean distance calculation by function 'calc_euclidean'. ", {
   test = calc_euclidean(as.matrix(data))

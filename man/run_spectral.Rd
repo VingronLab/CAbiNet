@@ -4,8 +4,24 @@
 \alias{run_spectral}
 \title{run spectral clustering}
 \usage{
-run_spectral()
+run_spectral(SNN, use_gap = TRUE, nclust = NULL, python = TRUE)
+}
+\arguments{
+\item{SNN}{The adjacency matrix of graph}
+
+\item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+most important eigenvector automatically, and the number of output clusters 
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+selcted and 'nclust' clusters will be detected by skmeans.}
+
+\item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
+decompositon, else R-base function 'svd' will be used for calculation.}
+}
+\value{
+The clustering results
 }
 \description{
-run spectral clustering
+This function is designed for detecting clusters from input graph adjacency 
+matrix by using spectral clustering with normalized graph laplacian.
 }
