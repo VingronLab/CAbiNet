@@ -495,6 +495,61 @@ eigengap = function(e, v){
   return(selected_eigen)
 }
 
+#' An integration of several runs of skmens with different random seeds
+#' @description 
+#' This function will select the optimal clustering result from several skmeans::skmeans runs
+#' with different random seeds, The clustering result with smallest within-cluster-sum
+#' of squared distances will be selected.
+#' @param method see skmeans method
+#' @param m see skmeans 'm'
+#' @param weights
+#' @param control
+#' @param num.seeds number of trials with random seeds
+#' @return 
+#' The optimal skmeans clustering result
+#' @export
+SKMeans <- function (x, k, 
+                     method = NULL, 
+                     m = 1, 
+                     weights = 1, 
+                     control = list(), 
+                     num.seeds = 10) 
+{
+  if (mode(x) == "numeric") 
+    # x <- data.frame(new.x = x)
+  KM <- skmeans::skmeans(x = x, 
+                         k = k, 
+                         method = method,
+                         m = m,
+                         weights = weights,
+                         control = control)
+  wss = do.call(sum, lapply(list(1:length(KM$cluster)), function(i){
+    sum((x[i,]-KM$prototypes[KM$cluster[i],])^2)
+  }))
+  for (i in 2:num.seeds) {
+    newKM <- skmeans::skmeans(x = x, 
+                              k = k, 
+                              method = method,
+                              m = m,
+                              weights = weights,
+                              control = control)
+    
+    newwss = do.call(sum, lapply(list(1:length(newKM$cluster)), function(i){
+      sum((x[i,]-newKM$prototypes[newKM$cluster[i],])^2)
+    }))
+    if (newwss <wss) {
+      KM <- newKM
+      wss = newwss
+    }
+  }
+  # xmean <- apply(x, 2, mean)
+  # centers <- rbind(KM$centers, xmean)
+  # bss1 <- as.matrix(dist(centers)^2)
+  # KM$betweenss <- sum(as.vector(bss1[nrow(bss1), ]) * c(KM$size, 
+  #                                                       0))
+  return(KM)
+}
+
 #' run spectral clustering
 #' @description 
 #' This function is designed for detecting clusters from input graph adjacency 
@@ -513,28 +568,21 @@ eigengap = function(e, v){
 run_spectral <- function(SNN, 
                          use_gap = TRUE, 
                          nclust = NULL,
-                         python = TRUE) {
+                         python = TRUE,
+                         clust.method = 'kmeans',
+                         iter.max=10, 
+                         num.seeds=20) {
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   if (python == TRUE){
     
-    eig_torch <- NULL
+    svd_torch <- NULL
     L = as.matrix(L)
-    # require(reticulate)
-    # source_python('./python_svd.py')
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
     
-    SVD <- eig_torch(L)
-    names(SVD) <- c("D", "U")
-    if (sum(SVD$D[,2]^2)>0){
-      
-      stop("eigenvalues are not real values...")
-      
-    }else{
-      
-      SVD$D <- as.vector(SVD$D[,1])
-      
-    }
+    SVD <- svd_torch(L)
+    names(SVD) <- c("U", "D", "V")
+    SVD$D <- as.vector(SVD$D)
     
   } else {
     
@@ -548,27 +596,38 @@ run_spectral <- function(SNN,
   idx = order(SVD$D, decreasing = TRUE)
   eigenvalues = SVD$D[idx]
   eigenvectors = SVD$U[,idx]
-  cat('SVD for graph laplacian is done....\n')
+  # cat('SVD for graph laplacian is done....\n')
   
   if (use_gap == FALSE){
-    # fixSCskmeans
-    if (is.null(nclust)){
+
+        if (is.null(nclust)){
       
       stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
     
       }else{
         
-      fixeig = eigenvectors[,(ncol(eigenvectors)- nclust + 1):ncol(eigenvectors)]
-      cat('skmeans....\n')
-      clusters = skmeans::skmeans(fixeig, k = ncol(fixeig))$cluster
+      eig = eigenvectors[,(ncol(eigenvectors)- nclust + 1):ncol(eigenvectors)]
       
     }
   } else if (use_gap == TRUE){
     
-    gapeig = eigengap(eigenvalues, eigenvectors)
-    clusters = skmeans::skmeans(gapeig, k = ncol(gapeig))$cluster
+    eig = eigengap(eigenvalues, eigenvectors)
+    # clusters = skmeans::skmeans(gapeig, k = ncol(gapeig))$cluster
     
   }
+  
+  if (clust.method == 'skmeans'){
+    
+    clusters = SKMeans(eig, k = ncol(eig), num.seeds = num.seeds)$cluster
+  
+    }else if (clust.method == 'kmeans'){
+      
+    clusters = RcmdrMisc::KMeans(eig, centers = ncol(eig), iter.max=iter.max, num.seeds= num.seeds)$cluster
+  
+    }else{
+    stop('clustering method should be chosen from kmeans and skmeans!')
+  }
+  
   clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
   return(clusters)
@@ -617,7 +676,10 @@ run_caclust <- function(caobj,
                         rand_seed = 2358,
                         use_gap = TRUE,
                         nclust = NULL,
-                        python = TRUE) {
+                        python = TRUE,
+                        clust.method = 'kmeans',
+                        iter.max=10, 
+                        num.seeds=20) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
