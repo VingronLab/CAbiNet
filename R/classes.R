@@ -243,13 +243,14 @@ rm_monoclusters <- function(bic){
   
   keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
  
-  if(any(keep)){
+  if(any(!keep)){
 
       bic@RowxNumber <- bic@RowxNumber[,keep, drop=FALSE]
       bic@NumberxCol <- bic@NumberxCol[keep, ,drop=FALSE]
       bic@Number <- sum(keep)
   
   }
+  
   return(bic)
 }
 
