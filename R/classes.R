@@ -240,6 +240,7 @@ convert_to_biclust <- function(caclust){
 #' biclust object with monoclusters removed.
 #' @export
 rm_monoclusters <- function(bic){
+  
   keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
   bic@RowxNumber <- bic@RowxNumber[,keep, drop=FALSE]
   bic@NumberxCol <- bic@NumberxCol[keep, ,drop=FALSE]
