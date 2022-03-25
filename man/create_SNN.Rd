@@ -41,27 +41,35 @@ gene-cell distances/association ratios. Must be named list as follows:
 
 \item{k_gc}{k for gene-cell kNN}
 
-\item{SNN_prune}{numeric. Value between 0-1. Entries in SNN-graph lower than
-SNN_prune are set to 0.}
+\item{SNN_prune}{numeric. Value between 0-1. Sets cutoff of acceptable jaccard
+similarity scores for neighborhood overlap of vertices in SNN. Edges with values
+less than this will be set as 0. The default value is 1/15.}
 
 \item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
 
-\item{mode}{"out" or "all". If mode = "out" only outgoing edges are
-considered for SNN construction. If mode = "all" in- AND outgoing edges
-are considered.}
+\item{mode}{The type of neighboring vertices to use for calculating similarity
+scores(Jaccard Index). Three options: "out", "in" and "all":
+\itemize{
+\item "out": Selecting neighbouring vertices by out-going edges;
+\item "in": Selecting neighbouring vertices by in-coming edges;
+\item "all": Selecting neigbouring vertices by both in-coming and out-going edges.
+}}
 
 \item{select_genes}{TRUE/FALSE. Should genes be selected by wether they have
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
-Pruning is only performed if select_genes = TRUE.}
+than \code{overlap} of genes with the nearest neighbours of the cell are removed.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+graph is transposed.}
+
+\item{calc_cell_gene_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
+by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 }
 \value{

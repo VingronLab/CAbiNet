@@ -418,9 +418,13 @@ create_SNN <- function(caobj,
 run_leiden <- function(SNN, 
                        resolution = 1,
                        n.int = 10, 
-                       rand_seed = 2358) {
+                       rand_seed = 2358,
+                       dense = TRUE) {
+  if(isTRUE(dense)){
+    SNN = as.matrix(SNN)
+  }
   
-  clusters <- leiden::leiden(object = as.matrix(SNN),
+  clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -573,30 +577,35 @@ run_spectral <- function(SNN,
                          iter.max=10, 
                          num.seeds=10,
                          return.eig = TRUE,
-                         dims = NULL) {
+                         dims = 100) {
   diag(SNN) = 0
   L = NormLaplacian(SNN)
+  
+  if (dims > ncol(SNN)){
+    
+    dims = ncol(SNN)
+    
+  }
+  
   if (python == TRUE){
     
-    svd_torch <- NULL
-    L = as.matrix(L)
+    svd_scipy <- NULL
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
     
-    SVD <- svd_torch(L)
+    SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
-    SVD$D <- as.vector(SVD$D) # eigenvalues in a decreasing order
     
   } else {
     
-    SVD <- svd(L) # eigenvalues in a decreasing order
-    names(SVD) <- c("D", "U", "V")
-    SVD <- SVD[c(2, 1, 3)]
+    SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
+    names(SVD)[1:3] <- c("D", "U", "V")
     
   }
-
+  
   idx = order(SVD$D, decreasing = FALSE)
   eigenvalues = SVD$D[idx]
   eigenvectors = SVD$U[,idx]
+  
   # cat('SVD for graph laplacian is done....\n')
   
   if (use_gap == FALSE){
@@ -605,12 +614,19 @@ run_spectral <- function(SNN,
       
         stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
     
-      }else{
+      }else if (nclust > dims){
         
-      eig = eigenvectors[,1:nclust] # in an increasing order
+        stop('Number of dims should be larger than number of clusters (nclust)')
       
-    }} else if (use_gap == TRUE){
+      }else{
+      
+        eig = eigenvectors[,1:nclust] # in an increasing order
+        
+    }
     
+    } else if (use_gap == TRUE){
+      
+      
     eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
     
   }
@@ -690,7 +706,9 @@ run_caclust <- function(caobj,
                         clust.method = 'kmeans',
                         iter.max=10, 
                         num.seeds=10,
-                        return.eig = TRUE) {
+                        return.eig = TRUE,
+                        sc.dims = NULL,
+                        leiden.dense = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
@@ -716,22 +734,26 @@ run_caclust <- function(caobj,
     clusters <- run_leiden(SNN = SNN, 
                            resolution = resolution,
                            n.int = n.int, 
-                           rand_seed = rand_seed)
+                           rand_seed = rand_seed,
+                           dense = leiden.dense)
     
     eigen <- matrix()
     
   } else if (algorithm == "spectral"){
     
-    dims = length(caobj@D)
-    clusters <- run_spectral(SNN = SNN,
-                             use_gap = use_gap,
-                             nclust = nclust,
-                             python = python,
-                             clust.method = clust.method,
-                             iter.max = iter.max, 
-                             num.seeds = num.seeds,
-                             return.eig = return.eig,
-                             dims = dims)
+    if (is.null(sc.dims)){
+      sc.dims = length(caobj@D)
+    }
+    
+      clusters <- run_spectral(SNN = SNN,
+                               use_gap = use_gap,
+                               nclust = nclust,
+                               python = python,
+                               clust.method = clust.method,
+                               iter.max = iter.max, 
+                               num.seeds = num.seeds,
+                               return.eig = return.eig,
+                               dims = sc.dims)
     if (return.eig){
       
       eigen <- clusters$eigen
@@ -786,6 +808,9 @@ run_biUMAP <- function(caobj,
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
   
+  custom.config = umap::umap.defaults
+  custom.config$random_state = rand_seed
+  
   if (algorithm == 'leiden'){
   
     SNN <- get_snn(caclust_obj)
@@ -805,9 +830,6 @@ run_biUMAP <- function(caobj,
     rownames(SNN_idx) <- rownames(SNN)
     rownames(SNN_jacc) <- rownames(SNN)
     
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
-    
     snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
                                     distances = SNN_jacc)
     
@@ -823,25 +845,27 @@ run_biUMAP <- function(caobj,
     
     eigen = get_eigen(caclust_obj)
     
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
-    
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
                               n_neighbors = k_umap,
                               metric = 'cosine')
     
   }else if (algorithm == 'ca'){
-    eigen = rbind(caobj@V, caobj@U)
+    eigen = rbind(caobj@prin_coords_rows, caobj@prin_coords_cols)
+    # eigen = rbind(caobj@U, caobj@V)
+
+        idx1 = which(rownames(eigen)  %in% names(gene_clusters(caclust_obj)))
+    idx2 = which(rownames(eigen) %in% names(cell_clusters(caclust_obj)))
     
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
+    eigen = eigen[c(idx1,idx2),]
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
                               metric = 'cosine',
                               n_neighbors = k_umap)
     
+  }else{
+    stop('algorithm should be one of leiden, spectral and ca!')
   }
   
   
