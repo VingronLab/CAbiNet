@@ -75,6 +75,7 @@ setClass("caclust",
            cell_clusters = "factor",
            gene_clusters = "factor",
            SNN = "dgCMatrix",
+           eigen = 'matrix',
            parameters = "list"
          ),
          validity = check_caclust
@@ -144,6 +145,14 @@ gene_clusters <- function(object){
 get_snn <- function(object){
   stopifnot(is(object, "caclust"))
   slot(object, "SNN")
+}
+
+#' Get eigenvectors from spectral clustering
+#' @param object caclust object
+#' @export
+get_eigen <- function(object){
+  stopifnot(is(object, "caclust"))
+  slot(object, "eigen")
 }
 
 #' Get parameters for generating clustering
