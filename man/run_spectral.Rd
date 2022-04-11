@@ -4,7 +4,17 @@
 \alias{run_spectral}
 \title{run spectral clustering}
 \usage{
-run_spectral(SNN, use_gap = TRUE, nclust = NULL, python = TRUE)
+run_spectral(
+  SNN,
+  use_gap = TRUE,
+  nclust = NULL,
+  python = TRUE,
+  clust.method = "kmeans",
+  iter.max = 10,
+  num.seeds = 10,
+  return.eig = TRUE,
+  dims = NULL
+)
 }
 \arguments{
 \item{SNN}{The adjacency matrix of graph}

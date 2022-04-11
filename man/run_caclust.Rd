@@ -21,7 +21,11 @@ run_caclust(
   rand_seed = 2358,
   use_gap = TRUE,
   nclust = NULL,
-  python = TRUE
+  python = TRUE,
+  clust.method = "kmeans",
+  iter.max = 10,
+  num.seeds = 10,
+  return.eig = TRUE
 )
 }
 \arguments{

@@ -794,32 +794,48 @@ run_biUMAP <- function(caobj,
     
     k_snn = ncol(SNN)
     SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
-    
+
     for (i in seq_len(nrow(SNN))){
       SNN_idx[i,] <- order(SNN[i,], decreasing = TRUE)
     }
-    
+
     SNN_jacc <- matrix(as.matrix(SNN)[SNN_idx],
                        nrow = nrow(SNN_idx),
                        ncol = ncol(SNN_idx))
-    
-    
+
+
     rownames(SNN_idx) <- rownames(SNN)
     rownames(SNN_jacc) <- rownames(SNN)
-    
+
     custom.config = umap::umap.defaults
     custom.config$random_state = rand_seed
-    
+
     snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
                                     distances = SNN_jacc)
-    
+
     assym <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
     assym <- assym[rownames(assym) %in% rownames(SNN),]
-    
+
     caclust_umap = umap::umap(assym,
                               config = custom.config,
-                              n_neighbors = k_umap, 
+                              n_neighbors = k_umap,
                               knn = snn_umap_graph)
+    
+    umap_coords <- as.data.frame(caclust_umap$layout)
+    
+    
+  }else if (algorithm == "precomp"){
+    
+    SNNdist <- as.matrix(1-get_snn(caclust_obj))
+    
+    reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
+    
+    umap_coords = python_umap(dm = SNNdist,
+                              metric = "precomputed",
+                              n_neighbors = as.integer(k_umap))
+    
+    umap_coords <- as.data.frame(umap_coords)
+    rownames(umap_coords) <- colnames(SNNdist)
   
   }else if (algorithm == 'spectral'){
     
@@ -833,16 +849,25 @@ run_biUMAP <- function(caobj,
                               n_neighbors = k_umap,
                               metric = 'cosine')
     
-  }else if (algorithm == 'ca'){
-    eigen = rbind(caobj@V, caobj@U)
+    umap_coords <- as.data.frame(caclust_umap$layout)
     
+  }else if (algorithm == 'ca'){
+    
+    SNN <- get_snn(caclust_obj)
+    
+    eigen = rbind(caobj@V, caobj@U)
+    # eigen <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
     custom.config = umap::umap.defaults
     custom.config$random_state = rand_seed
+    
+    eigen <- eigen[rownames(eigen) %in% rownames(SNN),]
+    
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
                               metric = 'cosine',
                               n_neighbors = k_umap)
+    umap_coords <- as.data.frame(caclust_umap$layout)
     
   }
   
@@ -851,7 +876,6 @@ run_biUMAP <- function(caobj,
   genec <- gene_clusters(caclust_obj)
   
   
-  umap_coords <- as.data.frame(caclust_umap$layout)
   colnames(umap_coords) <- c("x", "y")
   umap_coords$name <- rownames(umap_coords)
   
@@ -875,4 +899,13 @@ run_biUMAP <- function(caobj,
 
 
 
+
+
+aR_metric <- function(matrix, origin, target){
+  
+  assR <- matrix[,origin] %*% matrix[,target]
+  assR <- drop(assR)
+  return(assR)
+  # assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
+}
 

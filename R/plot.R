@@ -18,7 +18,7 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
                                    "Type: ", type, "\n",
                                    "Name: ", name, "\n",
                                    "Cluster: ", cluster))) +
-      geom_point(alpha = 0.4) +
+      geom_point(alpha = 0.4, size = 1) +
       theme_bw()
   } else if (color_by == "cluster"){
     
@@ -27,7 +27,7 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
                                    "Type: ", type, "\n",
                                    "Name: ", name, "\n",
                                    "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4) +
+      geom_point(alpha = 0.4, size = 1) +
       theme_bw()
   } else {
     stop("color_by has to be either 'type' or 'cluster'.")
