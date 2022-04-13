@@ -783,12 +783,12 @@ run_biUMAP <- function(caobj,
                               caclust_obj,
                               k_umap,
                               rand_seed = 2358,
-                              algorithm = 'leiden'){
+                              algorithm = 'SNNdist'){
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
   
-  if (algorithm == 'leiden'){
+  if (algorithm == 'SNNgraph'){
   
     SNN <- get_snn(caclust_obj)
     
@@ -824,7 +824,7 @@ run_biUMAP <- function(caobj,
     umap_coords <- as.data.frame(caclust_umap$layout)
     
     
-  }else if (algorithm == "precomputed"){
+  }else if (algorithm == "SNNdist"){
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     

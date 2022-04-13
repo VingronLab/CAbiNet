@@ -175,12 +175,13 @@ show.caclust <- function(object){
 
   stopifnot(identical(levels(cell_clusters(object)),
                       levels(gene_clusters(object))))
-  
+  cat("\n")
+  cat(length(levels(gene_clusters(object))), "clusters found.")
   cat("\nClustering results:\n\n")
   df <- data.frame("cluster" = levels(cell_clusters(object)),
-                   "ncells" = summary(cell_clusters(object)),
-                   "ngenes" = summary(gene_clusters(object)))
-  print(df, row.names = FALSE, right = FALSE)
+                   "ncells" = summary(cell_clusters(object), maxsum = Inf),
+                   "ngenes" = summary(gene_clusters(object), maxsum = Inf))
+  print(df, row.names = FALSE, right = FALSE, max = 20)
   
 }
 

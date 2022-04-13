@@ -33,11 +33,61 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
     stop("color_by has to be either 'type' or 'cluster'.")
   }
   
-  
   return(p)
   
 }
 
+
+feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
+  stopifnot(length(feature)<=1)
+  
+  if(color_cells_by == "expression") {
+    isExpr <- FALSE
+    if(!is.null(feature)) lgnd <- feature
+  }else{
+    isExpr <- TRUE
+    lgnd <- color_cells_by
+  }
+  
+  
+  if(!is.null(feature)){
+    
+    stopifnot(isTRUE(feature %in% umap_coords$name))
+    cnts <- SummarizedExperiment::assay(sce, assay)
+    umap_coords$expression <- NA
+    umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
+    
+  }
+  cell_idx <- which(umap_coords$type == "cell")
+  
+  
+
+  
+  ggplot()+
+    geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping=aes_(~x, ~y, text = paste0(
+                                       "Type: ", quote(type), "\n",
+                                       "Name: ", quote(name), "\n",
+                                       "Cluster: ", quote(cluster))),color ="grey", alpha = 0.5) +
+    geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
+                                                    "Type: ", quote(type), "\n",
+                                                    "Name: ", quote(name), "\n",
+                                                    "Cluster: ", quote(cluster)))) +
+    geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+               aes_(~x, ~y),
+               color = "red") +
+    geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+                    aes_(~x, ~y, label= ~name),
+                    color = "red") +
+    viridis::scale_color_viridis(name=lgnd, discrete = isExpr) +
+    theme_bw()
+    
+}
+  
+  
+  
+  
 #' Plot of 2D CA projection of the data.
 #'
 #' @description
