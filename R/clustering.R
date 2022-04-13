@@ -96,12 +96,13 @@ make_knn <- function(dists,
   n.row <- nrow(dists)
   n.col <- ncol(dists)
 
-  if (n.col < k) {
+  if ((n.col-1 < k) |(n.row-1 < k)) {
     warning(
       "k set larger than number of genes Setting k to number of genes - 1.",
       call. = FALSE
     )
-    k <- n.col - 1
+    k = min(n.col-1, n.row -1)
+    # k <- n.col - 1
   }
   knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
   # knd.mat <- knn.mat
@@ -124,7 +125,6 @@ make_knn <- function(dists,
   # convert nn.ranked into a Graph
   j <- as.numeric(t(knn.mat))
   i <- ((1:length(j)) - 1) %/% k + 1
-
   nn.matrix <- Matrix::sparseMatrix(i = i,
                                     j = j,
                                     x = 1,
@@ -577,7 +577,7 @@ run_spectral <- function(SNN,
                          iter.max=10, 
                          num.seeds=10,
                          return.eig = TRUE,
-                         dims = 100) {
+                         dims = 30) {
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   
@@ -594,6 +594,7 @@ run_spectral <- function(SNN,
     
     SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
+  
     
   } else {
     
@@ -614,13 +615,14 @@ run_spectral <- function(SNN,
       
         stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
     
-      }else if (nclust > dims){
-        
-        stop('Number of dims should be larger than number of clusters (nclust)')
+      # }else if (nclust > dims){
+      #   
+      #   stop('Number of dims should be larger than number of clusters (nclust)')
       
       }else{
       
         eig = eigenvectors[,1:nclust] # in an increasing order
+        # eig = eigenvectors
         
     }
     
@@ -628,16 +630,17 @@ run_spectral <- function(SNN,
       
       
     eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
+    nclust = ncol(eig)
     
   }
   
   if (clust.method == 'skmeans'){
     
-    clusters = SKMeans(eig, k = ncol(eig), num.seeds = num.seeds)$cluster
+    clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
   
     }else if (clust.method == 'kmeans'){
       
-    clusters = RcmdrMisc::KMeans(eig, centers = ncol(eig), iter.max=iter.max, num.seeds= num.seeds)$cluster
+    clusters = RcmdrMisc::KMeans(eig, centers = nclust, iter.max=iter.max, num.seeds= num.seeds)$cluster
   
     }else{
     stop('clustering method should be chosen from kmeans and skmeans!')
@@ -762,6 +765,7 @@ run_caclust <- function(caobj,
     
       }
       
+
     
   } else{
     stop("algorithm should choose from 'leiden' and 'spectral'!")
@@ -803,7 +807,8 @@ run_biUMAP <- function(caobj,
                               caclust_obj,
                               k_umap,
                               rand_seed = 2358,
-                              algorithm = 'leiden'){
+                              algorithm = 'leiden',
+                              coords = 1,...){
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
@@ -843,16 +848,38 @@ run_biUMAP <- function(caobj,
   
   }else if (algorithm == 'spectral'){
     
-    eigen = get_eigen(caclust_obj)
+    eigen = get_eigen(caclust_obj) 
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
-                              n_neighbors = k_umap,
-                              metric = 'cosine')
+                              n_neighbors = k_umap)
     
   }else if (algorithm == 'ca'){
-    eigen = rbind(caobj@prin_coords_rows, caobj@prin_coords_cols)
-    # eigen = rbind(caobj@U, caobj@V)
+    # eigen = rbind(caobj@prin_coords_cols, caobj@prin_coords_rows)
+    if (coords == 1){
+      
+      if(sum(!is.null(caobj@prin_coords_rows), !is.null(caobj@std_coords_cols)) != 2){
+        stop("Principal and/or standard coordinates not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@prin_coords_cols, caobj@prin_coords_rows)
+      
+    } else if (coords == 2){
+      if(sum(!is.null(caobj@prin_coords_cols), !is.null(caobj@std_coords_rows)) != 2){
+        stop("Principal and/or standard coordinates not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@std_coords_cols, caobj@std_coords_rows)
+    }else if (coords == 3){
+      if(sum(!is.null(caobj@U), !is.null(caobj@V)) != 2){
+        stop("Singular eigenvectors not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@V, caobj@U)
+    } else {
+      stop("princ_coords must be either 1 for rows or 2 for columns.")
+    }
+    
 
         idx1 = which(rownames(eigen)  %in% names(gene_clusters(caclust_obj)))
     idx2 = which(rownames(eigen) %in% names(cell_clusters(caclust_obj)))

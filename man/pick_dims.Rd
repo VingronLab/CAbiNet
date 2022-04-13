@@ -2,7 +2,7 @@
 % Please edit documentation in R/CA.R
 \name{pick_dims}
 \alias{pick_dims}
-\alias{pick_dims,cacontainer-method}
+\alias{pick_dims,cacomp-method}
 \alias{pick_dims,Seurat-method}
 \alias{pick_dims,SingleCellExperiment-method}
 \title{Compute statistics to help choose the number of dimensions}
@@ -17,7 +17,7 @@ pick_dims(
   ...
 )
 
-\S4method{pick_dims}{cacontainer}(
+\S4method{pick_dims}{cacomp}(
   obj,
   mat = NULL,
   method = "scree_plot",

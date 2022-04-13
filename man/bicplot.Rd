@@ -30,6 +30,13 @@ bicplot(
 )
 }
 \arguments{
+\item{caobj}{An object of class "cacomp" with the relevant standardized and 
+principal coordinates calculated,
+ or alternatively an object of class "Seurat" or "SingleCellExperiment" 
+ with a dim. reduction named "CA" saved.}
+
+\item{caclust}{caclust object containing clustering results.}
+
 \item{xdim}{Integer. The dimension for the x-axis. Default 1.}
 
 \item{ydim}{Integer. The dimension for the y-axis. Default 2.}
@@ -47,11 +54,6 @@ Default NULL (no columns).}
 Default "plotly".}
 
 \item{...}{Further arguments.}
-
-\item{obj}{An object of class "cacomp" with the relevant standardized and 
-principal coordinates calculated,
- or alternatively an object of class "Seurat" or "SingleCellExperiment" 
- with a dim. reduction named "CA" saved.}
 
 \item{princ_coords}{Integer. If 1 then principal coordinates are used for 
 the rows,
@@ -73,16 +75,4 @@ are chosen. For the other the standard coordinates are plotted
 (assymetric biplot).
 Labels for rows and columns should be stored in the row and column names 
 respectively.
-}
-\examples{
-# Simulate counts
-cnts <- mapply(function(x){rpois(n = 500, lambda = x)},
-               x = sample(1:100, 50, replace = TRUE))
-rownames(cnts) <- paste0("gene_", 1:nrow(cnts))
-colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
-
-# Run correspondence analysis
-ca <- cacomp(obj = cnts, princ_coords = 3)
-
-ca_biplot(ca)
 }

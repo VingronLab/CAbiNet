@@ -1428,7 +1428,7 @@ setMethod(f = "pick_dims",
   }
 
   if ("CA" %in% SingleCellExperiment::reducedDimNames(obj)){
-    caobj <- as.cacomp(obj, assay = assay)
+    caobj <- APL::as.cacomp(obj, assay = assay)
   } else {
     stop("No 'CA' dim. reduction object found. ",
          "Please run cacontainer(sce, top, coords = FALSE, ",

@@ -19,7 +19,11 @@ Imports:
   magrittr,
   methods,
   RcppEigen,
-  biclust
+  biclust,
+  reticulate,
+  ggrepel,
+  plotly,
+  skmeans,
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
 Suggests: 

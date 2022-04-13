@@ -1,12 +1,8 @@
-predir = './testdata/'
-data <- readRDS(file.path(predir, "mini_lympho_example.rds"))
 
-
-dists = as.matrix(dist(data))
-saveRDS(dists, file.path(predir, 'handmade_Euclidean_dist.rds'))
+data <- readRDS("./testdata/mini_lympho_example.rds")
+eudist <- readRDS("./testdata/testdata_Euclidean_dist.rds")
 
 test_that("Euclidean distance calculation by function 'calc_euclidean'. ", {
-  eudist = readRDS(file.path(predir, 'handmade_Euclidean_dist.rds'))
   test = calc_euclidean(as.matrix(data))
   expect_equal(eudist, test)  
   })

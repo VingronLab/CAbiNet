@@ -208,11 +208,12 @@ convert_to_biclust <- function(caclust){
   gc <- gene_clusters(caclust)
   params <- get_params(caclust)
   
-  ctypes = unique(cc)
-  gtypes = unique(gc)
-  bitypes = intersect(ctypes, gtypes)
+  ctypes = sort(unique(cc))
+  gtypes = sort(unique(gc))
+  bitypes = union(ctypes, gtypes)
   
   Number = length(bitypes)
+
   if (Number == 0){
     NumberxCol = matrix(0)
     RowxNumber = matrix(0)
@@ -220,11 +221,38 @@ convert_to_biclust <- function(caclust){
     NumberxCol = do.call(rbind, lapply(bitypes, function(x){cc == x}))
     RowxNumber = do.call(cbind, lapply(bitypes, function(x){gc == x}))
   }
+  
+  rownames(RowxNumber) <- names(gc)
+  colnames(RowxNumber) <- paste0("BC", bitypes)
+
+  rownames(NumberxCol) <- paste0("BC", bitypes)
+  colnames(NumberxCol) <- names(cc)
+
   bic <- new("Biclust", "Parameters" = params,
                        "RowxNumber" = RowxNumber,
                        "NumberxCol" = NumberxCol,
                        "Number" = Number,
                        "info" = list("Output of CAclust package"))
+  
+  return(bic)
+}
+
+#' Remove clusters only consisting of cells/genes
+#' 
+#' @description 
+#' Takes an object of class biclust and removes all clusters that only consist
+#' of cells or genes.
+#' 
+#' @param bic object of class biclust
+#' 
+#' @return 
+#' biclust object with monoclusters removed.
+#' @export
+rm_monoclusters <- function(bic){
+  keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
+  bic@RowxNumber <- bic@RowxNumber[,keep]
+  bic@NumberxCol <- bic@NumberxCol[keep, ]
+  bic@Number <- sum(keep)
   
   return(bic)
 }

@@ -2,9 +2,7 @@
 # data <- readRDS("./tests/testthat/testdata/mini_lympho_example.rds")
 data_dir <- file.path("./testdata")
 data <- readRDS("./testdata/mini_lympho_example.rds")
-# data <-read.csv('tests/testthat/testdata/Mat8x10.csv')
-# rownames(data) = paste0('gene', 1:nrow(data))
-# data = as.matrix(data)
+
 ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3,dims = 4, ntop = nrow(df)))
 ca_dists <- calc_distances(caobj = ca)
 
@@ -17,7 +15,7 @@ test_that("SNN graph with no loops and transposed gcKNN, outgoing edges only", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_outgoing_noLoops_transpose_gcKNN.rds"
+    "SNN_igraph_outgoing_noLoops_trans_gcKNN.rds"
   ))
   
   
@@ -94,7 +92,7 @@ test_that("SNN graph with loops and transposed gcKNN, outgoing edges only", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_outgoing_withLoops_transpose_gcKNN.rds"
+    "SNN_igraph_outgoing_withLoops_trans_gcKNN.rds"
   ))
 
   
@@ -172,7 +170,7 @@ test_that("SNN graph with loops and gcKNN, all edges", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_alledges_withLoops_gcKNN.rds"
+    "SNN_igraph_all_withLoops_gcKNN.rds"
   ))
   
   SNN <- create_SNN(caobj = ca, 
@@ -228,7 +226,7 @@ test_that("SNN graph no loops and transposed gcKNN, all edges", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_alledges_noLoops_transpose_gcKNN.rds"
+    "SNN_igraph_all_noLoops_trans_gcKNN.rds"
   ))
   
   SNN <- create_SNN(caobj = ca, 
@@ -256,7 +254,7 @@ test_that("SNN graph with loops and transposed gcKNN, all edges", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_alledges_withLoops_transpose_gcKNN.rds"
+    "SNN_igraph_all_withLoops_trans_gcKNN.rds"
   ))
   
   SNN <- create_SNN(caobj = ca, 
@@ -284,7 +282,7 @@ test_that("SNN graph with no loops and transposed gcKNN, incoming edges only", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_incoming_noLoops_transpose_gcKNN.rds"
+    "SNN_igraph_incoming_noLoops_trans_gcKNN.rds"
   ))
   
   
@@ -341,7 +339,7 @@ test_that("SNN graph with loops and transposed gcKNN, incoming edges only", {
   
   SNN_igraph <- readRDS(file.path(
     data_dir,
-    "SNN_igraph_incoming_withLoops_transpose_gcKNN.rds"
+    "SNN_igraph_incoming_withLoops_trans_gcKNN.rds"
   ))
   
   
