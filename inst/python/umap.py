@@ -1,4 +1,4 @@
-import umap
+import umap.umap_ as umap
 
 def python_umap(dm, n_neighbors, metric):
                   

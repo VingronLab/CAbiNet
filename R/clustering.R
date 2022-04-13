@@ -824,7 +824,7 @@ run_biUMAP <- function(caobj,
     umap_coords <- as.data.frame(caclust_umap$layout)
     
     
-  }else if (algorithm == "precomp"){
+  }else if (algorithm == "precomputed"){
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     
@@ -841,6 +841,7 @@ run_biUMAP <- function(caobj,
     
     eigen = get_eigen(caclust_obj)
     
+    if(is.na(eigen)) stop("Spectral clustering not run.")
     custom.config = umap::umap.defaults
     custom.config$random_state = rand_seed
     
