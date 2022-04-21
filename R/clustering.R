@@ -787,6 +787,7 @@ run_biUMAP <- function(caobj,
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
+  stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca"))
   
   if (algorithm == 'SNNgraph'){
   

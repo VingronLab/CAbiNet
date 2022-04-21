@@ -5,39 +5,57 @@
 #' @param umap_coords data frame as outputted by `run_biUMAP_*`
 #' @param color_by Either "type" or "cluster". "type" colors by the type 
 #' (cell or gene) while "cluster" colors by the assigned cluster.
+#' @param metadata optional. data.frame that should have either gene or cell names
+#' (or both) in as rownames or a column named `name` and a column with the same name as 
+#' `color_by`.
 #' 
 #' @return 
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biUMAP <- function(umap_coords, color_by = "type"){
+plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL){
   
-  if(color_by == "type"){
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
+    if(!is.null(metadata)){
+      
+      if(!is(metadata,"data.frame")){
+        metadata <- as.data.frame(metadata)
+      }
+      stopifnot(color_by %in% colnames(metadata))
+      
+      if(!"name" %in% colnames(metadata)){
+        metadata$name <- rownames(metadata)
+      }
+        
+      sel <- metadata$name %in% umap_coords$name
+      metadata <- metadata[sel,]
+      
+      sel <- umap_coords$name %in% metadata$name
+      matched_names <- match(umap_coords$name[sel], metadata$name)
+      umap_coords[,color_by] <- "not_in_metadata"
+      umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+      
+    }
+  
+    p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
                                  text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster))) +
+                                   "Type: ", quote(type), "\n",
+                                   "Name: ", quote(name), "\n",
+                                   "Cluster: ", quote(cluster)))) +
       geom_point(alpha = 0.4, size = 1) +
       theme_bw()
-  } else if (color_by == "cluster"){
-    
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = cluster,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4, size = 1) +
-      theme_bw()
-  } else {
-    stop("color_by has to be either 'type' or 'cluster'.")
-  }
   
   return(p)
   
 }
 
-
+#' plot biUMAP with gene expression
+#' 
+#' @param umap_coords
+#' @param sce
+#' @param feature
+#' @param color_cells_by
+#' @param assay
+#' 
 feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
   stopifnot(length(feature)<=1)
   
@@ -49,6 +67,7 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     lgnd <- color_cells_by
   }
   
+  cell_idx <- which(umap_coords$type == "cell")
   
   if(!is.null(feature)){
     
@@ -58,10 +77,7 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
     
   }
-  cell_idx <- which(umap_coords$type == "cell")
   
-  
-
   
   ggplot()+
     geom_point(umap_coords[umap_coords$type == "gene",],
@@ -86,7 +102,9 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
 }
   
   
-  
+mix <- function(df){
+  df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
+}
   
 #' Plot of 2D CA projection of the data.
 #'
