@@ -103,6 +103,7 @@ setMethod(f = "bicplot",
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "plotly",
+                   rm.show = TRUE,
                    ...){
             
             if (!is(caobj,"cacomp")){
@@ -114,8 +115,8 @@ setMethod(f = "bicplot",
             gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
             cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
             
-            cells <- data.frame(clusters = rep(NA, ncells)) 
-            genes <- data.frame(clusters = rep(NA, ngenes))
+            cells <- data.frame(clusters = rep('trimmed', ncells)) 
+            genes <- data.frame(clusters = rep('trimmed', ngenes))
             
             cells[cell.idx,] <- as.vector(cell_clusters(caclust))
             genes[gene.idx,] <- as.vector(gene_clusters(caclust))
@@ -148,6 +149,14 @@ setMethod(f = "bicplot",
             
             rows <- as.data.frame(rows)
             cols <- as.data.frame(cols)
+            
+            if (isFALSE(rm.show)){
+              rows <- rows[rows$cluster != 'trimmed',]
+              cols <- cols[cols$cluster != 'trimmed',]
+            }
+            
+            # rows <- rows[rownames(rows) %in% names(genes),]
+            # cols <- cols[rownames(cols) %in% names(cells),]
             if (type == "ggplot"){
               
               # rows <- as.data.frame(rows)
@@ -168,9 +177,9 @@ setMethod(f = "bicplot",
                                     ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy),
                                                   colour= rows$clusters),
                                     # colour = "#0066FF",
-                                    alpha = 0.7, 
+					alpha = 1, 
                                     shape = 1) +
-                ggplot2::theme_bw()
+                ggplot2::theme_bw() #+ ggsci::scale_color_npg()
               
               if (!is.null(row_labels)){
                 p <- p +

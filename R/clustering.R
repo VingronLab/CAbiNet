@@ -389,7 +389,6 @@ create_SNN <- function(caobj,
     adj <- as(adj, "dgCMatrix")  
   }
   
-  
   snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
   
   ## to coincide with output of "igraph"
@@ -489,7 +488,7 @@ eigengap = function(e, v){
   n = length(e)
   gaps = abs(e[1:(n-1)] - e[2:n])
   idx = which(gaps == max(gaps))[1]
-  cat('eigengap idx',idx,'\n')
+  # cat('eigengap idx',idx,'\n')
   if ( idx <2){
     selected_eigen = v[, 1:2]
   }else{
