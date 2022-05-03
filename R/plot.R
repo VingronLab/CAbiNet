@@ -35,12 +35,14 @@ plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL){
       umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
       
     }
-  
+    
+    interact <- paste0(
+      "Type: ", umap_coords$type, "\n",
+      "Name: ", umap_coords$name, "\n",
+      "Cluster: ", umap_coords$cluster)
+    
     p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
-                                 text = paste0(
-                                   "Type: ", quote(type), "\n",
-                                   "Name: ", quote(name), "\n",
-                                   "Cluster: ", quote(cluster)))) +
+                                 text = quote(interact))) +
       geom_point(alpha = 0.4, size = 1) +
       theme_bw()
   
