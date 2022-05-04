@@ -4,7 +4,7 @@
 \alias{run_biUMAP}
 \title{Plots UMAP depicting both cells and genes.}
 \usage{
-run_biUMAP(caobj, caclust_obj, k_umap, rand_seed = 2358, algorithm = "leiden")
+run_biUMAP(caobj, caclust_obj, k_umap, rand_seed = 2358, algorithm = "SNNdist")
 }
 \arguments{
 \item{caobj}{A cacomp object with principal and standard coordinates 

@@ -8,33 +8,167 @@
 #' @param metadata optional. data.frame that should have either gene or cell names
 #' (or both) in as rownames or a column named `name` and a column with the same name as 
 #' `color_by`.
-#' 
+#' @param type Either "scatter", "contour" or "hex".
 #' @return 
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL){
+plot_biUMAP <- function(umap_coords,
+                        color_by = "type",
+                        metadata=NULL,
+                        type = "scatter",
+                        point_size = 1,
+                        hex_n = 40,
+                        contour_n = 0.02,
+                        color_genes = FALSE){
   
-    if(!is.null(metadata)){
-      
-      if(!is(metadata,"data.frame")){
-        metadata <- as.data.frame(metadata)
-      }
-      stopifnot(color_by %in% colnames(metadata))
-      
-      if(!"name" %in% colnames(metadata)){
-        metadata$name <- rownames(metadata)
-      }
-        
-      sel <- metadata$name %in% umap_coords$name
-      metadata <- metadata[sel,]
-      
-      sel <- umap_coords$name %in% metadata$name
-      matched_names <- match(umap_coords$name[sel], metadata$name)
-      umap_coords[,color_by] <- "not_in_metadata"
-      umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
-      
+  if(!is.null(metadata)){
+    
+    if(!is(metadata,"data.frame")){
+      metadata <- as.data.frame(metadata)
     }
+    stopifnot(color_by %in% colnames(metadata))
+    
+    if(!"name" %in% colnames(metadata)){
+      metadata$name <- rownames(metadata)
+    }
+    
+    sel <- metadata$name %in% umap_coords$name
+    metadata <- metadata[sel,]
+    
+    sel <- umap_coords$name %in% metadata$name
+    matched_names <- match(umap_coords$name[sel], metadata$name)
+    umap_coords[,color_by] <- "not_in_metadata"
+    umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+    
+  }
+  
+  cats <- length(unique(umap_coords[,color_by]))
+  
+  if (cats <= 9){
+    
+    colors <- RColorBrewer::brewer.pal(cats, "Set1")
+    names(colors) <- sort(unique(umap_coords[,color_by]))
+    
+  } else if (cats <= 12) {
+    
+    colors <- RColorBrewer::brewer.pal(cats, "Set3")
+    names(colors) <- sort(unique(umap_coords[,color_by]))
+    
+    
+  } else {
+    colors <- Polychrome::createPalette(N = cats,
+                                        seedcolors = c("#00ffff", "#ff00ff", "#ffff00"), 
+                                        range = c(10, 60))
+    names(colors) <- sort(unique(umap_coords[,color_by]))
+  }
+  
+  
+  if (type == "contour" ){
+    
+    
+    umap_cells <- dplyr::filter(umap_coords, type == "cell")
+    umap_genes <- dplyr::filter(umap_coords, type == "gene")    
+    
+    xrange <- max(umap_cells$x)-min(umap_cells$x)
+    yrange <- max(umap_cells$y)-min(umap_cells$y)
+    
+    if (isTRUE(color_genes)){
+      color_by_genes <- color_by
+      gene_colors <- colors
+    } else {
+      color_by_genes <- "type"
+      
+      if (is(color_genes, "character")){
+        gene_colors <- c("gene" = color_genes)
+      } else {
+        gene_colors <- c("gene" = "#7393B3")
+        
+      }
+    }
+    
+    interact <- paste0(
+      "Type: ", umap_genes$type, "\n",
+      "Name: ", umap_genes$name, "\n",
+      "Cluster: ", umap_genes$cluster
+    )
+    p <- ggplot() +
+      geom_density_2d(data = umap_cells,
+                      mapping = aes_(x = ~x,
+                                     y = ~y,
+                                     colour = as.name(color_by)),
+                      contour_var = "ndensity",
+                      breaks = seq(0, 1.0, length.out = contour_n),
+      ) +
+      geom_point(data = umap_genes,
+                 mapping = aes_(x = ~x,
+                                y = ~y,
+                                fill = as.name(color_by_genes),
+                                text = quote(interact)
+                 ),
+                 color = "black",
+                 size = point_size,
+                 shape = 21,
+                 # stroke = 0.25,
+                 alpha = 1 ) +
+      scale_fill_manual(values = gene_colors) +
+      scale_color_manual(values = colors) +
+      theme_bw()
+    
+  } else if (type == "hex"){
+    
+    umap_cells <- dplyr::filter(umap_coords, type == "cell")
+    umap_genes <- dplyr::filter(umap_coords, type == "gene")
+    
+    xrange <- max(umap_cells$x)-min(umap_cells$x)
+    yrange <- max(umap_cells$y)-min(umap_cells$y)
+    
+    bin_size <- c(xrange/hex_n, yrange/hex_n)
+    
+    if (isTRUE(color_genes)){
+      color_by_genes <- color_by
+    } else {
+      color_by_genes <- "type"
+      
+      if (is(color_genes, "character")){
+        colors<- c(colors, "gene" = color_genes)
+      } else {
+        colors<- c(colors, "gene" = "#7393B3")
+        
+      }
+    }
+    
+    interact <- paste0(
+      "Type: ", umap_genes$type, "\n",
+      "Name: ", umap_genes$name, "\n",
+      "Cluster: ", umap_genes$cluster
+    )
+    p <- ggplot() +
+      geom_hex(data = umap_cells,
+               mapping = aes_(x = ~x,
+                              y = ~y,
+                              fill = as.name(color_by),
+                              alpha = quote(..count..)),
+               # bins = bin_n,
+               binwidth = bin_size,
+               alpha = 0.7,
+               color = "black") +
+      geom_point(data = umap_genes,
+                 mapping = aes_(x = ~x,
+                                y = ~y,
+                                fill = as.name(color_by_genes),
+                                text = quote(interact)
+                 ),
+                 color = "black",
+                 shape = 21,
+                 size = point_size,
+                 # stroke = 0.25,
+                 alpha = 1 ) +
+      scale_fill_manual(values = colors) +
+      theme_bw()
+    
+    
+  } else if (type == "scatter"){
     
     interact <- paste0(
       "Type: ", umap_coords$type, "\n",
@@ -42,9 +176,13 @@ plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL){
       "Cluster: ", umap_coords$cluster)
     
     p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
-                                 text = quote(interact))) +
-      geom_point(alpha = 0.4, size = 1) +
+                                  text = quote(interact))) +
+      geom_point(alpha = 0.7, size = point_size) +
+      scale_color_manual(values = colors) +
       theme_bw()
+  }
+  
+  
   
   return(p)
   
@@ -102,8 +240,10 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     theme_bw()
     
 }
-  
-  
+
+#' Shuffle rows of a data frame for better plotting.
+#' @param df data.frame
+#' @export
 mix <- function(df){
   df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
 }

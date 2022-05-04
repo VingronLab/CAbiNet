@@ -4,13 +4,13 @@
 \alias{calc_assR}
 \title{Calculate Association Ratio}
 \usage{
-calc_assR(caobj, direction = "cells")
+calc_assR(caobj, direction = "cells-genes")
 }
 \arguments{
 \item{caobj}{A cacomp object with principal and standard coordinates calculated.}
 
-\item{direction}{Either "cells" or "genes". If "cells" the association ratio
-of each gene for each cell is calculated. If "genes" the assoc. ratio of each
+\item{direction}{Either "cells" or "genes". If "cells-genes" the association ratio
+of each gene for each cell is calculated. If "genes-cells" the assoc. ratio of each
 cell for each gene is calculated.}
 }
 \value{
