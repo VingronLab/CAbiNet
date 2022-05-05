@@ -1,4 +1,22 @@
-
+mix_rgb <- function(df, colors, cell, color_by){
+  rgbcols <- col2rgb(colors)
+  
+  sel <- which(df$hexbin == cell)
+  n_clust <- df[sel,color_by]
+  # n_clust[15:30] <- 1
+  n_clust <- table(as.character(n_clust))
+  prop <- as.numeric(n_clust)
+  names(prop) <- names(n_clust)
+  prop <- round(prop/sum(prop),2)
+  
+  rgb_new <- sweep(rgbcols[,names(prop), drop=FALSE], MARGIN =2, FUN = "*", prop)  
+  rgb_new <- rowSums(rgb_new)
+  rgb_new <- rgb(red = rgb_new["red"], 
+                 green = rgb_new["green"],
+                 blue = rgb_new["blue"], 
+                 maxColorValue = 256)
+  return(rgb_new)
+}
 
 #' Plot biUMAP
 #' 
@@ -15,11 +33,15 @@
 #' @export
 plot_biUMAP <- function(umap_coords,
                         color_by = "type",
-                        metadata=NULL,
+                        metadata = NULL,
                         type = "scatter",
                         point_size = 1,
                         hex_n = 40,
-                        contour_n = 0.02,
+                        min_bin = 2,
+                        contour_n = 5,
+                        cell_alpha = 0.5,
+                        gene_alpha = 1,
+                        show_density = FALSE,
                         color_genes = FALSE){
   
   if(!is.null(metadata)){
@@ -47,7 +69,8 @@ plot_biUMAP <- function(umap_coords,
   
   if (cats <= 9){
     
-    colors <- RColorBrewer::brewer.pal(cats, "Set1")
+    colors <- suppressWarnings(RColorBrewer::brewer.pal(cats, "Set1"))
+    colors <- colors[seq_len(cats)]
     names(colors) <- sort(unique(umap_coords[,color_by]))
     
   } else if (cats <= 12) {
@@ -63,12 +86,21 @@ plot_biUMAP <- function(umap_coords,
     names(colors) <- sort(unique(umap_coords[,color_by]))
   }
   
+  umap_cells <- dplyr::filter(umap_coords, type == "cell")
+  umap_genes <- dplyr::filter(umap_coords, type == "gene")   
+  
+  interact_cells <- paste0(
+    "Type: ", umap_cells$type, "\n",
+    "Name: ", umap_cells$name, "\n",
+    "Cluster: ", umap_cells$cluster)
+  
+  
+  interact_genes <- paste0(
+    "Type: ", umap_genes$type, "\n",
+    "Name: ", umap_genes$name, "\n",
+    "Cluster: ", umap_genes$cluster)
   
   if (type == "contour" ){
-    
-    
-    umap_cells <- dplyr::filter(umap_coords, type == "cell")
-    umap_genes <- dplyr::filter(umap_coords, type == "gene")    
     
     xrange <- max(umap_cells$x)-min(umap_cells$x)
     yrange <- max(umap_cells$y)-min(umap_cells$y)
@@ -87,11 +119,6 @@ plot_biUMAP <- function(umap_coords,
       }
     }
     
-    interact <- paste0(
-      "Type: ", umap_genes$type, "\n",
-      "Name: ", umap_genes$name, "\n",
-      "Cluster: ", umap_genes$cluster
-    )
     p <- ggplot() +
       geom_density_2d(data = umap_cells,
                       mapping = aes_(x = ~x,
@@ -104,21 +131,18 @@ plot_biUMAP <- function(umap_coords,
                  mapping = aes_(x = ~x,
                                 y = ~y,
                                 fill = as.name(color_by_genes),
-                                text = quote(interact)
+                                text = quote(interact_genes)
                  ),
                  color = "black",
                  size = point_size,
                  shape = 21,
                  # stroke = 0.25,
-                 alpha = 1 ) +
+                 alpha = gene_alpha ) +
       scale_fill_manual(values = gene_colors) +
       scale_color_manual(values = colors) +
       theme_bw()
     
   } else if (type == "hex"){
-    
-    umap_cells <- dplyr::filter(umap_coords, type == "cell")
-    umap_genes <- dplyr::filter(umap_coords, type == "gene")
     
     xrange <- max(umap_cells$x)-min(umap_cells$x)
     yrange <- max(umap_cells$y)-min(umap_cells$y)
@@ -138,48 +162,124 @@ plot_biUMAP <- function(umap_coords,
       }
     }
     
-    interact <- paste0(
-      "Type: ", umap_genes$type, "\n",
-      "Name: ", umap_genes$name, "\n",
-      "Cluster: ", umap_genes$cluster
-    )
-    p <- ggplot() +
-      geom_hex(data = umap_cells,
-               mapping = aes_(x = ~x,
-                              y = ~y,
-                              fill = as.name(color_by),
-                              alpha = quote(..count..)),
-               # bins = bin_n,
-               binwidth = bin_size,
-               alpha = 0.7,
-               color = "black") +
-      geom_point(data = umap_genes,
-                 mapping = aes_(x = ~x,
-                                y = ~y,
-                                fill = as.name(color_by_genes),
-                                text = quote(interact)
-                 ),
-                 color = "black",
-                 shape = 21,
-                 size = point_size,
-                 # stroke = 0.25,
-                 alpha = 1 ) +
+    hexb <- hexbin::hexbin(umap_cells$x,
+                           umap_cells$y,
+                           xbins=hex_n,
+                           xbnds=c(min(umap_cells$x),
+                                   max(umap_cells$x)),
+                           ybnds=c(min(umap_cells$y),
+                                   max(umap_cells$y)),
+                           IDs = TRUE)
+    
+    gghex <- data.frame(hexbin::hcell2xy(hexb),
+                        count = hexb@count,
+                        cell = hexb@cell,
+                        xo = hexb@xcm,
+                        yo = hexb@ycm,
+                        hexclust = NA)
+    
+    for (i in seq_along(gghex$cell)){
+      
+      cell_id <- gghex$cell[i]
+      hcnt <- gghex$count[i]
+      
+      orig_id <- which(hexb@cID == cell_id)
+      umap_cells[orig_id,"hexbin"] <- cell_id
+      
+      gghex$hexclust[i] <- mclust::majorityVote(umap_cells[orig_id, color_by])$majority
+      
+    }
+    
+    
+    hex_colors <- vector(mode = "character", length = length(gghex$cell))
+    
+    for (n in seq_along(gghex$cell)){
+      hex_colors[n] <- mix_rgb(umap_cells, colors = colors, cell = gghex$cell[n], color_by = color_by)
+      
+    }
+    
+    gghex$colors <- hex_colors
+    
+    if(min_bin > 0){
+      gghex <- gghex[gghex$count >= min_bin,]
+    }
+    
+    # names(hex_colors) <- as.character(gghex$cell)
+    
+    p <- ggplot()
+    
+    if (isTRUE(show_density)){
+      p <- p + geom_hex(data = gghex,
+                        mapping = aes(x = x,
+                                      y = y,
+                                      alpha = count),
+                        fill = gghex$colors,
+                        stat = "identity") + 
+        scale_alpha(range = c(0.2, 1))
+    } else {
+      
+      # gghex$std_count <- (gghex$count-min(gghex$count))/(max(gghex$count)-min(gghex$count))
+      p <- p + geom_hex(data = gghex,
+                        mapping = aes(x = x,
+                                      y = y),
+                        fill = gghex$colors,
+                        alpha = cell_alpha,
+                        stat = "identity")
+      
+    }
+    
+    p <- p + geom_point(data = umap_genes,
+                        mapping = aes_(x = ~x,
+                                       y = ~y,
+                                       fill = as.name(color_by_genes),
+                                       text = quote(interact_genes)
+                        ),
+                        color = "black",
+                        shape = 21,
+                        size = point_size,
+                        alpha = gene_alpha ) +
       scale_fill_manual(values = colors) +
       theme_bw()
     
     
   } else if (type == "scatter"){
     
-    interact <- paste0(
-      "Type: ", umap_coords$type, "\n",
-      "Name: ", umap_coords$name, "\n",
-      "Cluster: ", umap_coords$cluster)
     
-    p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
-                                  text = quote(interact))) +
-      geom_point(alpha = 0.7, size = point_size) +
+    
+    if (isTRUE(color_genes)){
+      
+      color_by_genes <- color_by
+      
+    } else {
+      
+      color_by_genes <- "type"
+      
+      if (is(color_genes, "character")){
+        colors<- c(colors, "gene" = color_genes)
+      } else {
+        colors<- c(colors, "gene" = "#7393B3")
+        
+      }
+    }
+    
+    p <- ggplot() +
+      geom_point(data = umap_cells,
+                 mapping = aes_(x = ~x,
+                                y = ~y,
+                                color = as.name(color_by),
+                                text = quote(interact_cells)),
+                 alpha = cell_alpha,
+                 size = point_size/3) +
+      geom_point(data = umap_genes,
+                 mapping = aes_(x = ~x,
+                                y = ~y,
+                                color = as.name(color_by_genes),
+                                text = quote(interact_genes)),
+                 alpha = gene_alpha, 
+                 size = point_size) +
       scale_color_manual(values = colors) +
       theme_bw()
+    
   }
   
   
@@ -187,6 +287,7 @@ plot_biUMAP <- function(umap_coords,
   return(p)
   
 }
+
 
 #' plot biUMAP with gene expression
 #' 
