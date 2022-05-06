@@ -105,8 +105,10 @@ plot_biUMAP <- function(umap_coords,
     yrange <- max(umap_cells$y)-min(umap_cells$y)
     
     if (isTRUE(color_genes)){
+      
       color_by_genes <- color_by
       gene_colors <- colors
+      
     } else {
       color_by_genes <- "type"
       
@@ -121,11 +123,7 @@ plot_biUMAP <- function(umap_coords,
         gene_colors <- c("gene" = color_genes)
       } else {
         gene_colors <- c("gene" = "#7393B3")
-        
       }
-      
-      gene_colors <- colors["gene"]
-      
     }
     
     p <- ggplot() +
@@ -263,8 +261,8 @@ plot_biUMAP <- function(umap_coords,
     
     
     if (isTRUE(color_genes)){
-      
       color_by_genes <- color_by
+      gene_colors <- colors
       
     } else {
       
@@ -278,14 +276,11 @@ plot_biUMAP <- function(umap_coords,
       }
       
       if (is(color_genes, "character")){
-        colors<- c(colors, "gene" = color_genes)
+        gene_colors <- c("gene" = color_genes)
       } else {
-        colors<- c(colors, "gene" = "#7393B3")
+        gene_colors <- c("gene" = "#7393B3")
         
       }
-      
-      gene_colors <- colors["gene"]
-      
     }
     
     p <- ggplot() +
