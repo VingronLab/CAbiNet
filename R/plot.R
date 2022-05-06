@@ -3,18 +3,17 @@ mix_rgb <- function(df, colors, cell, color_by){
   
   sel <- which(df$hexbin == cell)
   n_clust <- df[sel,color_by]
-  # n_clust[15:30] <- 1
   n_clust <- table(as.character(n_clust))
   prop <- as.numeric(n_clust)
   names(prop) <- names(n_clust)
-  prop <- round(prop/sum(prop),2)
+  prop <- prop/sum(prop)
   
   rgb_new <- sweep(rgbcols[,names(prop), drop=FALSE], MARGIN =2, FUN = "*", prop)  
   rgb_new <- rowSums(rgb_new)
   rgb_new <- rgb(red = rgb_new["red"], 
                  green = rgb_new["green"],
                  blue = rgb_new["blue"], 
-                 maxColorValue = 256)
+                 maxColorValue = 255)
   return(rgb_new)
 }
 
@@ -111,12 +110,22 @@ plot_biUMAP <- function(umap_coords,
     } else {
       color_by_genes <- "type"
       
+      if("not_in_metadata" %in% names(colors)){
+        idx <- which(umap_coords[,color_by] == "not_in_metadata")
+        if(all(umap_coords[idx, "type"] == "gene")){
+          colors <- colors[-which(names(colors) == "not_in_metadata")]
+        }
+      }
+      
       if (is(color_genes, "character")){
         gene_colors <- c("gene" = color_genes)
       } else {
         gene_colors <- c("gene" = "#7393B3")
         
       }
+      
+      gene_colors <- colors["gene"]
+      
     }
     
     p <- ggplot() +
@@ -153,6 +162,13 @@ plot_biUMAP <- function(umap_coords,
       color_by_genes <- color_by
     } else {
       color_by_genes <- "type"
+      
+      if("not_in_metadata" %in% names(colors)){
+        idx <- which(umap_coords[,color_by] == "not_in_metadata")
+        if(all(umap_coords[idx, "type"] == "gene")){
+          colors <- colors[-which(names(colors) == "not_in_metadata")]
+        }
+      }
       
       if (is(color_genes, "character")){
         colors<- c(colors, "gene" = color_genes)
@@ -254,12 +270,22 @@ plot_biUMAP <- function(umap_coords,
       
       color_by_genes <- "type"
       
+      if("not_in_metadata" %in% names(colors)){
+        idx <- which(umap_coords[,color_by] == "not_in_metadata")
+        if(all(umap_coords[idx, "type"] == "gene")){
+          colors <- colors[-which(names(colors) == "not_in_metadata")]
+        }
+      }
+      
       if (is(color_genes, "character")){
         colors<- c(colors, "gene" = color_genes)
       } else {
         colors<- c(colors, "gene" = "#7393B3")
         
       }
+      
+      gene_colors <- colors["gene"]
+      
     }
     
     p <- ggplot() +
@@ -273,11 +299,14 @@ plot_biUMAP <- function(umap_coords,
       geom_point(data = umap_genes,
                  mapping = aes_(x = ~x,
                                 y = ~y,
-                                color = as.name(color_by_genes),
+                                fill = as.name(color_by_genes),
                                 text = quote(interact_genes)),
+                 color = "black",
+                 shape = 21,
                  alpha = gene_alpha, 
                  size = point_size) +
       scale_color_manual(values = colors) +
+      scale_fill_manual(values = gene_colors) +
       theme_bw()
     
   }
