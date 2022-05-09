@@ -175,12 +175,13 @@ show.caclust <- function(object){
 
   stopifnot(identical(levels(cell_clusters(object)),
                       levels(gene_clusters(object))))
-  
+  cat("\n")
+  cat(length(levels(gene_clusters(object))), "clusters found.")
   cat("\nClustering results:\n\n")
   df <- data.frame("cluster" = levels(cell_clusters(object)),
-                   "ncells" = summary(cell_clusters(object)),
-                   "ngenes" = summary(gene_clusters(object)))
-  print(df, row.names = FALSE, right = FALSE)
+                   "ncells" = summary(cell_clusters(object), maxsum = Inf),
+                   "ngenes" = summary(gene_clusters(object), maxsum = Inf))
+  print(df, row.names = FALSE, right = FALSE, max = 20)
   
 }
 
@@ -237,23 +238,74 @@ convert_to_biclust <- function(caclust){
   return(bic)
 }
 
+
+
 #' Remove clusters only consisting of cells/genes
 #' 
 #' @description 
 #' Takes an object of class biclust and removes all clusters that only consist
 #' of cells or genes.
 #' 
-#' @param bic object of class biclust
+#' @param bic biclustering results from caclust or biclust
 #' 
 #' @return 
-#' biclust object with monoclusters removed.
+#' caclust/biclust object with monoclusters removed.
+#' 
 #' @export
-rm_monoclusters <- function(bic){
-  keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
-  bic@RowxNumber <- bic@RowxNumber[,keep]
-  bic@NumberxCol <- bic@NumberxCol[keep, ]
-  bic@Number <- sum(keep)
-  
-  return(bic)
-}
+setGeneric("rm_monoclusters", function(bic) {
+  standardGeneric("rm_monoclusters")
+})
+
+
+#' @rdname rm_monoclusters
+#' @export
+setMethod(f = "rm_monoclusters",
+          signature=(bic="caclust"),
+          function(bic){
+        
+        cc <- unique(cell_clusters(bic))
+        gc <- unique(gene_clusters(bic))
+        
+        keep <- order(as.character(intersect(cc,gc)))
+        
+        if(length(keep > 0)){
+          
+          bic@cell_clusters <- bic@cell_clusters[as.character(bic@cell_clusters) %in% keep]
+          bic@cell_clusters <- droplevels(bic@cell_clusters)
+          # bic@cell_clusters <- factor(as.character(bic@cell_clusters), levels = keep)
+          # bic@cell_clusters <- na.omit(bic@cell_clusters)
+          
+          bic@gene_clusters <- bic@gene_clusters[as.character(bic@gene_clusters) %in% keep]
+          bic@gene_clusters <- droplevels(bic@gene_clusters)
+          # bic@gene_clusters <- factor(as.character(bic@gene_clusters), levels = keep)
+          # bic@gene_clusters <- na.omit(bic@gene_clusters)
+          
+        }
+        
+        return(bic)      
+                       
+})
+
+
+#' @rdname rm_monoclusters
+#' @export
+setMethod(f = "rm_monoclusters",
+          signature=(bic="biclust"),
+          function(bic){
+            
+            keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
+            
+            if(any(!keep)){
+              
+              bic@RowxNumber <- bic@RowxNumber[,keep, drop=FALSE]
+              bic@NumberxCol <- bic@NumberxCol[keep, ,drop=FALSE]
+              bic@Number <- sum(keep)
+              
+            }
+            
+            return(bic)            
+            
+})
+
+
 

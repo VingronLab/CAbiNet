@@ -24,6 +24,8 @@ Imports:
   ggrepel,
   plotly,
   skmeans,
+  SingleCellExperiment,
+  SummarizedExperiment
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
 Suggests: 

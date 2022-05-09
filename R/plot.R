@@ -5,40 +5,108 @@
 #' @param umap_coords data frame as outputted by `run_biUMAP_*`
 #' @param color_by Either "type" or "cluster". "type" colors by the type 
 #' (cell or gene) while "cluster" colors by the assigned cluster.
+#' @param metadata optional. data.frame that should have either gene or cell names
+#' (or both) in as rownames or a column named `name` and a column with the same name as 
+#' `color_by`.
 #' 
 #' @return 
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biUMAP <- function(umap_coords, color_by = "type", size = 1, alpha = 0.4){
-  umap_coords = umap_coords[sample(1:nrow(umap_coords), size = nrow(umap_coords)),]
+
+plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL, size = 1, alpha = 0.4){
   
-  if(color_by == "type"){
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
+    if(!is.null(metadata)){
+      
+      if(!is(metadata,"data.frame")){
+        metadata <- as.data.frame(metadata)
+      }
+      stopifnot(color_by %in% colnames(metadata))
+      
+      if(!"name" %in% colnames(metadata)){
+        metadata$name <- rownames(metadata)
+      }
+        
+      sel <- metadata$name %in% umap_coords$name
+      metadata <- metadata[sel,]
+      
+      sel <- umap_coords$name %in% metadata$name
+      matched_names <- match(umap_coords$name[sel], metadata$name)
+      umap_coords[,color_by] <- "not_in_metadata"
+      umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+      
+    }
+  
+    p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
                                  text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster))) +
+                                   "Type: ", quote(type), "\n",
+                                   "Name: ", quote(name), "\n",
+                                   "Cluster: ", quote(cluster)))) +
       geom_jitter(alpha = alpha, size = size) +
       theme_bw()
-  } else if (color_by == "cluster"){
-    
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = cluster,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster)))+
-      geom_jitter(alpha = alpha, size = size) +
-      theme_bw()
-  } else {
-    stop("color_by has to be either 'type' or 'cluster'.")
-  }
-  
   
   return(p)
   
 }
 
+#' plot biUMAP with gene expression
+#' 
+#' @param umap_coords
+#' @param sce
+#' @param feature
+#' @param color_cells_by
+#' @param assay
+#' 
+feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
+  stopifnot(length(feature)<=1)
+  
+  if(color_cells_by == "expression") {
+    isExpr <- FALSE
+    if(!is.null(feature)) lgnd <- feature
+  }else{
+    isExpr <- TRUE
+    lgnd <- color_cells_by
+  }
+  
+  cell_idx <- which(umap_coords$type == "cell")
+  
+  if(!is.null(feature)){
+    
+    stopifnot(isTRUE(feature %in% umap_coords$name))
+    cnts <- SummarizedExperiment::assay(sce, assay)
+    umap_coords$expression <- NA
+    umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
+    
+  }
+  
+  
+  ggplot()+
+    geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping=aes_(~x, ~y, text = paste0(
+                                       "Type: ", quote(type), "\n",
+                                       "Name: ", quote(name), "\n",
+                                       "Cluster: ", quote(cluster))),color ="grey", alpha = 0.5) +
+    geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
+                                                    "Type: ", quote(type), "\n",
+                                                    "Name: ", quote(name), "\n",
+                                                    "Cluster: ", quote(cluster)))) +
+    geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+               aes_(~x, ~y),
+               color = "red") +
+    geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+                    aes_(~x, ~y, label= ~name),
+                    color = "red") +
+    viridis::scale_color_viridis(name=lgnd, discrete = isExpr) +
+    theme_bw()
+    
+}
+  
+  
+mix <- function(df){
+  df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
+}
+  
 #' Plot of 2D CA projection of the data.
 #'
 #' @description

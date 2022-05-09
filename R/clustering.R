@@ -594,12 +594,13 @@ run_spectral <- function(SNN,
   
   if (python == TRUE){
     
-    svd_scipy <- NULL
+    svds_scipy <- NULL
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
     
     SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
   
+    SVD$D <- as.vector(SVD$D) # eigenvalues in a decreasing order
     
   } else {
     
@@ -761,6 +762,7 @@ run_caclust <- function(caobj,
                                num.seeds = num.seeds,
                                return.eig = return.eig,
                                dims = sc.dims)
+
     if (return.eig){
       
       eigen <- clusters$eigen
@@ -811,52 +813,75 @@ run_biUMAP <- function(caobj,
                               caclust_obj,
                               k_umap,
                               rand_seed = 2358,
-                              algorithm = 'leiden',
+                              algorithm = 'SNNdist',
                               coords = 1,...){
+
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
+  stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca"))
   
   custom.config = umap::umap.defaults
   custom.config$random_state = rand_seed
   
-  if (algorithm == 'leiden'){
+  if (algorithm == 'SNNgraph'){
   
     SNN <- get_snn(caclust_obj)
     
     k_snn = ncol(SNN)
     SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
-    
+
     for (i in seq_len(nrow(SNN))){
       SNN_idx[i,] <- order(SNN[i,], decreasing = TRUE)
     }
-    
+
     SNN_jacc <- matrix(as.matrix(SNN)[SNN_idx],
                        nrow = nrow(SNN_idx),
                        ncol = ncol(SNN_idx))
-    
-    
+
+
     rownames(SNN_idx) <- rownames(SNN)
     rownames(SNN_jacc) <- rownames(SNN)
-    
+
     snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
                                     distances = SNN_jacc)
-    
+
     assym <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
     assym <- assym[rownames(assym) %in% rownames(SNN),]
-    
+
     caclust_umap = umap::umap(assym,
                               config = custom.config,
-                              n_neighbors = k_umap, 
+                              n_neighbors = k_umap,
                               knn = snn_umap_graph)
+    
+    umap_coords <- as.data.frame(caclust_umap$layout)
+    
+    
+  }else if (algorithm == "SNNdist"){
+    
+    SNNdist <- as.matrix(1-get_snn(caclust_obj))
+    
+    reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
+    
+    umap_coords = python_umap(dm = SNNdist,
+                              metric = "precomputed",
+                              n_neighbors = as.integer(k_umap))
+    
+    umap_coords <- as.data.frame(umap_coords)
+    rownames(umap_coords) <- colnames(SNNdist)
   
   }else if (algorithm == 'spectral'){
     
-    eigen = get_eigen(caclust_obj) 
+    eigen = get_eigen(caclust_obj)
+    
+    if(is.na(eigen)) stop("Spectral clustering not run.")
+
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
                               n_neighbors = k_umap)
+    
+    umap_coords <- as.data.frame(caclust_umap$layout)
     
   }else if (algorithm == 'ca'){
     # eigen = rbind(caobj@prin_coords_cols, caobj@prin_coords_rows)
@@ -885,15 +910,19 @@ run_biUMAP <- function(caobj,
     }
     
 
-        idx1 = which(rownames(eigen)  %in% names(gene_clusters(caclust_obj)))
+    idx1 = which(rownames(eigen)  %in% names(gene_clusters(caclust_obj)))
     idx2 = which(rownames(eigen) %in% names(cell_clusters(caclust_obj)))
     
     eigen = eigen[c(idx1,idx2),]
+    
+    eigen <- eigen[rownames(eigen) %in% rownames(SNN),]
+    
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
                               metric = 'cosine',
                               n_neighbors = k_umap)
+    umap_coords <- as.data.frame(caclust_umap$layout)
     
   }else{
     stop('algorithm should be one of leiden, spectral and ca!')
@@ -904,7 +933,6 @@ run_biUMAP <- function(caobj,
   genec <- gene_clusters(caclust_obj)
   
   
-  umap_coords <- as.data.frame(caclust_umap$layout)
   colnames(umap_coords) <- c("x", "y")
   umap_coords$name <- rownames(umap_coords)
   
@@ -928,4 +956,13 @@ run_biUMAP <- function(caobj,
 
 
 
+
+
+aR_metric <- function(matrix, origin, target){
+  
+  assR <- matrix[,origin] %*% matrix[,target]
+  assR <- drop(assR)
+  return(assR)
+  # assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
+}
 
