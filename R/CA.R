@@ -220,7 +220,7 @@ inertia_rows <- function(mat, top = 5000){
 
     top <- min(nrow(mat), top)
 
-    inertia <- apply(res$S, 1, function(x){x^2})
+    inertia <- res$S^2
     inertia <- Matrix::rowSums(inertia)
     ix <- order(inertia, decreasing = T)
     mat <- mat[ix[seq_len(top)],] # choose top rows

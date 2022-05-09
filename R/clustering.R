@@ -98,7 +98,7 @@ make_knn <- function(dists,
 
   if ((n.col-1 < k) |(n.row-1 < k)) {
     warning(
-      "k set larger than number of genes Setting k to number of genes - 1.",
+      "k set larger than number of selected genes Setting k to number of genes - 1.",
       call. = FALSE
     )
     k = min(n.col-1, n.row -1)
@@ -274,6 +274,12 @@ create_bigraph <- function(cell_dists,
     cgg_nn[overlap_mat < overlap] <- 0
 
     idx <- Matrix::colSums(cgg_nn) > 0
+    if (sum(idx) <=1){
+      cat('The given value of "overlap" is too large, all gene nodes 
+           are trimmed. Use a smaller overlap instead! 99% quantile of overlaps is',
+          quantile(overlap_mat,0.99), '. Overlap should be smaller than ', max(overlap_mat), '.\n')
+      return(ccg_nn)
+    }
     cgg_nn <- cgg_nn[,idx]
     gene_dists <- gene_dists[idx,idx]
     gene_cell_assr <- gene_cell_assr[idx,]
@@ -746,7 +752,6 @@ run_caclust <- function(caobj,
     if (is.null(sc.dims)){
       sc.dims = length(caobj@D)
     }
-    
       clusters <- run_spectral(SNN = SNN,
                                use_gap = use_gap,
                                nclust = nclust,

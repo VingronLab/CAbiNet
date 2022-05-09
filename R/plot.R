@@ -10,7 +10,8 @@
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biUMAP <- function(umap_coords, color_by = "type"){
+plot_biUMAP <- function(umap_coords, color_by = "type", size = 1, alpha = 0.4){
+  umap_coords = umap_coords[sample(1:nrow(umap_coords), size = nrow(umap_coords)),]
   
   if(color_by == "type"){
     p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
@@ -18,7 +19,7 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
                                    "Type: ", type, "\n",
                                    "Name: ", name, "\n",
                                    "Cluster: ", cluster))) +
-      geom_point(alpha = 0.4) +
+      geom_jitter(alpha = alpha, size = size) +
       theme_bw()
   } else if (color_by == "cluster"){
     
@@ -27,7 +28,7 @@ plot_biUMAP <- function(umap_coords, color_by = "type"){
                                    "Type: ", type, "\n",
                                    "Name: ", name, "\n",
                                    "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4) +
+      geom_jitter(alpha = alpha, size = size) +
       theme_bw()
   } else {
     stop("color_by has to be either 'type' or 'cluster'.")
