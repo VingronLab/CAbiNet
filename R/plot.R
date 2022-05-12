@@ -34,7 +34,8 @@ plot_biUMAP <- function(umap_coords,
                         color_by = "type",
                         metadata = NULL,
                         type = "scatter",
-                        point_size = 1,
+                        cell_size = 1,
+                        gene_size = 3,
                         hex_n = 40,
                         min_bin = 2,
                         contour_n = 5,
@@ -141,12 +142,14 @@ plot_biUMAP <- function(umap_coords,
                                 text = quote(interact_genes)
                  ),
                  color = "black",
-                 size = point_size,
+                 size = gene_size,
                  shape = 21,
                  # stroke = 0.25,
                  alpha = gene_alpha ) +
       scale_fill_manual(values = gene_colors) +
       scale_color_manual(values = colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
   } else if (type == "hex"){
@@ -250,9 +253,11 @@ plot_biUMAP <- function(umap_coords,
                         ),
                         color = "black",
                         shape = 21,
-                        size = point_size,
+                        size = gene_size,
                         alpha = gene_alpha ) +
       scale_fill_manual(values = colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
     
@@ -290,7 +295,7 @@ plot_biUMAP <- function(umap_coords,
                                 color = as.name(color_by),
                                 text = quote(interact_cells)),
                  alpha = cell_alpha,
-                 size = point_size/3) +
+                 size = cell_size) +
       geom_point(data = umap_genes,
                  mapping = aes_(x = ~x,
                                 y = ~y,
@@ -299,9 +304,11 @@ plot_biUMAP <- function(umap_coords,
                  color = "black",
                  shape = 21,
                  alpha = gene_alpha, 
-                 size = point_size) +
+                 size = gene_size) +
       scale_color_manual(values = colors) +
       scale_fill_manual(values = gene_colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
   }
@@ -320,7 +327,7 @@ plot_biUMAP <- function(umap_coords,
 #' @param feature
 #' @param color_cells_by
 #' @param assay
-#' 
+#' @export
 feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
   stopifnot(length(feature)<=1)
   
@@ -349,7 +356,7 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
                mapping=aes_(~x, ~y, text = paste0(
                                        "Type: ", quote(type), "\n",
                                        "Name: ", quote(name), "\n",
-                                       "Cluster: ", quote(cluster))),color ="grey", alpha = 0.5) +
+                                       "Cluster: ", quote(cluster))), color ="#A9A9A9", alpha = 0.5) +  #grey
     geom_point(umap_coords[umap_coords$type == "cell",],
                mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
                                                     "Type: ", quote(type), "\n",
@@ -362,6 +369,8 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
                     aes_(~x, ~y, label= ~name),
                     color = "red") +
     viridis::scale_color_viridis(name=lgnd, discrete = isExpr) +
+    labs(x="Dim 1",
+         y="Dim 2")+
     theme_bw()
     
 }

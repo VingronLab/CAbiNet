@@ -248,12 +248,27 @@ create_bigraph <- function(cell_dists,
                            select_genes = TRUE,
                            prune_overlap = TRUE,
                            overlap = 0.2,
-                           calc_gene_cell_kNN = FALSE) {
+                           calc_gene_cell_kNN = FALSE,
+                           marker_genes = NULL) {
 
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
                      decr = TRUE,
                      loops = loops)
+  
+  if (!is.null(marker_genes)){
+    stopifnot(is(marker_genes, "character"))
+    
+    idx <- which(colnames(cgg_nn) %in% marker_genes)
+    marker_knn <- cgg_nn[,idx]
+    cgg_nn <- cgg_nn[,-idx]
+    
+    marker_dists <- gene_dists[idx,]
+    marker_assr <- gene_cell_assr[idx,]
+    
+    gene_dists <- gene_dists[-idx, -idx]
+    gene_cell_assr <- gene_cell_assr[-idx,]
+  }
 
   if(isTRUE(select_genes)){
     
@@ -274,7 +289,7 @@ create_bigraph <- function(cell_dists,
 
     overlap_mat <- determine_overlap(cg_adj = cgg_nn,
                                      cc_adj = ccg_nn)
-
+    
     cgg_nn[overlap_mat < overlap] <- 0
 
     idx <- Matrix::colSums(cgg_nn) > 0
@@ -284,7 +299,16 @@ create_bigraph <- function(cell_dists,
 
   }
 
-
+  
+  if(!is.null(marker_genes)){
+    
+    cgg_nn <- cbind(cgg_nn, marker_knn)
+    
+    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+    
+  }
 
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
@@ -369,7 +393,8 @@ create_SNN <- function(caobj,
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE) {
+                       calc_gene_cell_kNN = FALSE,
+                       marker_genes = NULL) {
   
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
@@ -387,7 +412,8 @@ create_SNN <- function(caobj,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
-                        calc_gene_cell_kNN = calc_gene_cell_kNN)
+                        calc_gene_cell_kNN = calc_gene_cell_kNN,
+                        marker_genes = marker_genes)
   
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")  
@@ -710,6 +736,7 @@ run_caclust <- function(caobj,
                         overlap = 0.2,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
+                        marker_genes = NULL,
                         n.int = 10,
                         rand_seed = 2358,
                         use_gap = TRUE,
@@ -737,7 +764,8 @@ run_caclust <- function(caobj,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
                     overlap = overlap,
-                    calc_gene_cell_kNN = calc_gene_cell_kNN)
+                    calc_gene_cell_kNN = calc_gene_cell_kNN,
+                    marker_genes = marker_genes)
   
   if (algorithm == "leiden"){
     
