@@ -347,7 +347,8 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     cnts <- SummarizedExperiment::assay(sce, assay)
     umap_coords$expression <- NA
     umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
-    
+
+    umap_coords[cell_idx,] <- umap_coords[cell_idx,][order(umap_coords[cell_idx,"expression"], decreasing = FALSE),]
   }
   
   
@@ -361,7 +362,8 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
                mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
                                                     "Type: ", quote(type), "\n",
                                                     "Name: ", quote(name), "\n",
-                                                    "Cluster: ", quote(cluster)))) +
+                                                    "Cluster: ", quote(cluster))),
+               alpha = 0.8) +
     geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
                aes_(~x, ~y),
                color = "red") +
