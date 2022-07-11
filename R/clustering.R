@@ -58,11 +58,15 @@ calc_assR <- function(caobj, direction = "cells"){
 #' * "gc": gene-cell association ratio
 #' 
 #' @md
-calc_distances <- function(caobj){
+calc_distances <- function(caobj, appx = TRUE){
   
   cell_dists <- calc_euclidean(caobj@prin_coords_cols)
   gene_dists <- calc_euclidean(caobj@prin_coords_rows)
-  cell_gene_assr <- calc_assR(caobj, direction = "cells")
+  if (isTRUE(appx)){
+    cell_gene_assr <- calc_assR(caobj, direction = "cells")
+  }else{
+    cell_gene_assr <- t(caobj@AR)
+  }
 #   gene_cell_assr <- calc_assR(caobj, direction = "genes")
     # no need to calculate again, just take the transpose
   gene_cell_assr <- t(cell_gene_assr) 
@@ -376,11 +380,13 @@ create_SNN <- function(caobj,
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
   stopifnot(mode %in% c("out", "in", "all"))
-  
+  # S = caobj@U %*% diag(caobj@D) %*% t(caobj@V)
   adj <- create_bigraph(cell_dists = distances[["cc"]],
                         gene_dists = distances[["gg"]],
                         cell_gene_assr = distances[["cg"]],
+                        # cell_gene_assr = t(S),
                         gene_cell_assr = distances[["gc"]],
+                        # gene_cell_assr = S,
                         k_c = k_c,
                         k_g = k_g,
                         k_cg = k_cg,
@@ -717,12 +723,13 @@ run_caclust <- function(caobj,
                         num.seeds=10,
                         return.eig = TRUE,
                         sc.dims = NULL,
-                        leiden.dense = TRUE) {
+                        leiden.dense = TRUE,
+                        appx = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj)
+  distances <- calc_distances(caobj = caobj, appx = appx)
   
   SNN <- create_SNN(caobj = caobj, 
                     distances = distances,
@@ -861,7 +868,7 @@ run_biUMAP <- function(caobj,
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     
-    reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
+    reticulate::source_python(system.file("inst/python/umap.py", package = "CAclust"), envir = globalenv())
     
     umap_coords = python_umap(dm = SNNdist,
                               metric = "precomputed",
@@ -914,7 +921,7 @@ run_biUMAP <- function(caobj,
     idx2 = which(rownames(eigen) %in% names(cell_clusters(caclust_obj)))
     
     eigen = eigen[c(idx1,idx2),]
-    
+    SNN <- get_snn(caclust_obj)
     eigen <- eigen[rownames(eigen) %in% rownames(SNN),]
     
     

@@ -13,11 +13,7 @@ run_spectral(
   iter.max = 10,
   num.seeds = 10,
   return.eig = TRUE,
-<<<<<<< HEAD
-  dims = 100
-=======
-  dims = NULL
->>>>>>> cle
+  dims = 30
 )
 }
 \arguments{

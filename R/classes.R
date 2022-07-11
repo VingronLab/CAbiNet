@@ -290,7 +290,7 @@ setMethod(f = "rm_monoclusters",
 #' @rdname rm_monoclusters
 #' @export
 setMethod(f = "rm_monoclusters",
-          signature=(bic="biclust"),
+          signature=(bic="Biclust"),
           function(bic){
             
             keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0

@@ -2,15 +2,21 @@
 % Please edit documentation in R/classes.R
 \name{rm_monoclusters}
 \alias{rm_monoclusters}
+\alias{rm_monoclusters,caclust-method}
+\alias{rm_monoclusters,Biclust-method}
 \title{Remove clusters only consisting of cells/genes}
 \usage{
 rm_monoclusters(bic)
+
+\S4method{rm_monoclusters}{caclust}(bic)
+
+\S4method{rm_monoclusters}{Biclust}(bic)
 }
 \arguments{
-\item{bic}{object of class biclust}
+\item{bic}{biclustering results from caclust or biclust}
 }
 \value{
-biclust object with monoclusters removed.
+caclust/biclust object with monoclusters removed.
 }
 \description{
 Takes an object of class biclust and removes all clusters that only consist

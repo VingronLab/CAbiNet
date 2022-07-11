@@ -25,13 +25,9 @@ run_caclust(
   clust.method = "kmeans",
   iter.max = 10,
   num.seeds = 10,
-<<<<<<< HEAD
   return.eig = TRUE,
   sc.dims = NULL,
   leiden.dense = TRUE
-=======
-  return.eig = TRUE
->>>>>>> cle
 )
 }
 \arguments{

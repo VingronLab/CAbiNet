@@ -4,13 +4,23 @@
 \alias{plot_biUMAP}
 \title{Plot biUMAP}
 \usage{
-plot_biUMAP(umap_coords, color_by = "type")
+plot_biUMAP(
+  umap_coords,
+  color_by = "type",
+  metadata = NULL,
+  size = 1,
+  alpha = 0.4
+)
 }
 \arguments{
 \item{umap_coords}{data frame as outputted by `run_biUMAP_*`}
 
 \item{color_by}{Either "type" or "cluster". "type" colors by the type 
 (cell or gene) while "cluster" colors by the assigned cluster.}
+
+\item{metadata}{optional. data.frame that should have either gene or cell names
+(or both) in as rownames or a column named `name` and a column with the same name as 
+`color_by`.}
 }
 \value{
 ggplot of UMAP

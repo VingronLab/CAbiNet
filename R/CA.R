@@ -33,21 +33,31 @@ comp_std_residuals <- function(mat){
   rowm <- Matrix::rowSums(P)          # row masses
   colm <- Matrix::colSums(P)          # column masses
 
-  # E <- rowm %o% colm      # expected proportions
-  E <- rowm %*% Matrix::t(colm)
+  E <- rowm %o% colm      # expected proportions
+  # E <- rowm %*% Matrix::t(colm)
   
   if (is(P, 'dgCMatrix')){
     
-    idx = cbind(P@i+1, rep(1:P@Dim[2], diff(P@p)))
-    S = -E/sqrt(E)
-    S[idx] = P@x/sqrt(E[idx]) + S[idx] 
+    # idx = cbind(P@i+1, rep(1:P@Dim[2], diff(P@p)))
+    # S = -E/sqrt(E)
+    # S[idx] = P@x/sqrt(E[idx]) + S[idx] 
+    # AR = matrix(1, nrow = nrow(E), ncol = ncol(E))
+    # AR[idx] = P@x/E[idx] - AR[idx]
+    P = as.matrix(P)
+    S <-  (P - E) / sqrt(E)         # standardized residuals
+    AR <- P/E -1
     
   }else{
     S <-  (P - E) / sqrt(E)         # standardized residuals
+    AR <- P/E -1
   }
+  print(class(S))
   S[is.na(S)] <- 0
+  AR[is.na(AR)] <- 0
+  rownames(S) = rownames(mat)
+  rownames(AR) = rownames(mat)
 
-  out <- list("S"=S, "tot"=tot, "rowm"=rowm, "colm"=colm)
+  out <- list("S"=S, "tot"=tot, "rowm"=rowm, "colm"=colm, 'AR' = AR)
   return(out)
 }
 
@@ -229,7 +239,7 @@ inertia_rows <- function(mat, top = 5000){
 
 
 
-#' Internal function for `cacontainer`
+#' Internal function for `cacomp`
 #'
 #' @description
 #' `run_cacontainer` performs correspondence analysis on a matrix and returns the 
@@ -246,7 +256,7 @@ inertia_rows <- function(mat, top = 5000){
 #' computational time.
 #'
 #' @return
-#' Returns a named list of class "cacontainer" with components
+#' Returns a named list of class "cacomp" with components
 #' U, V and D: The results from the SVD.
 #' row_masses and col_masses: Row and columns masses.
 #' top_rows: How many of the most variable rows/genes were retained for the 
@@ -328,8 +338,7 @@ run_cacontainer <- function(obj,
   tot <- res$tot
   rowm <- res$rowm
   colm <- res$colm
-  rm(res)
-
+  
   k <- min(dim(S))-1
 
   if (is.null(dims) | (dims > k)){ 
@@ -399,9 +408,9 @@ run_cacontainer <- function(obj,
   SVD$col_masses <- colm
   SVD$top_rows <- toptmp
 
-  SVD <- do.call(APL::new_cacomp, SVD)
+  SVD <- do.call(new_cacomp, SVD)
   SVD <- select_dims(SVD, dims)
-  # class(SVD) <- "cacontainer"
+  # class(SVD) <- "cacomp"
 
   if (coords == TRUE){
     # message("Calculating coordinates...")
@@ -441,6 +450,8 @@ run_cacontainer <- function(obj,
     }
 
   stopifnot(validObject(SVD))
+  SVD@S <- res$S
+  SVD@AR <- res$AR
   return(SVD)
 }
 
@@ -449,7 +460,7 @@ run_cacontainer <- function(obj,
 #' Correspondance Analysis
 #'
 #' @description
-#' `cacontainer` performs correspondence analysis on a matrix or
+#' `cacomp` performs correspondence analysis on a matrix or
 #' Seurat/SingleCellExperiment object and returns the transformed data.
 #'
 #' @details
@@ -461,7 +472,7 @@ run_cacontainer <- function(obj,
 #' computational time.
 #'
 #' @return
-#' Returns a named list of class "cacontainer" with components
+#' Returns a named list of class "cacomp" with components
 #' U, V and D: The results from the SVD.
 #' row_masses and col_masses: Row and columns masses.
 #' top_rows: How many of the most variable rows were retained for the analysis.
@@ -503,7 +514,7 @@ run_cacontainer <- function(obj,
 #' cnts <- as.matrix(cnts)
 #'
 #' # Run correspondence analysis.
-#' ca <- cacontainer(obj = cnts, princ_coords = 3, top = 5)
+#' ca <- cacomp(obj = cnts, princ_coords = 3, top = 5)
 #' @export
 setGeneric("cacontainer", function(obj,
                               coords = TRUE,
@@ -519,7 +530,7 @@ setGeneric("cacontainer", function(obj,
 })
 
 
-#' @rdname cacontainer
+#' @rdname cacomp
 #' @export
 setMethod(f = "cacontainer",
           signature=(obj="matrix"),
@@ -549,7 +560,7 @@ setMethod(f = "cacontainer",
 
 })
 
-#' @rdname cacontainer
+#' @rdname cacomp
 #' @export
 setMethod(f = "cacontainer",
           signature=(obj="dgCMatrix"),
@@ -582,7 +593,7 @@ setMethod(f = "cacontainer",
 #' Correspondance Analysis for Seurat objects
 #'
 #' @description
-#' `cacontainer.seurat` performs correspondence analysis on an assay from a Seurat 
+#' `cacomp.seurat` performs correspondence analysis on an assay from a Seurat 
 #' container and stores the standardized coordinates of the columns (= cells) 
 #' and the principal coordinates of the rows (= genes) as a DimReduc Object in 
 #' the Seurat container.
@@ -594,8 +605,8 @@ setMethod(f = "cacontainer",
 #' the principal coordinates of the genes as loadings and
 #' the singular values (= square root of principal intertias/eigenvalues)
 #' are stored as stdev.
-#' To recompute a regular "cacontainer" object without rerunning cacontainer use 
-#' `APL::as.cacontainer()`.
+#' To recompute a regular "cacomp" object without rerunning cacomp use 
+#' `as.cacomp()`.
 #' @param assay Character. The assay from which extract the count matrix for 
 #' SVD, e.g. "RNA" for Seurat objects or "counts"/"logcounts" for 
 #' SingleCellExperiments.
@@ -603,9 +614,9 @@ setMethod(f = "cacontainer",
 #' @param return_input Logical. If TRUE returns the input 
 #' (SingleCellExperiment/Seurat object) with the CA results saved in the 
 #' reducedDim/DimReduc slot "CA".
-#' Otherwise returns a "cacontainer". Default FALSE.
+#' Otherwise returns a "cacomp". Default FALSE.
 #' @param ... Other parameters
-#' @rdname cacontainer
+#' @rdname cacomp
 #' @export
 #' @examples
 #' 
@@ -625,10 +636,10 @@ setMethod(f = "cacontainer",
 #' seu <- CreateSeuratObject(counts = cnts)
 #'
 #' # Run CA and save in dim. reduction slot
-#' seu <- cacontainer(seu, return_input = TRUE, assay = "RNA", slot = "counts")
+#' seu <- cacomp(seu, return_input = TRUE, assay = "RNA", slot = "counts")
 #'
-#' # Run CA and return cacontainer object
-#' ca <- cacontainer(seu, return_input = FALSE, assay = "RNA", slot = "counts")
+#' # Run CA and return cacomp object
+#' ca <- cacomp(seu, return_input = FALSE, assay = "RNA", slot = "counts")
 setMethod(f = "cacontainer",
           signature=(obj="Seurat"),
           function(obj,
@@ -688,7 +699,7 @@ setMethod(f = "cacontainer",
 #' Correspondance Analysis for SingleCellExperiment objects
 #'
 #' @description
-#' `cacontainer.SingleCellExperiment` performs correspondence analysis on an assay 
+#' `cacomp.SingleCellExperiment` performs correspondence analysis on an assay 
 #' from a SingleCellExperiment and stores the standardized coordinates
 #'  of the columns (= cells) and the principal coordinates of the rows 
 #'  (= genes) as a matrix in the SingleCellExperiment container.
@@ -703,16 +714,16 @@ setMethod(f = "cacontainer",
 #' "singval": Singular values. For the explained inertia of each principal 
 #' axis calculate singval^2.
 #' "percInertia": Percent explained inertia of each principal axis.
-#' To recompute a regular "cacontainer" object from a SingleCellExperiment without 
-#' rerunning cacontainer use `as.cacontainer()`.
+#' To recompute a regular "cacomp" object from a SingleCellExperiment without 
+#' rerunning cacomp use `as.cacomp()`.
 #' @param assay Character. The assay from which extract the count matrix for 
 #' SVD, e.g. "RNA" for Seurat objects or "counts"/"logcounts" for 
 #' SingleCellExperiments.
 #' @param return_input Logical. If TRUE returns the input 
 #' (SingleCellExperiment/Seurat object) with the CA results saved in the 
 #' reducedDim/DimReduc slot "CA".
-#'  Otherwise returns a "cacontainer". Default FALSE.
-#' @rdname cacontainer
+#'  Otherwise returns a "cacomp". Default FALSE.
+#' @rdname cacomp
 #' @export
 #' @examples
 #' 
@@ -733,11 +744,11 @@ setMethod(f = "cacontainer",
 #' sce <- SingleCellExperiment(assays=list(counts=cnts, logcounts=logcnts))
 #'
 #' # run CA and save in dim. reduction slot.
-#' sce <- cacontainer(sce, return_input = TRUE, assay = "counts") # on counts
-#' sce <- cacontainer(sce, return_input = TRUE, assay = "logcounts") # on logcounts
+#' sce <- cacomp(sce, return_input = TRUE, assay = "counts") # on counts
+#' sce <- cacomp(sce, return_input = TRUE, assay = "logcounts") # on logcounts
 #'
-#' # run CA and return cacontainer object.
-#' ca <- cacontainer(sce, return_input = FALSE, assay = "counts")
+#' # run CA and return cacomp object.
+#' ca <- cacomp(sce, return_input = FALSE, assay = "counts")
 setMethod(f = "cacontainer",
           signature=(obj="SingleCellExperiment"),
           function(obj,
@@ -813,7 +824,7 @@ setMethod(f = "cacontainer",
 #' cnts <- as.matrix(cnts)
 #'
 #' # Run correspondence analysis.
-#' ca <- cacontainer(cnts)
+#' ca <- cacomp(cnts)
 #' ca <- select_dims(ca, 2)
 #' @export
 select_dims <- function(caobj, dims){
@@ -866,7 +877,7 @@ select_dims <- function(caobj, dims){
 #' coordinates of the rows and columns in CA space.
 #'
 #' @details
-#' Takes a "cacontainer" object and calculates standardized and principal 
+#' Takes a "cacomp" object and calculates standardized and principal 
 #' coordinates for the visualization of CA results in a biplot or
 #' to subsequently calculate coordinates in an Association Plot.
 #'
@@ -875,7 +886,7 @@ select_dims <- function(caobj, dims){
 #' std_coords_rows/std_coords_cols: Standardized coordinates of rows/columns.
 #' prin_coords_rows/prin_coords_cols: Principal coordinates of rows/columns.
 #'
-#' @param caobj A "cacontainer" object as outputted from `cacontainer()`.
+#' @param caobj A "cacomp" object as outputted from `cacomp()`.
 #' @param dims Integer indicating the number of dimensions to use for the 
 #' calculation of coordinates.
 #' All elements of caobj (where applicable) will be reduced to the given 
@@ -897,7 +908,7 @@ select_dims <- function(caobj, dims){
 #' cnts <- as.matrix(cnts)
 #'
 #' # Run correspondence analysis.
-#' ca <- cacontainer(obj = cnts, princ_coords = 1)
+#' ca <- cacomp(obj = cnts, princ_coords = 1)
 #' ca <- ca_coords(ca, princ_coords = 3)
 #' @export
 ca_coords <- function(caobj, dims=NULL, princ_coords = 3, princ_only = FALSE){
@@ -1033,7 +1044,7 @@ scree_plot <- function(df){
 #' 
 #' @description Helper function for pick_dims() to run the elbow method.
 #' 
-#' @param obj A "cacontainer" object as outputted from `cacontainer()`
+#' @param obj A "cacomp" object as outputted from `cacomp()`
 #' @param mat A numeric matrix. For sequencing a count matrix, gene expression 
 #' values with genes in rows and samples/cells in columns.
 #' Should contain row and column names.
@@ -1060,7 +1071,7 @@ scree_plot <- function(df){
 #' set.seed(2358)
 #' cnts <- as.matrix(Seurat::GetAssayData(pbmc_small, "data"))
 #' # Run correspondence analysis.
-#' ca <- cacontainer(obj = cnts)
+#' ca <- cacomp(obj = cnts)
 #' 
 #' # pick dimensions with the elbow rule. Returns list.
 #' pd <- pick_dims(obj = ca,
@@ -1091,7 +1102,7 @@ elbow_method <- function(obj,
     colnames(mat_perm) <- colnames(mat)
     rownames(mat_perm) <- seq_len(nrow(mat_perm))
     
-    obj_perm <- cacontainer(obj=mat_perm,
+    obj_perm <- cacomp(obj=mat_perm,
                        top = obj@top_rows,
                        dims = obj@dims,
                        coords = FALSE,
@@ -1166,7 +1177,7 @@ elbow_method <- function(obj,
 #' explain up to 80% of the total inertia.
 #' * "scree_plot" plots a scree plot.
 #' * "elbow_rule" formalization of the commonly used elbow rule. Permutes the 
-#' rows for each column and reruns `cacontainer()` for a total of `reps` times.
+#' rows for each column and reruns `cacomp()` for a total of `reps` times.
 #' The number of relevant dimensions is obtained from the point where the 
 #' line for the explained inertia of the permuted data intersects with the 
 #' actual data.
@@ -1178,7 +1189,7 @@ elbow_method <- function(obj,
 #' * `elbow_rule` (for `return_plot=TRUE`) returns a list with two elements: 
 #' "dims" contains the number of dimensions and "plot" a ggplot.
 #'
-#' @param obj A "cacontainer" object as outputted from `cacontainer()`,
+#' @param obj A "cacomp" object as outputted from `cacomp()`,
 #' a "Seurat" object with a "CA" DimReduc object stored,
 #' or a "SingleCellExperiment" object with a "CA" dim. reduction stored.
 #' @param mat A numeric matrix. For sequencing a count matrix, gene expression 
@@ -1203,7 +1214,7 @@ elbow_method <- function(obj,
 #' colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
 #'
 #' # Run correspondence analysis.
-#' ca <- cacontainer(obj = cnts)
+#' ca <- cacomp(obj = cnts)
 #'
 #' # pick dimensions with the elbow rule. Returns list.
 #'
@@ -1247,7 +1258,7 @@ setMethod(f = "pick_dims",
                    ...){
 
   if (!is(obj,"cacomp")){
-    stop("Not a CA object. Please run cacontainer() first!")
+    stop("Not a CA object. Please run cacomp() first!")
   }
 
   ev <- obj@D^2
@@ -1285,7 +1296,7 @@ setMethod(f = "pick_dims",
     if(is.null(mat)){
       cat(paste0("When running method=\"elbow_rule\", ",
                  "please provide the original data matrix (paramater mat) ",
-                 "which was earlier submitted to cacontainer()!"))
+                 "which was earlier submitted to cacomp()!"))
       stop()
     }
     
@@ -1330,7 +1341,7 @@ setMethod(f = "pick_dims",
 #' seu <- CreateSeuratObject(counts = cnts)
 #'
 #' # run CA and save in dim. reduction slot.
-#' seu <- cacontainer(seu, return_input = TRUE, assay = "RNA", slot = "counts")
+#' seu <- cacomp(seu, return_input = TRUE, assay = "RNA", slot = "counts")
 #'
 #' # pick dimensions
 #' pd <- pick_dims(obj = seu,
@@ -1362,7 +1373,7 @@ setMethod(f = "pick_dims",
     caobj <- as.cacomp(obj, assay = assay)
   } else {
     stop("No 'CA' dimension reduction object found. ",
-         "Please run cacontainer(seurat_obj, top, coords = FALSE, ",
+         "Please run cacomp(seurat_obj, top, coords = FALSE, ",
          "return_input=TRUE) first.")
   }
 
@@ -1401,7 +1412,7 @@ setMethod(f = "pick_dims",
 #' sce <- SingleCellExperiment(assays=list(counts=cnts))
 #'
 #' # run CA and save in dim. reduction slot.
-#' sce <- cacontainer(sce, return_input = TRUE, assay = "counts")
+#' sce <- cacomp(sce, return_input = TRUE, assay = "counts")
 #'
 #' # pick dimensions
 #' pd <- pick_dims(obj = sce,
@@ -1428,10 +1439,10 @@ setMethod(f = "pick_dims",
   }
 
   if ("CA" %in% SingleCellExperiment::reducedDimNames(obj)){
-    caobj <- APL::as.cacomp(obj, assay = assay)
+    caobj <- as.cacomp(obj, assay = assay)
   } else {
     stop("No 'CA' dim. reduction object found. ",
-         "Please run cacontainer(sce, top, coords = FALSE, ",
+         "Please run cacomp(sce, top, coords = FALSE, ",
          "return_input=TRUE) first.")
   }
 
@@ -1446,8 +1457,450 @@ setMethod(f = "pick_dims",
 })
 
 
+#' Helper function to check if object is empty.
+#' @param x object
+#' @return TRUE if x has length 0 and is not NULL. FALSE otherwise
+is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
 
 
+#' Check if cacomp object was correctly created.
+#'
+#' @description Checks if the slots in a cacomp object are of the correct size
+#' and whether they are coherent.
+#' @param object A cacomp object.
+#' @return TRUE if it is a valid cacomp object. FALSE otherwise.
+#' @export
+#' @examples
+#' # Simulate scRNAseq data.
+#' cnts <- data.frame(cell_1 = rpois(10, 5),
+#'                    cell_2 = rpois(10, 10),
+#'                    cell_3 = rpois(10, 20))
+#' rownames(cnts) <- paste0("gene_", 1:10)
+#' cnts <- as.matrix(cnts)
+#'
+#' # Run correspondence analysis.
+#' ca <- cacomp(obj = cnts, princ_coords = 3, top = 5)
+#'
+#' check_cacomp(ca)
+check_cacomp <- function(object) {
+  errors <- character()
+  
+  dim_rows <- object@top_rows
+  dims <- object@dims
+  
+  # SVD results
+  if (isTRUE(!is.empty(object@U) & 
+             nrow(object@U) != dim_rows)) {
+    msg <- paste0("Nr. of rows in U is ",
+                  nrow(object@U),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@U) & 
+             ncol(object@U) != dims)) {
+    msg <- paste0("Nr. of columns in U is ",
+                  ncol(object@U),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@V) & 
+             ncol(object@V) != dims)) {
+    msg <- paste0("Nr. of columns in V is ",
+                  ncol(object@V),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@D) & 
+             length(object@D) != dims)) {
+    msg <- paste0("Length of D is ", ncol(object@D), ".  Should be ", dims, ".")
+    errors <- c(errors, msg)
+  }
+  
+  # CA results
+  
+  if (isTRUE(!is.empty(object@row_masses) & 
+             length(object@row_masses) != dim_rows)) {
+    
+    msg <- paste0("Length of row_masses is ",
+                  length(object@row_masses),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@col_masses) & 
+             length(object@col_masses) != nrow(object@V))) {
+    
+    msg <- paste0("Length of col_masses is ",
+                  length(object@col_masses),
+                  ".  Should be ",
+                  nrow(object@V),
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@row_inertia) & 
+             length(object@row_inertia) != dim_rows)){
+    
+    msg <- paste0("Length of row_inertia is ",
+                  length(object@row_inertia),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@col_inertia) & 
+             length(object@col_inertia) != nrow(object@V))) {
+    
+    msg <- paste0("Length of col_inertia is ",
+                  length(object@col_inertia),
+                  ".  Should be ",
+                  nrow(object@V),
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@tot_inertia) & 
+             length(object@tot_inertia) != 1)) {
+    
+    msg <- paste0("Length of tot_inertia is ",
+                  length(object@tot_inertia),
+                  ".  Should be 1.")
+    errors <- c(errors, msg)
+  }
+  
+  # standardized coordinates
+  
+  if (isTRUE(!is.empty(object@std_coords_rows) & 
+             nrow(object@std_coords_rows) != dim_rows)) {
+    
+    msg <- paste0("Nr. of rows in std_coords_rows is ",
+                  nrow(object@std_coords_rows),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@std_coords_rows) & 
+             ncol(object@std_coords_rows) != dims)) {
+    
+    msg <- paste0("Nr. of columns in std_coords_rows is ",
+                  ncol(object@std_coords_rows),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@std_coords_cols) & 
+             nrow(object@std_coords_cols) != nrow(object@V))) {
+    
+    msg <- paste0("Nr. of rows in std_coords_cols is ",
+                  nrow(object@std_coords_cols),
+                  ".  Should be ",
+                  nrow(object@V),
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@std_coords_cols) & 
+             ncol(object@std_coords_cols) != dims)) {
+    
+    msg <- paste0("Nr. of columns in std_coords_cols is ",
+                  ncol(object@std_coords_cols),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  
+  # principal coordinates
+  
+  if (isTRUE(!is.empty(object@prin_coords_rows) & 
+             nrow(object@prin_coords_rows) != dim_rows)) {
+    
+    msg <- paste0("Nr. of rows in prin_coords_rows is ",
+                  nrow(object@prin_coords_rows),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@prin_coords_rows) & 
+             ncol(object@prin_coords_rows) != dims)) {
+    
+    msg <- paste0("Nr. of columns in prin_coords_rows is ",
+                  ncol(object@prin_coords_rows),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@prin_coords_cols) & 
+             nrow(object@prin_coords_cols) != nrow(object@V))) {
+    
+    msg <- paste0("Nr. of rows in prin_coords_cols is ",
+                  nrow(object@prin_coords_cols),
+                  ".  Should be ",
+                  nrow(object@V),
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@prin_coords_cols) & 
+             ncol(object@prin_coords_cols) != dims)) {
+    
+    msg <- paste0("Nr. of columns in prin_coords_cols is ",
+                  ncol(object@prin_coords_cols),
+                  ".  Should be ",
+                  dims,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  # AP coordinates
+  
+  if (isTRUE(!is.empty(object@apl_rows) & 
+             nrow(object@apl_rows) != dim_rows)) {
+    
+    msg <- paste0("Nr. of rows in apl_rows is ",
+                  ncol(object@apl_rows),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@apl_rows) & 
+             ncol(object@apl_rows) != 2)) {
+    
+    msg <- paste0("Nr. of columns in apl_rows is ",
+                  ncol(object@apl_rows),
+                  ".  Should be 2.")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@apl_cols) & 
+             nrow(object@apl_cols) != nrow(object@V))) {
+    
+    msg <- paste0("Nr. of rows in apl_cols is ",
+                  ncol(object@apl_cols),
+                  ".  Should be ",
+                  nrow(object@V),
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (isTRUE(!is.empty(object@apl_cols) & 
+             ncol(object@apl_cols) != 2)) {
+    
+    msg <- paste0("Nr. of columns in apl_cols is ",
+                  ncol(object@apl_cols),
+                  ".  Should be 2.")
+    errors <- c(errors, msg)
+  }
+  
+  # Salpha score
+  if (isTRUE(!is.empty(object@APL_score) & 
+             ncol(object@APL_score) != 4)) {
+    
+    msg <- paste0("Nr. of columns in APL_score is ",
+                  ncol(object@APL_score),
+                  ".  Should be 4.")
+    errors <- c(errors, msg)
+  }
+  if (isTRUE(!is.empty(object@APL_score) & 
+             nrow(object@APL_score) != dim_rows)) {
+    
+    msg <- paste0("Nr. of rows in APL_score is ",
+                  nrow(object@APL_score),
+                  ".  Should be ",
+                  dim_rows,
+                  ".")
+    errors <- c(errors, msg)
+  }
+  
+  if (length(errors) == 0) TRUE else errors
+}
+
+#' An S4 class that contains all elements needed for CA.
+#' @name cacomp-class
+#' @rdname cacomp-class
+#' @description
+#' This class contains elements necessary to computer CA coordinates or 
+#' Association Plot coordinates,
+#' as well as other informative data such as row/column inertia, 
+#' gene-wise APL-scores, etc. ...
+#'
+#' @slot U class "matrix". Left singular vectors of the original input matrix.
+#' @slot V class "matrix". Right singular vectors of the original input matrix.
+#' @slot D class "numeric". Singular values of the original inpt matrix.
+#' @slot std_coords_rows class "matrix". Standardized CA coordinates of the 
+#' rows.
+#' @slot std_coords_cols class "matrix". Standardized CA coordinates of the 
+#' columns.
+#' @slot prin_coords_rows class "matrix". Principal CA coordinates of the rows.
+#' @slot prin_coords_cols class "matrix". Principal CA coordinates of the 
+#' columns.
+#' @slot apl_rows class "matrix". Association Plot coordinates of the rows 
+#' for the direction defined in slot "group"
+#' @slot apl_cols class "matrix". Association Plot coordinates of the columns 
+#' for the direction defined in slot "group"
+#' @slot APL_score class "data.frame". Contains rows sorted by the APL score.
+#' Columns: Rowname (gene name in the case of gene expression data),
+#' APL score calculated for the direction defined in slot "group",
+#' the original row number and the rank of the row as determined by the score.
+#' @slot dims class "numeric". Number of dimensions in CA space.
+#' @slot group class "numeric". Indices of the chosen columns for APL 
+#' calculations.
+#' @slot row_masses class "numeric". Row masses of the frequency table.
+#' @slot col_masses class "numeric". Column masses of the frequency table.
+#' @slot top_rows class "numeric". Number of most variable rows chosen.
+#' @slot tot_inertia class "numeric". Total inertia in CA space.
+#' @slot row_inertia class "numeric". Row-wise inertia in CA space.
+#' @slot col_inertia class "numeric". Column-wise inertia in CA space.
+#' @slot permuted_data class "list". Storage slot for permuted data.
+#' @export
+setClass("cacomp",
+         representation(
+           S = 'matrix',
+           AR = 'matrix',
+           U = "matrix",
+           V = "matrix",
+           D = "numeric",
+           std_coords_rows = "matrix",
+           std_coords_cols = "matrix",
+           prin_coords_rows = "matrix",
+           prin_coords_cols = "matrix",
+           apl_rows = "matrix",
+           apl_cols = "matrix",
+           APL_score = "data.frame",
+           dims = "numeric",
+           group = "numeric",
+           row_masses = "numeric",
+           col_masses = "numeric",
+           top_rows = "numeric",
+           tot_inertia = "numeric",
+           row_inertia = "numeric",
+           col_inertia = "numeric",
+           permuted_data = "list"
+         ),
+         prototype(
+           S = matrix(0, 0, 0),
+           U = matrix(0, 0, 0),
+           V = matrix(0, 0, 0),
+           D = numeric(),
+           std_coords_rows = matrix(0, 0, 0),
+           std_coords_cols = matrix(0, 0, 0),
+           prin_coords_rows = matrix(0, 0, 0),
+           prin_coords_cols = matrix(0, 0, 0),
+           apl_rows = matrix(0, 0, 0),
+           apl_cols = matrix(0, 0, 0),
+           APL_score = data.frame(),
+           dims = numeric(),
+           group = numeric(),
+           row_masses = numeric(),
+           col_masses = numeric(),
+           top_rows = numeric(),
+           tot_inertia = numeric(),
+           row_inertia = numeric(),
+           col_inertia = numeric(),
+           permuted_data = list()),
+         validity = check_cacomp
+)
+
+#' Create new "cacomp" object.
+#' @description Creates new cacomp object.
+#'
+#' @param ... slot names and objects for new cacomp object.
+#' @return cacomp object
+#' @rdname cacomp-class
+#' @export
+#' @examples
+#' set.seed(1234)
+#'
+#' # Simulate counts
+#' cnts <- mapply(function(x){rpois(n = 500, lambda = x)}, 
+#'                x = sample(1:20, 50, replace = TRUE))
+#' rownames(cnts) <- paste0("gene_", 1:nrow(cnts))
+#' colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
+#'
+#' res <-  APL:::comp_std_residuals(mat=cnts)
+#' SVD <- svd(res$S)
+#' names(SVD) <- c("D", "U", "V")
+#' SVD <- SVD[c(2, 1, 3)]
+#'
+#' ca <- new_cacomp(U = SVD$U,
+#'                  V = SVD$V,
+#'                  D = SVD$D,
+#'                  row_masses = res$rowm,
+#'                  col_masses = res$colm)
+new_cacomp <- function(...) new("cacomp",...)
+
+
+#' Access slots in a cacomp object
+#' 
+#' @param caobj a cacomp object
+#' @param slot slot to return
+#' @returns Chosen slot of the cacomp object
+#' @examples 
+#' # Simulate scRNAseq data.
+#' cnts <- data.frame(cell_1 = rpois(10, 5),
+#'                    cell_2 = rpois(10, 10),
+#'                    cell_3 = rpois(10, 20))
+#' rownames(cnts) <- paste0("gene_", 1:10)
+#' cnts <- as.matrix(cnts)
+#'
+#' # Run correspondence analysis.
+#' ca <- cacomp(obj = cnts, princ_coords = 3, top = 5)
+#' 
+#' # access left singular vectors
+#' cacomp_slot(ca, "U")
+#' 
+#' @export
+cacomp_slot <- function(caobj, slot){
+  stopifnot(slot %in% slotNames(caobj))
+  
+  return(slot(caobj, slot))
+}
+
+#' Prints slot names of cacomp object
+#' 
+#' @param caobj a cacomp object
+#' @returns Prints slot names of cacomp object
+#' @examples 
+#' # Simulate scRNAseq data.
+#' cnts <- data.frame(cell_1 = rpois(10, 5),
+#'                    cell_2 = rpois(10, 10),
+#'                    cell_3 = rpois(10, 20))
+#' rownames(cnts) <- paste0("gene_", 1:10)
+#' cnts <- as.matrix(cnts)
+#'
+#' # Run correspondence analysis.
+#' ca <- cacomp(obj = cnts, princ_coords = 3, top = 5)
+#' 
+#' # show slot names:
+#' cacomp_names(ca)
+#' 
+#' @export
+cacomp_names <- function(caobj){
+  slotNames(caobj)
+}
 
 
 
