@@ -377,6 +377,40 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     
 }
 
+
+metadata_biUMAP <- function(umap_coords, sce, color_cells_by, continous = FALSE){
+  metadata <- colData(sce)
+
+  cell_idx <- which(umap_coords$type == "cell")
+
+  umap_coords[,color_cells_by] <- NA
+  umap_coords[cell_idx, color_cells_by] <- metadata[umap_coords[cell_idx,]$name, color_cells_by] 
+
+
+
+  p <- ggplot()+
+    geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping=aes_(~x, ~y), color ="#A9A9A9", alpha = 0.5) +  #grey
+    geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping=aes_(~x, ~y, color = as.name(color_cells_by)),
+               alpha = 0.8)
+
+    if(isTRUE(continous)){
+
+      p <- p + viridis::scale_color_viridis(name=color_cells_by, discrete = FALSE)
+
+    } 
+
+
+    p<- p + 
+      labs(x="Dim 1",
+           y="Dim 2")+
+      theme_bw()
+
+    return(p)
+}
+
+
 #' Shuffle rows of a data frame for better plotting.
 #' @param df data.frame
 #' @export
