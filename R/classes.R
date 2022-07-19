@@ -266,7 +266,7 @@ setMethod(f = "rm_monoclusters",
         cc <- unique(cell_clusters(bic))
         gc <- unique(gene_clusters(bic))
         
-        keep <- order(as.character(intersect(cc,gc)))
+        keep <- sort(as.character(intersect(cc,gc)))
         
         if(length(keep > 0)){
           

@@ -14,14 +14,22 @@
 #' 
 #' @export
 
-plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL, size = 1, alpha = 0.4){
+plot_biUMAP <- function(umap_coords, color_by = "type", 
+                        metadata=NULL, 
+                        size = 1, 
+                        alpha = 0.4,
+                        label_groups = TRUE,
+                        group_label_size=4,
+                        labels_per_group=1,
+                        show_gene_meta = TRUE,
+                        label_marker_gene = FALSE){
   
     if(!is.null(metadata)){
       
       if(!is(metadata,"data.frame")){
         metadata <- as.data.frame(metadata)
       }
-      stopifnot(color_by %in% colnames(metadata))
+      stopifnot((color_by %in% colnames(metadata)) | (color_by %in% colnames(umap_coords)))
       
       if(!"name" %in% colnames(metadata)){
         metadata$name <- rownames(metadata)
@@ -32,18 +40,75 @@ plot_biUMAP <- function(umap_coords, color_by = "type", metadata=NULL, size = 1,
       
       sel <- umap_coords$name %in% metadata$name
       matched_names <- match(umap_coords$name[sel], metadata$name)
-      umap_coords[,color_by] <- "not_in_metadata"
-      umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+      if (color_by %in% colnames(metadata)){
+        umap_coords[,color_by] <- "not_in_metadata"
+        umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+      } else {
+        
+        umap_coords[!sel,color_by] <- "not_in_metadata"
+      }
+      
       
     }
+  umap_coords$group_color = umap_coords[,color_by]
   
-    p <- ggplot(umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
-                                 text = paste0(
-                                   "Type: ", quote(type), "\n",
-                                   "Name: ", quote(name), "\n",
-                                   "Cluster: ", quote(cluster)))) +
-      geom_jitter(alpha = alpha, size = size) +
-      theme_bw()
+  if(show_gene_meta){
+    umap_coords = umap_coords[sel,]
+  }
+  
+  if(label_groups){
+    
+    text_df = umap_coords %>%
+      filter(type == 'cell') %>%
+      dplyr::group_by(group_color) %>%
+      dplyr::mutate(cells_in_cluster= dplyr::n()) %>%
+      dplyr::group_by(group_color, .add=TRUE) %>%
+      dplyr::mutate(per=dplyr::n()/cells_in_cluster)
+    median_coord_df = text_df %>%
+      dplyr::summarize(fraction_of_group = dplyr::n(),
+                       text_x = stats::median(x = x),
+                       text_y = stats::median(x = y))
+    text_df = suppressMessages(text_df %>% dplyr::select(per) %>%
+                                 dplyr::distinct())
+    text_df = suppressMessages(dplyr::inner_join(text_df,
+                                                 median_coord_df))
+    text_df = text_df %>% dplyr::group_by(group_color) %>%
+      dplyr::top_n(labels_per_group, per)
+    text_df$label = as.character(text_df %>% dplyr::pull(group_color))
+  }else{
+    text_df = NULL
+  }
+
+  
+        p <- ggplot(umap_coords,aes(x=x, y=y)) +
+      # umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
+      #                            text = paste0(
+      #                              "Type: ", quote(type), "\n",
+      #                              "Name: ", quote(name), "\n",
+      #                              "Cluster: ", quote(cluster)))) +
+      geom_jitter(aes(color =group_color),alpha = alpha, size = size) +
+      geom_point(data = umap_coords[umap_coords$type == 'gene',],
+      shape = 1, aes(fill = group_color ), color = 'black', alpha = 0.5)+
+      geom_point(data = umap_coords[!sel,],
+                 shape = 1, aes(fill = group_color ) , color = 'black', alpha = 0.5)
+    if(label_groups) {
+      p <- p + ggrepel::geom_text_repel(data = text_df,
+                                        mapping = aes(x = text_x,
+                                                             y = text_y,
+                                                             label = label),
+                                        size=I(group_label_size),
+                                        fontface = "bold")
+    }
+      if(label_marker_gene){
+        
+        p <- p + ggrepel::geom_text_repel(data = umap_coords[sel &(umap_coords$type == 'gene'),],
+                                          mapping = aes(x = x,
+                                                        y = y,
+                                                        label = name),
+                                          max.overlaps = 12,
+                                          size=I(group_label_size-1))
+      }
+    p = p + theme_bw()
   
   return(p)
   
