@@ -24,9 +24,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_overlap
+Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, Eigen::SparseMatrix<int> cg_adj);
+RcppExport SEXP _CAclust_calc_overlap(SEXP cc_adjSEXP, SEXP cg_adjSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cc_adj(cc_adjSEXP);
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cg_adj(cg_adjSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_overlap(cc_adj, cg_adj));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CAclust_ComputeSNNasym", (DL_FUNC) &_CAclust_ComputeSNNasym, 3},
+    {"_CAclust_calc_overlap", (DL_FUNC) &_CAclust_calc_overlap, 2},
     {NULL, NULL, 0}
 };
 

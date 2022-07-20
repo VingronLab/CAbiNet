@@ -21,3 +21,8 @@ ComputeSNNasym <- function(SNN, prune, mode) {
     .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune, mode)
 }
 
+#' @export
+calc_overlap <- function(cc_adj, cg_adj) {
+    .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
+}
+
