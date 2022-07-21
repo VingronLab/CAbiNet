@@ -74,9 +74,9 @@ plot_biUMAP <- function(umap_coords,
     #   
     #   umap_coords[!sel,color_by] <- "not_in_metadata"
     # }
-    # if(show_gene_meta){
-    #   umap_coords = umap_coords[sel,]
-    # }
+    if(show_gene_meta){
+      umap_coords = umap_coords[sel,]
+    }
     
   }
   
