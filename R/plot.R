@@ -34,21 +34,27 @@ plot_biUMAP <- function(umap_coords,
                         color_by = "type",
                         metadata = NULL,
                         type = "scatter",
-                        point_size = 1,
+                        cell_size = 1,
+                        gene_size = 3,
                         hex_n = 40,
                         min_bin = 2,
                         contour_n = 5,
                         cell_alpha = 0.5,
                         gene_alpha = 1,
                         show_density = FALSE,
-                        color_genes = FALSE){
+                        color_genes = FALSE,
+                        label_groups = TRUE,
+                        group_label_size=4,
+                        labels_per_group=1,
+                        show_gene_meta = TRUE,
+                        label_marker_gene = FALSE){
   
   if(!is.null(metadata)){
     
     if(!is(metadata,"data.frame")){
       metadata <- as.data.frame(metadata)
     }
-    stopifnot(color_by %in% colnames(metadata))
+    stopifnot((color_by %in% colnames(metadata)) | (color_by %in% colnames(umap_coords)))
     
     if(!"name" %in% colnames(metadata)){
       metadata$name <- rownames(metadata)
@@ -61,6 +67,16 @@ plot_biUMAP <- function(umap_coords,
     matched_names <- match(umap_coords$name[sel], metadata$name)
     umap_coords[,color_by] <- "not_in_metadata"
     umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+    # if (color_by %in% colnames(metadata)){
+    #   umap_coords[,color_by] <- "not_in_metadata"
+    #   umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
+    # } else {
+    #   
+    #   umap_coords[!sel,color_by] <- "not_in_metadata"
+    # }
+    if(show_gene_meta){
+      umap_coords = umap_coords[sel,]
+    }
     
   }
   
@@ -106,8 +122,6 @@ plot_biUMAP <- function(umap_coords,
     
     if (isTRUE(color_genes)){
       
-      color_by_genes <- color_by
-      gene_colors <- colors
       
     } else {
       color_by_genes <- "type"
@@ -141,12 +155,14 @@ plot_biUMAP <- function(umap_coords,
                                 text = quote(interact_genes)
                  ),
                  color = "black",
-                 size = point_size,
+                 size = gene_size,
                  shape = 21,
                  # stroke = 0.25,
                  alpha = gene_alpha ) +
       scale_fill_manual(values = gene_colors) +
       scale_color_manual(values = colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
   } else if (type == "hex"){
@@ -250,9 +266,11 @@ plot_biUMAP <- function(umap_coords,
                         ),
                         color = "black",
                         shape = 21,
-                        size = point_size,
+                        size = gene_size,
                         alpha = gene_alpha ) +
       scale_fill_manual(values = colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
     
@@ -290,7 +308,7 @@ plot_biUMAP <- function(umap_coords,
                                 color = as.name(color_by),
                                 text = quote(interact_cells)),
                  alpha = cell_alpha,
-                 size = point_size/3) +
+                 size = cell_size) +
       geom_point(data = umap_genes,
                  mapping = aes_(x = ~x,
                                 y = ~y,
@@ -299,13 +317,70 @@ plot_biUMAP <- function(umap_coords,
                  color = "black",
                  shape = 21,
                  alpha = gene_alpha, 
-                 size = point_size) +
+                 size = gene_size) +
       scale_color_manual(values = colors) +
       scale_fill_manual(values = gene_colors) +
+      labs(x="Dim 1",
+           y="Dim 2") +
       theme_bw()
     
   }
   
+  umap_coords$group_color = umap_coords[,color_by]
+  
+  if(label_groups){
+    
+    text_df = umap_coords %>%
+      filter(type == 'cell') %>%
+      dplyr::group_by(group_color) %>%
+      dplyr::mutate(cells_in_cluster= dplyr::n()) %>%
+      dplyr::group_by(group_color, .add=TRUE) %>%
+      dplyr::mutate(per=dplyr::n()/cells_in_cluster)
+    median_coord_df = text_df %>%
+      dplyr::summarize(fraction_of_group = dplyr::n(),
+                       text_x = stats::median(x = x),
+                       text_y = stats::median(x = y))
+    text_df = suppressMessages(text_df %>% dplyr::select(per) %>%
+                                 dplyr::distinct())
+    text_df = suppressMessages(dplyr::inner_join(text_df,
+                                                 median_coord_df))
+    text_df = text_df %>% dplyr::group_by(group_color) %>%
+      dplyr::top_n(labels_per_group, per)
+    text_df$label = as.character(text_df %>% dplyr::pull(group_color))
+  }else{
+    text_df = NULL
+  }
+  
+  # 
+  # p <- ggplot(umap_coords,aes(x=x, y=y)) +
+  #   # umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
+  #   #                            text = paste0(
+  #   #                              "Type: ", quote(type), "\n",
+  #   #                              "Name: ", quote(name), "\n",
+  #   #                              "Cluster: ", quote(cluster)))) +
+  #   geom_jitter(aes(color =group_color),alpha = alpha, size = size) +
+  #   geom_point(data = umap_coords[umap_coords$type == 'gene',],
+  #              shape = 1, aes(fill = group_color ), color = 'black', alpha = 0.5)+
+  #   geom_point(data = umap_coords[!sel,],
+  #              shape = 1, aes(fill = group_color ) , color = 'black', alpha = 0.5)
+  if(label_groups) {
+    p <- p + ggrepel::geom_text_repel(data = text_df,
+                                      mapping = aes(x = text_x,
+                                                    y = text_y,
+                                                    label = label),
+                                      size=I(group_label_size),
+                                      fontface = "bold")
+  }
+  if(label_marker_gene){
+    
+    p <- p + ggrepel::geom_text_repel(data = umap_genes,
+                                      mapping = aes(x = x,
+                                                    y = y,
+                                                    label = name),
+                                      max.overlaps = 12,
+                                      size=I(group_label_size-1))
+  }
+  p = p + theme_bw()
   
   
   return(p)
@@ -320,7 +395,7 @@ plot_biUMAP <- function(umap_coords,
 #' @param feature
 #' @param color_cells_by
 #' @param assay
-#' 
+#' @export
 feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
   stopifnot(length(feature)<=1)
   
@@ -340,7 +415,8 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
     cnts <- SummarizedExperiment::assay(sce, assay)
     umap_coords$expression <- NA
     umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
-    
+
+    umap_coords[cell_idx,] <- umap_coords[cell_idx,][order(umap_coords[cell_idx,"expression"], decreasing = FALSE),]
   }
   
   
@@ -349,12 +425,13 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
                mapping=aes_(~x, ~y, text = paste0(
                                        "Type: ", quote(type), "\n",
                                        "Name: ", quote(name), "\n",
-                                       "Cluster: ", quote(cluster))),color ="grey", alpha = 0.5) +
+                                       "Cluster: ", quote(cluster))), color ="#A9A9A9", alpha = 0.5) +  #grey
     geom_point(umap_coords[umap_coords$type == "cell",],
                mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
                                                     "Type: ", quote(type), "\n",
                                                     "Name: ", quote(name), "\n",
-                                                    "Cluster: ", quote(cluster)))) +
+                                                    "Cluster: ", quote(cluster))),
+               alpha = 0.8) +
     geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
                aes_(~x, ~y),
                color = "red") +
@@ -362,9 +439,45 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
                     aes_(~x, ~y, label= ~name),
                     color = "red") +
     viridis::scale_color_viridis(name=lgnd, discrete = isExpr) +
+    labs(x="Dim 1",
+         y="Dim 2")+
     theme_bw()
     
 }
+
+
+metadata_biUMAP <- function(umap_coords, sce, color_cells_by, continous = FALSE){
+  metadata <- colData(sce)
+
+  cell_idx <- which(umap_coords$type == "cell")
+
+  umap_coords[,color_cells_by] <- NA
+  umap_coords[cell_idx, color_cells_by] <- metadata[umap_coords[cell_idx,]$name, color_cells_by] 
+
+
+
+  p <- ggplot()+
+    geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping=aes_(~x, ~y), color ="#A9A9A9", alpha = 0.5) +  #grey
+    geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping=aes_(~x, ~y, color = as.name(color_cells_by)),
+               alpha = 0.8)
+
+    if(isTRUE(continous)){
+
+      p <- p + viridis::scale_color_viridis(name=color_cells_by, discrete = FALSE)
+
+    } 
+
+
+    p<- p + 
+      labs(x="Dim 1",
+           y="Dim 2")+
+      theme_bw()
+
+    return(p)
+}
+
 
 #' Shuffle rows of a data frame for better plotting.
 #' @param df data.frame
@@ -438,6 +551,7 @@ setMethod(f = "bicplot",
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "plotly",
+                   rm.show = TRUE,
                    ...){
             
             if (!is(caobj,"cacomp")){
@@ -449,8 +563,8 @@ setMethod(f = "bicplot",
             gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
             cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
             
-            cells <- data.frame(clusters = rep(NA, ncells)) 
-            genes <- data.frame(clusters = rep(NA, ngenes))
+            cells <- data.frame(clusters = rep('trimmed', ncells)) 
+            genes <- data.frame(clusters = rep('trimmed', ngenes))
             
             cells[cell.idx,] <- as.vector(cell_clusters(caclust))
             genes[gene.idx,] <- as.vector(gene_clusters(caclust))
@@ -483,6 +597,14 @@ setMethod(f = "bicplot",
             
             rows <- as.data.frame(rows)
             cols <- as.data.frame(cols)
+            
+            if (isFALSE(rm.show)){
+              rows <- rows[rows$cluster != 'trimmed',]
+              cols <- cols[cols$cluster != 'trimmed',]
+            }
+            
+            # rows <- rows[rownames(rows) %in% names(genes),]
+            # cols <- cols[rownames(cols) %in% names(cells),]
             if (type == "ggplot"){
               
               # rows <- as.data.frame(rows)
@@ -494,25 +616,25 @@ setMethod(f = "bicplot",
               cnmy <- colnames(cols)[ydim]
               
               p <- ggplot2::ggplot()+
-                ggplot2::geom_point(data=rows,
-                                    ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy),
-                                                  colour= rows$clusters),
-                                    # colour = "#0066FF",
-                                    alpha = 0.7, 
-                                    shape = 1) +
                 ggplot2::geom_point(data=cols,
                                     ggplot2::aes_(x = as.name(cnmx), y = as.name(cnmy),
                                                   colour= cols$clusters),
                                     # colour = "#990000",
                                     shape = 4) +
-                ggplot2::theme_bw()
+                ggplot2::geom_point(data=rows,
+                                    ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy),
+                                                  colour= rows$clusters),
+                                    # colour = "#0066FF",
+					alpha = 1, 
+                                    shape = 1) +
+                ggplot2::theme_bw() #+ ggsci::scale_color_npg()
               
               if (!is.null(row_labels)){
                 p <- p +
                   ggplot2::geom_point(data=rows[row_labels,],
                                       ggplot2::aes_(x = as.name(rnmx),
                                                     y = as.name(rnmy),
-                                                    colour= rows$clusters),
+                                                    colour= rows$clusters[row_labels]),
                                       # colour = "#FF0000",
                                       shape = 16) +
                   ggrepel::geom_text_repel(data=rows[row_labels,],

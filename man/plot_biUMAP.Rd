@@ -4,7 +4,26 @@
 \alias{plot_biUMAP}
 \title{Plot biUMAP}
 \usage{
-plot_biUMAP(umap_coords, color_by = "type", metadata = NULL, type = "scatter")
+plot_biUMAP(
+  umap_coords,
+  color_by = "type",
+  metadata = NULL,
+  type = "scatter",
+  cell_size = 1,
+  gene_size = 3,
+  hex_n = 40,
+  min_bin = 2,
+  contour_n = 5,
+  cell_alpha = 0.5,
+  gene_alpha = 1,
+  show_density = FALSE,
+  color_genes = FALSE,
+  abel_groups = TRUE,
+  group_label_size = 4,
+  labels_per_group = 1,
+  show_gene_meta = TRUE,
+  label_marker_gene = FALSE
+)
 }
 \arguments{
 \item{umap_coords}{data frame as outputted by `run_biUMAP_*`}

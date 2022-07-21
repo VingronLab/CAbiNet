@@ -62,11 +62,15 @@ calc_assR <- function(caobj, direction = "cells-genes"){
 #' * "gc": gene-cell association ratio
 #' 
 #' @md
-calc_distances <- function(caobj){
+calc_distances <- function(caobj, appx = TRUE){
   
   cell_dists <- calc_euclidean(caobj@prin_coords_cols)
   gene_dists <- calc_euclidean(caobj@prin_coords_rows)
-  cell_gene_assr <- calc_assR(caobj, direction = "cells-genes")
+  if (isTRUE(appx)){
+    cell_gene_assr <- calc_assR(caobj, direction = "cells-genes")
+  }else{
+    cell_gene_assr <- t(caobj@AR)
+  }
 #   gene_cell_assr <- calc_assR(caobj, direction = "genes")
     # no need to calculate again, just take the transpose
   gene_cell_assr <- t(cell_gene_assr) 
@@ -100,12 +104,13 @@ make_knn <- function(dists,
   n.row <- nrow(dists)
   n.col <- ncol(dists)
 
-  if (n.col < k) {
+  if ((n.col-1 < k) |(n.row-1 < k)) {
     warning(
-      "k set larger than number of genes Setting k to number of genes - 1.",
+      "k set larger than number of selected genes Setting k to number of genes - 1.",
       call. = FALSE
     )
-    k <- n.col - 1
+    k = min(n.col-1, n.row -1)
+    # k <- n.col - 1
   }
   knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
   # knd.mat <- knn.mat
@@ -128,7 +133,6 @@ make_knn <- function(dists,
   # convert nn.ranked into a Graph
   j <- as.numeric(t(knn.mat))
   i <- ((1:length(j)) - 1) %/% k + 1
-
   nn.matrix <- Matrix::sparseMatrix(i = i,
                                     j = j,
                                     x = 1,
@@ -248,12 +252,27 @@ create_bigraph <- function(cell_dists,
                            select_genes = TRUE,
                            prune_overlap = TRUE,
                            overlap = 0.2,
-                           calc_gene_cell_kNN = FALSE) {
+                           calc_gene_cell_kNN = FALSE,
+                           marker_genes = NULL) {
 
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
                      decr = TRUE,
                      loops = loops)
+  
+  if (!is.null(marker_genes)){
+    stopifnot(is(marker_genes, "character"))
+    
+    idx <- which(colnames(cgg_nn) %in% marker_genes)
+    marker_knn <- cgg_nn[,idx]
+    cgg_nn <- cgg_nn[,-idx]
+    
+    marker_dists <- gene_dists[idx,]
+    marker_assr <- gene_cell_assr[idx,]
+    
+    gene_dists <- gene_dists[-idx, -idx]
+    gene_cell_assr <- gene_cell_assr[-idx,]
+  }
 
   if(isTRUE(select_genes)){
     
@@ -274,17 +293,32 @@ create_bigraph <- function(cell_dists,
 
     overlap_mat <- determine_overlap(cg_adj = cgg_nn,
                                      cc_adj = ccg_nn)
-
+    
     cgg_nn[overlap_mat < overlap] <- 0
 
     idx <- Matrix::colSums(cgg_nn) > 0
+    if (sum(idx) <=1){
+      cat('The given value of "overlap" is too large, all gene nodes 
+           are trimmed. Use a smaller overlap instead! 99% quantile of overlaps is',
+          quantile(overlap_mat,0.99), '. Overlap should be smaller than ', max(overlap_mat), '.\n')
+      return(ccg_nn)
+    }
     cgg_nn <- cgg_nn[,idx]
     gene_dists <- gene_dists[idx,idx]
     gene_cell_assr <- gene_cell_assr[idx,]
 
   }
 
-
+  
+  if(!is.null(marker_genes)){
+    
+    cgg_nn <- cbind(cgg_nn, marker_knn)
+    
+    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+    
+  }
 
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
@@ -369,16 +403,19 @@ create_SNN <- function(caobj,
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE) {
+                       calc_gene_cell_kNN = FALSE,
+                       marker_genes = NULL) {
   
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
   stopifnot(mode %in% c("out", "in", "all"))
-  
+  # S = caobj@U %*% diag(caobj@D) %*% t(caobj@V)
   adj <- create_bigraph(cell_dists = distances[["cc"]],
                         gene_dists = distances[["gg"]],
                         cell_gene_assr = distances[["cg"]],
+                        # cell_gene_assr = t(S),
                         gene_cell_assr = distances[["gc"]],
+                        # gene_cell_assr = S,
                         k_c = k_c,
                         k_g = k_g,
                         k_cg = k_cg,
@@ -387,12 +424,12 @@ create_SNN <- function(caobj,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
-                        calc_gene_cell_kNN = calc_gene_cell_kNN)
+                        calc_gene_cell_kNN = calc_gene_cell_kNN,
+                        marker_genes = marker_genes)
   
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")  
   }
-  
   
   snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
   
@@ -422,9 +459,13 @@ create_SNN <- function(caobj,
 run_leiden <- function(SNN, 
                        resolution = 1,
                        n.int = 10, 
-                       rand_seed = 2358) {
+                       rand_seed = 2358,
+                       dense = TRUE) {
+  if(isTRUE(dense)){
+    SNN = as.matrix(SNN)
+  }
   
-  clusters <- leiden::leiden(object = as.matrix(SNN),
+  clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -489,7 +530,7 @@ eigengap = function(e, v){
   n = length(e)
   gaps = abs(e[1:(n-1)] - e[2:n])
   idx = which(gaps == max(gaps))[1]
-  cat('eigengap idx',idx,'\n')
+  # cat('eigengap idx',idx,'\n')
   if ( idx <2){
     selected_eigen = v[, 1:2]
   }else{
@@ -577,31 +618,37 @@ run_spectral <- function(SNN,
                          iter.max=10, 
                          num.seeds=10,
                          return.eig = TRUE,
-                         dims = NULL) {
+                         dims = 30) {
   diag(SNN) = 0
   L = NormLaplacian(SNN)
+  
+  if (dims > ncol(SNN)){
+    
+    dims = ncol(SNN)
+    
+  }
+  
   if (python == TRUE){
     
-    svd_torch <- NULL
-    L = as.matrix(L)
+    svds_scipy <- NULL
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
 
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
-    
-    SVD <- svd_torch(L)
+    SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
+  
     SVD$D <- as.vector(SVD$D) # eigenvalues in a decreasing order
     
   } else {
     
-    SVD <- svd(L) # eigenvalues in a decreasing order
-    names(SVD) <- c("D", "U", "V")
-    SVD <- SVD[c(2, 1, 3)]
+    SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
+    names(SVD)[1:3] <- c("D", "U", "V")
     
   }
-
+  
   idx = order(SVD$D, decreasing = FALSE)
   eigenvalues = SVD$D[idx]
   eigenvectors = SVD$U[,idx]
+  
   # cat('SVD for graph laplacian is done....\n')
   
   if (use_gap == FALSE){
@@ -610,19 +657,28 @@ run_spectral <- function(SNN,
       
         stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
     
-      }else{
-        
-      eig = eigenvectors[,1:nclust] # in an increasing order
+      # }else if (nclust > dims){
+      #   
+      #   stop('Number of dims should be larger than number of clusters (nclust)')
       
-    }} else if (use_gap == TRUE){
+      }else{
+      
+        eig = eigenvectors[,1:nclust] # in an increasing order
+        # eig = eigenvectors
+        
+    }
     
+    } else if (use_gap == TRUE){
+      
+      
     eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
+    nclust = ncol(eig)
     
   }
   
   if (clust.method == 'skmeans'){
     
-    clusters = SKMeans(eig, k = ncol(eig), num.seeds = num.seeds)$cluster
+    clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
   
   }else if (clust.method == 'kmeans'){
     
@@ -710,6 +766,7 @@ run_caclust <- function(caobj,
                         overlap = 0.2,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
+                        marker_genes = NULL,
                         n.int = 10,
                         rand_seed = 2358,
                         use_gap = TRUE,
@@ -718,12 +775,15 @@ run_caclust <- function(caobj,
                         clust.method = 'kmeans',
                         iter.max=10, 
                         num.seeds=10,
-                        return.eig = TRUE) {
+                        return.eig = TRUE,
+                        sc.dims = NULL,
+                        leiden.dense = TRUE,
+                        appx = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj)
+  distances <- calc_distances(caobj = caobj, appx = appx)
   
   SNN <- create_SNN(caobj = caobj, 
                     distances = distances,
@@ -737,30 +797,35 @@ run_caclust <- function(caobj,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
                     overlap = overlap,
-                    calc_gene_cell_kNN = calc_gene_cell_kNN)
+                    calc_gene_cell_kNN = calc_gene_cell_kNN,
+                    marker_genes = marker_genes)
   
   if (algorithm == "leiden"){
     
     clusters <- run_leiden(SNN = SNN, 
                            resolution = resolution,
                            n.int = n.int, 
-                           rand_seed = rand_seed)
+                           rand_seed = rand_seed,
+                           dense = leiden.dense)
     
     eigen <- matrix()
     
   } else if (algorithm == "spectral"){
     
-    dims = length(caobj@D)
+    if (is.null(sc.dims)){
+      sc.dims = length(caobj@D)
+    }
+      clusters <- run_spectral(SNN = SNN,
+                               use_gap = use_gap,
+                               nclust = nclust,
+                               python = python,
+                               clust.method = clust.method,
+                               iter.max = iter.max, 
+                               num.seeds = num.seeds,
+                               return.eig = return.eig,
+                               dims = sc.dims)
 
-    clusters <- run_spectral(SNN = SNN,
-                             use_gap = use_gap,
-                             nclust = nclust,
-                             python = python,
-                             clust.method = clust.method,
-                             iter.max = iter.max, 
-                             num.seeds = num.seeds,
-                             return.eig = return.eig,
-                             dims = dims)
+
     if (isTRUE(return.eig)){
       
       eigen <- clusters$eigen
@@ -797,6 +862,7 @@ run_caclust <- function(caobj,
     }
 
       
+
     
   } else{
     stop("algorithm should choose from 'leiden' and 'spectral'!")
@@ -838,11 +904,16 @@ run_biUMAP <- function(caobj,
                               caclust_obj,
                               k_umap,
                               rand_seed = 2358,
-                              algorithm = 'SNNdist'){
+                              algorithm = 'SNNdist',
+                              coords = 1,...){
+
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
   stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca", "ca_assR"))
+  
+  custom.config = umap::umap.defaults
+  custom.config$random_state = rand_seed
   
   if (algorithm == 'SNNgraph'){
   
@@ -863,9 +934,6 @@ run_biUMAP <- function(caobj,
     rownames(SNN_idx) <- rownames(SNN)
     rownames(SNN_jacc) <- rownames(SNN)
 
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
-
     snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
                                     distances = SNN_jacc)
 
@@ -884,7 +952,7 @@ run_biUMAP <- function(caobj,
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     
-    reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
+    reticulate::source_python(system.file("inst/python/umap.py", package = "CAclust"), envir = globalenv())
     
     umap_coords = python_umap(dm = SNNdist,
                               metric = "precomputed",
@@ -898,25 +966,46 @@ run_biUMAP <- function(caobj,
     eigen = get_eigen(caclust_obj)
     
     if(is.na(eigen)) stop("Spectral clustering not run.")
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
+
     
     caclust_umap = umap::umap(eigen, 
                               config = custom.config,
-                              n_neighbors = k_umap,
-                              metric = 'cosine')
+                              n_neighbors = k_umap)
     
     umap_coords <- as.data.frame(caclust_umap$layout)
     
   }else if (algorithm == 'ca'){
+    # eigen = rbind(caobj@prin_coords_cols, caobj@prin_coords_rows)
+    if (coords == 1){
+      
+      if(sum(!is.null(caobj@prin_coords_rows), !is.null(caobj@std_coords_cols)) != 2){
+        stop("Principal and/or standard coordinates not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@prin_coords_cols, caobj@prin_coords_rows)
+      
+    } else if (coords == 2){
+      if(sum(!is.null(caobj@prin_coords_cols), !is.null(caobj@std_coords_rows)) != 2){
+        stop("Principal and/or standard coordinates not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@std_coords_cols, caobj@std_coords_rows)
+    }else if (coords == 3){
+      if(sum(!is.null(caobj@U), !is.null(caobj@V)) != 2){
+        stop("Singular eigenvectors not found, ",
+             "please run ca_coords() first!")
+      }
+      eigen = rbind(caobj@V, caobj@U)
+    } else {
+      stop("princ_coords must be either 1 for rows or 2 for columns.")
+    }
     
+
+    idx1 = which(rownames(eigen)  %in% names(gene_clusters(caclust_obj)))
+    idx2 = which(rownames(eigen) %in% names(cell_clusters(caclust_obj)))
+    
+    eigen = eigen[c(idx1,idx2),]
     SNN <- get_snn(caclust_obj)
-    
-    eigen = rbind(caobj@V, caobj@U)
-    # eigen <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
-    
     eigen <- eigen[rownames(eigen) %in% rownames(SNN),]
     
     

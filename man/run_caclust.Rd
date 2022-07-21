@@ -17,6 +17,7 @@ run_caclust(
   overlap = 0.2,
   calc_gene_cell_kNN = FALSE,
   resolution = 1,
+  marker_genes = NULL,
   n.int = 10,
   rand_seed = 2358,
   use_gap = TRUE,
@@ -25,7 +26,10 @@ run_caclust(
   clust.method = "kmeans",
   iter.max = 10,
   num.seeds = 10,
-  return.eig = TRUE
+  return.eig = TRUE,
+  sc.dims = NULL,
+  leiden.dense = TRUE,
+  appx = TRUE
 )
 }
 \arguments{

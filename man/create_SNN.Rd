@@ -17,7 +17,8 @@ create_SNN(
   select_genes = TRUE,
   prune_overlap = TRUE,
   overlap = 0.2,
-  calc_gene_cell_kNN = FALSE
+  calc_gene_cell_kNN = FALSE,
+  marker_genes = NULL
 )
 }
 \arguments{
