@@ -8,8 +8,21 @@ plot_biUMAP(
   umap_coords,
   color_by = "type",
   metadata = NULL,
-  size = 1,
-  alpha = 0.4
+  type = "scatter",
+  cell_size = 1,
+  gene_size = 3,
+  hex_n = 40,
+  min_bin = 2,
+  contour_n = 5,
+  cell_alpha = 0.5,
+  gene_alpha = 1,
+  show_density = FALSE,
+  color_genes = FALSE,
+  abel_groups = TRUE,
+  group_label_size = 4,
+  labels_per_group = 1,
+  show_gene_meta = TRUE,
+  label_marker_gene = FALSE
 )
 }
 \arguments{
@@ -21,6 +34,8 @@ plot_biUMAP(
 \item{metadata}{optional. data.frame that should have either gene or cell names
 (or both) in as rownames or a column named `name` and a column with the same name as 
 `color_by`.}
+
+\item{type}{Either "scatter", "contour" or "hex".}
 }
 \value{
 ggplot of UMAP

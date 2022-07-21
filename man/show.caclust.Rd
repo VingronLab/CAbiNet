@@ -5,7 +5,7 @@
 \alias{show,caclust-method}
 \title{Print caclust object in console}
 \usage{
-show.caclust(object)
+show.caclust(object, n_rows = 10)
 
 \S4method{show}{caclust}(object)
 }

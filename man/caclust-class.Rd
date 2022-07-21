@@ -21,5 +21,7 @@ jaccard similarity.}
 
 \item{\code{parameters}}{List of used parameters and function name with which results
 were generated.}
+
+\item{\code{gene_prob}}{}
 }}
 

@@ -51,7 +51,7 @@ pick_dims(
 )
 }
 \arguments{
-\item{obj}{A "cacontainer" object as outputted from \code{cacontainer()},
+\item{obj}{A "cacomp" object as outputted from \code{cacomp()},
 a "Seurat" object with a "CA" DimReduc object stored,
 or a "SingleCellExperiment" object with a "CA" dim. reduction stored.}
 
@@ -104,7 +104,7 @@ above the average inertia.
 explain up to 80\% of the total inertia.
 \item "scree_plot" plots a scree plot.
 \item "elbow_rule" formalization of the commonly used elbow rule. Permutes the
-rows for each column and reruns \code{cacontainer()} for a total of \code{reps} times.
+rows for each column and reruns \code{cacomp()} for a total of \code{reps} times.
 The number of relevant dimensions is obtained from the point where the
 line for the explained inertia of the permuted data intersects with the
 actual data.
@@ -118,7 +118,7 @@ rownames(cnts) <- paste0("gene_", 1:nrow(cnts))
 colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
 
 # Run correspondence analysis.
-ca <- cacontainer(obj = cnts)
+ca <- cacomp(obj = cnts)
 
 # pick dimensions with the elbow rule. Returns list.
 
@@ -153,7 +153,7 @@ colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
 seu <- CreateSeuratObject(counts = cnts)
 
 # run CA and save in dim. reduction slot.
-seu <- cacontainer(seu, return_input = TRUE, assay = "RNA", slot = "counts")
+seu <- cacomp(seu, return_input = TRUE, assay = "RNA", slot = "counts")
 
 # pick dimensions
 pd <- pick_dims(obj = seu,
@@ -177,7 +177,7 @@ colnames(cnts) <- paste0("cell_", 1:ncol(cnts))
 sce <- SingleCellExperiment(assays=list(counts=cnts))
 
 # run CA and save in dim. reduction slot.
-sce <- cacontainer(sce, return_input = TRUE, assay = "counts")
+sce <- cacomp(sce, return_input = TRUE, assay = "counts")
 
 # pick dimensions
 pd <- pick_dims(obj = sce,

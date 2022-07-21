@@ -9,6 +9,6 @@ test_that("Euclidean distance calculation by function 'calc_euclidean'. ", {
 
 test_that("The gene-cell association matrix is the transpose of cell-gene association matrix,",{
   ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3, ntop = nrow(df)))
-  expect_equal(calc_assR(ca, direction = "cells"), t(calc_assR(ca, direction = "genes")))
+  expect_equal(calc_assR(ca, direction = "cells-genes"), t(calc_assR(ca, direction = "genes-cells")))
 })
 

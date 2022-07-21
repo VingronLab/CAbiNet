@@ -23,22 +23,26 @@ calc_euclidean <- function(mat) {
 #' Calculate Association Ratio
 #'
 #' @param caobj A cacomp object with principal and standard coordinates calculated.
-#' @param direction Either "cells" or "genes". If "cells" the association ratio
-#' of each gene for each cell is calculated. If "genes" the assoc. ratio of each
+#' @param direction Either "cells" or "genes". If "cells-genes" the association ratio
+#' of each gene for each cell is calculated. If "genes-cells" the assoc. ratio of each
 #' cell for each gene is calculated.
 #'
 #' @return
 #' Matrix with pairwise association ratios.
-calc_assR <- function(caobj, direction = "cells"){
+calc_assR <- function(caobj, direction = "cells-genes"){
 
   stopifnot(is(caobj, "cacomp"))
 
-  if (direction == "cells") {
+  if (direction == "cells-genes") {
     assR <- caobj@std_coords_cols %*% t(caobj@prin_coords_rows)
-  } else if (direction == "genes"){
+  } else if (direction == "genes-cells"){
     assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
+  } else if (direction == "cells-cells"){
+    assR <- caobj@std_coords_cols %*% t(caobj@std_coords_cols)
+  } else if (direction == "genes-genes"){
+    assR <- caobj@std_coords_rows %*% t(caobj@std_coords_rows)
   } else {
-    stop("Please choose a valid direction. Either 'cells' or 'genes'")
+    stop("Please choose a valid direction.")
   }
 
   return(assR)
@@ -63,7 +67,7 @@ calc_distances <- function(caobj, appx = TRUE){
   cell_dists <- calc_euclidean(caobj@prin_coords_cols)
   gene_dists <- calc_euclidean(caobj@prin_coords_rows)
   if (isTRUE(appx)){
-    cell_gene_assr <- calc_assR(caobj, direction = "cells")
+    cell_gene_assr <- calc_assR(caobj, direction = "cells-genes")
   }else{
     cell_gene_assr <- t(caobj@AR)
   }
@@ -248,12 +252,27 @@ create_bigraph <- function(cell_dists,
                            select_genes = TRUE,
                            prune_overlap = TRUE,
                            overlap = 0.2,
-                           calc_gene_cell_kNN = FALSE) {
+                           calc_gene_cell_kNN = FALSE,
+                           marker_genes = NULL) {
 
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
                      decr = TRUE,
                      loops = loops)
+  
+  if (!is.null(marker_genes)){
+    stopifnot(is(marker_genes, "character"))
+    
+    idx <- which(colnames(cgg_nn) %in% marker_genes)
+    marker_knn <- cgg_nn[,idx]
+    cgg_nn <- cgg_nn[,-idx]
+    
+    marker_dists <- gene_dists[idx,]
+    marker_assr <- gene_cell_assr[idx,]
+    
+    gene_dists <- gene_dists[-idx, -idx]
+    gene_cell_assr <- gene_cell_assr[-idx,]
+  }
 
   if(isTRUE(select_genes)){
     
@@ -274,7 +293,7 @@ create_bigraph <- function(cell_dists,
 
     overlap_mat <- determine_overlap(cg_adj = cgg_nn,
                                      cc_adj = ccg_nn)
-
+    
     cgg_nn[overlap_mat < overlap] <- 0
 
     idx <- Matrix::colSums(cgg_nn) > 0
@@ -290,7 +309,16 @@ create_bigraph <- function(cell_dists,
 
   }
 
-
+  
+  if(!is.null(marker_genes)){
+    
+    cgg_nn <- cbind(cgg_nn, marker_knn)
+    
+    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+    
+  }
 
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
@@ -375,7 +403,8 @@ create_SNN <- function(caobj,
                        select_genes = TRUE,
                        prune_overlap = TRUE,
                        overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE) {
+                       calc_gene_cell_kNN = FALSE,
+                       marker_genes = NULL) {
   
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
@@ -395,7 +424,8 @@ create_SNN <- function(caobj,
                         overlap = overlap,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
-                        calc_gene_cell_kNN = calc_gene_cell_kNN)
+                        calc_gene_cell_kNN = calc_gene_cell_kNN,
+                        marker_genes = marker_genes)
   
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")  
@@ -602,7 +632,7 @@ run_spectral <- function(SNN,
     
     svds_scipy <- NULL
     reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
-    
+
     SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
   
@@ -650,12 +680,35 @@ run_spectral <- function(SNN,
     
     clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
   
-    }else if (clust.method == 'kmeans'){
-      
-    clusters = RcmdrMisc::KMeans(eig, centers = nclust, iter.max=iter.max, num.seeds= num.seeds)$cluster
-  
-    }else{
-    stop('clustering method should be chosen from kmeans and skmeans!')
+  }else if (clust.method == 'kmeans'){
+    
+  clusters = RcmdrMisc::KMeans(eig, centers = ncol(eig), iter.max=iter.max, num.seeds= num.seeds)$cluster
+
+  }else if (clust.method == 'GMM'){
+    
+    gmm = ClusterR::GMM(eig,
+                        gaussian_comps = ncol(eig),
+                        dist_mode = "maha_dist",
+                        seed_mode = "random_subset",
+                        km_iter = 30,
+                        em_iter = 30,
+                        verbose = F)   
+    
+    cluster_probs = predict_GMM(data = eig,
+                                 CENTROIDS = gmm$centroids, 
+                                 COVARIANCE = gmm$covariance_matrices,
+                                 WEIGHTS = gmm$weights)
+    
+    cluster_probs <- cluster_probs[-which(names(cluster_probs)=="log_likelihood")]
+    rownames(cluster_probs$cluster_proba) <- rownames(SNN)
+    colnames(cluster_probs$cluster_proba) <- paste("BC", seq_len(ncol(cluster_probs$cluster_proba)))
+    cluster_probs$cluster_labels <- as.factor(cluster_probs$cluster_labels)
+    names(cluster_probs$cluster_labels) <- rownames(SNN)
+    
+    return(cluster_probs)
+    
+  }else{
+  stop('clustering method should be chosen from kmeans and skmeans!')
   }
   
   clusters <- as.factor(clusters)
@@ -713,6 +766,7 @@ run_caclust <- function(caobj,
                         overlap = 0.2,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
+                        marker_genes = NULL,
                         n.int = 10,
                         rand_seed = 2358,
                         use_gap = TRUE,
@@ -743,7 +797,8 @@ run_caclust <- function(caobj,
                     select_genes = select_genes,
                     prune_overlap = prune_overlap,
                     overlap = overlap,
-                    calc_gene_cell_kNN = calc_gene_cell_kNN)
+                    calc_gene_cell_kNN = calc_gene_cell_kNN,
+                    marker_genes = marker_genes)
   
   if (algorithm == "leiden"){
     
@@ -770,13 +825,42 @@ run_caclust <- function(caobj,
                                return.eig = return.eig,
                                dims = sc.dims)
 
-    if (return.eig){
+
+    if (isTRUE(return.eig)){
       
       eigen <- clusters$eigen
-      clusters <- as.factor(clusters$clusters)
       rownames(eigen) <- rownames(SNN)
+      
+    } else {
+      
+      eigen <- matrix()
+    }
     
-      }
+    if (clust.method == "GMM"){
+      
+      cell_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_cols))
+      gene_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_rows))
+      
+      cell_clusters <- clusters$cluster_labels[cell_idx]
+      gene_clusters <- clusters$cluster_labels[gene_idx]
+      
+      cell_idx <- which(rownames(clusters$cluster_proba) %in% rownames(caobj@prin_coords_cols))
+      gene_idx <- which(rownames(clusters$cluster_proba) %in% rownames(caobj@prin_coords_rows))
+      cell_prob <- clusters$cluster_proba[cell_idx,]
+      gene_prob <- clusters$cluster_proba[gene_idx,]
+      
+      caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
+                                               "gene_clusters" = gene_clusters,
+                                               "SNN" = SNN,
+                                               "eigen" = eigen,
+                                               "parameters" = call_params,
+                                               "cell_prob" = cell_prob,
+                                               "gene_prob" = gene_prob))
+      return(caclust_res)
+    } else {
+      clusters <- as.factor(clusters$clusters)
+    }
+
       
 
     
@@ -826,7 +910,7 @@ run_biUMAP <- function(caobj,
   
   stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
-  stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca"))
+  stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca", "ca_assR"))
   
   custom.config = umap::umap.defaults
   custom.config$random_state = rand_seed
@@ -931,8 +1015,37 @@ run_biUMAP <- function(caobj,
                               n_neighbors = k_umap)
     umap_coords <- as.data.frame(caclust_umap$layout)
     
-  }else{
-    stop('algorithm should be one of leiden, spectral and ca!')
+  }else if (algorithm == 'ca_assR'){
+    
+    SNN <- get_snn(caclust_obj)
+    
+    cc <- calc_assR(caobj = caobj, direction = "cells-cells")
+    cc <- cc[rownames(cc) %in% rownames(SNN), colnames(cc) %in% colnames(SNN)]
+    
+    cg <- calc_assR(caobj = caobj, direction = "cells-genes")
+    cg <- cg[rownames(cg) %in% rownames(SNN), colnames(cg) %in% colnames(SNN)]
+    
+    gg <- calc_assR(caobj = caobj, direction = "genes-genes")
+    gg <- gg[rownames(gg) %in% rownames(SNN), colnames(gg) %in% colnames(SNN)]
+    
+    gc <- calc_assR(caobj = caobj, direction = "genes-cells")
+    gc <- gc[rownames(gc) %in% rownames(SNN), colnames(gc) %in% colnames(SNN)]
+    
+    assR <- rbind(cbind(cc,cg), cbind(gc,gg))
+
+    
+    
+    reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
+    
+    umap_coords = python_umap(dm = assR,
+                              metric = "precomputed",
+                              n_neighbors = as.integer(k_umap))
+    
+    umap_coords <- as.data.frame(umap_coords)
+    rownames(umap_coords) <- colnames(assR)
+    
+  } else {
+    stop()
   }
   
   
@@ -971,5 +1084,18 @@ aR_metric <- function(matrix, origin, target){
   assR <- drop(assR)
   return(assR)
   # assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
+}
+
+assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
+  if(type == "genes"){
+    prob_slot <- "gene_prob"
+  } else if (type == "cells"){
+    prob_slot <- "cells_prob"
+  }
+  
+  probs <- slot(caclust_obj, prob_slot)
+  probs <- probs > cutoff
+  
+  return(probs)
 }
 

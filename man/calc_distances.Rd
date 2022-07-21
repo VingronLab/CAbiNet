@@ -4,7 +4,7 @@
 \alias{calc_distances}
 \title{Calculate distances for bigraph}
 \usage{
-calc_distances(caobj)
+calc_distances(caobj, appx = TRUE)
 }
 \arguments{
 \item{caobj}{A cacomp object with principal and standard coordinates calculated.}

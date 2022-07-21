@@ -7,7 +7,7 @@
 ca_coords(caobj, dims = NULL, princ_coords = 3, princ_only = FALSE)
 }
 \arguments{
-\item{caobj}{A "cacontainer" object as outputted from `cacontainer()`.}
+\item{caobj}{A "cacomp" object as outputted from `cacomp()`.}
 
 \item{dims}{Integer indicating the number of dimensions to use for the 
 calculation of coordinates.
@@ -34,7 +34,7 @@ prin_coords_rows/prin_coords_cols: Principal coordinates of rows/columns.
 coordinates of the rows and columns in CA space.
 }
 \details{
-Takes a "cacontainer" object and calculates standardized and principal 
+Takes a "cacomp" object and calculates standardized and principal 
 coordinates for the visualization of CA results in a biplot or
 to subsequently calculate coordinates in an Association Plot.
 }
@@ -47,6 +47,6 @@ rownames(cnts) <- paste0("gene_", 1:10)
 cnts <- as.matrix(cnts)
 
 # Run correspondence analysis.
-ca <- cacontainer(obj = cnts, princ_coords = 1)
+ca <- cacomp(obj = cnts, princ_coords = 1)
 ca <- ca_coords(ca, princ_coords = 3)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/CA.R
 \name{run_cacontainer}
 \alias{run_cacontainer}
-\title{Internal function for `cacontainer`}
+\title{Internal function for `cacomp`}
 \usage{
 run_cacontainer(
   obj,
@@ -53,7 +53,7 @@ Default TRUE.}
 \item{...}{Arguments forwarded to methods.}
 }
 \value{
-Returns a named list of class "cacontainer" with components
+Returns a named list of class "cacomp" with components
 U, V and D: The results from the SVD.
 row_masses and col_masses: Row and columns masses.
 top_rows: How many of the most variable rows/genes were retained for the 

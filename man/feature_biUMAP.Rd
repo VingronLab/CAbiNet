@@ -12,9 +12,6 @@ feature_biUMAP(
   assay = "logcounts"
 )
 }
-\arguments{
-\item{assay}{}
-}
 \description{
 plot biUMAP with gene expression
 }

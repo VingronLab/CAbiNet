@@ -7,7 +7,7 @@
 elbow_method(obj, mat, reps, python, return_plot)
 }
 \arguments{
-\item{obj}{A "cacontainer" object as outputted from `cacontainer()`}
+\item{obj}{A "cacomp" object as outputted from `cacomp()`}
 
 \item{mat}{A numeric matrix. For sequencing a count matrix, gene expression 
 values with genes in rows and samples/cells in columns.
@@ -39,7 +39,7 @@ library(Seurat)
 set.seed(2358)
 cnts <- as.matrix(Seurat::GetAssayData(pbmc_small, "data"))
 # Run correspondence analysis.
-ca <- cacontainer(obj = cnts)
+ca <- cacomp(obj = cnts)
 
 # pick dimensions with the elbow rule. Returns list.
 pd <- pick_dims(obj = ca,

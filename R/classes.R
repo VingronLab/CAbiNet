@@ -69,6 +69,10 @@ check_caclust <- function(object){
 #' jaccard similarity.
 #' @slot parameters List of used parameters and function name with which results
 #' were generated.
+#' @slot eigen
+#' @slot cell_prob
+#' @slot gene_prob
+#' 
 #' @export
 setClass("caclust",
          representation(
@@ -76,7 +80,9 @@ setClass("caclust",
            gene_clusters = "factor",
            SNN = "dgCMatrix",
            eigen = 'matrix',
-           parameters = "list"
+           parameters = "list",
+           cell_prob = "matrix",
+           gene_prob = "matrix"
          ),
          validity = check_caclust
 )
@@ -163,9 +169,25 @@ get_params <- function(object){
   slot(object, "parameters")
 }
 
+#' Get probablities of cell clusters
+#' @param object caclust object
+#' @export
+get_cell_prob <- function(object){
+  stopifnot(is(object, "caclust"))
+  slot(object, "cell_prob")
+}
+
+#' Get probablities of gene clusters
+#' @param object caclust object
+#' @export
+get_gene_prob <- function(object){
+  stopifnot(is(object, "caclust"))
+  slot(object, "gene_prob")
+}
+
 #' Print caclust object in console
 #' @param object a caclust object
-show.caclust <- function(object){
+show.caclust <- function(object, n_rows = 10){
   
   stopifnot(is(object, "caclust"))
   
@@ -181,8 +203,9 @@ show.caclust <- function(object){
   df <- data.frame("cluster" = levels(cell_clusters(object)),
                    "ncells" = summary(cell_clusters(object), maxsum = Inf),
                    "ngenes" = summary(gene_clusters(object), maxsum = Inf))
-  print(df, row.names = FALSE, right = FALSE, max = 20)
   
+  print(df, row.names = FALSE, right = FALSE)
+  # print(df[seq_len(min(n_rows, nrows(df))),], row.names = FALSE, right = FALSE)
 }
 
 #' @rdname show.caclust
@@ -239,6 +262,10 @@ convert_to_biclust <- function(caclust){
 }
 
 
+#' Helper function to check if object is empty.
+#' @param x object
+#' @return TRUE if x has length 0 and is not NULL. FALSE otherwise
+is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
 
 #' Remove clusters only consisting of cells/genes
 #' 
@@ -279,6 +306,20 @@ setMethod(f = "rm_monoclusters",
           bic@gene_clusters <- droplevels(bic@gene_clusters)
           # bic@gene_clusters <- factor(as.character(bic@gene_clusters), levels = keep)
           # bic@gene_clusters <- na.omit(bic@gene_clusters)
+          
+        }
+        
+        stopifnot(!is.null(names(bic@cell_clusters)))
+        stopifnot(!is.null(names(bic@gene_clusters)))
+        
+        if(!is.empty(bic@SNN)){
+          
+          selr <- which(rownames(bic@SNN) %in% c(names(bic@cell_clusters),
+                                                 names(bic@gene_clusters)))
+          
+          selc <- which(colnames(bic@SNN) %in% c(names(bic@cell_clusters),
+                                                 names(bic@gene_clusters)))
+          bic@SNN <- bic@SNN[selr, selc]
           
         }
         
