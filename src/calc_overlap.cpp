@@ -11,8 +11,10 @@ using namespace Rcpp;
 Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, 
                                          Eigen::SparseMatrix<int> cg_adj) {
 
-  // store the results in sparse matrix
-  Eigen::SparseMatrix<double> overlap(cg_adj.rows(), cg_adj.cols());
+  // initialize vector to store triplets
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp;
+  
   
   // loop over genes (its faster in column major matrix)
   for (int i=0; i < cg_adj.outerSize(); i++){
@@ -22,7 +24,6 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
     // get the idxs of all the cells that have edge to gene
     for (Eigen::SparseMatrix<int>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
       cell_idxs.push_back(it.row());
-    
     }
     
     // for each cell that has an edge, get the nearest neighbours
@@ -37,6 +38,8 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
           
           if(it.row() == cell_idxs[k]){
             cell_NNs.push_back(it.col());
+          } else if(it.row() > cell_idxs[k]){
+            break;
           } else {
             continue;
           }
@@ -46,7 +49,8 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
     
     
       std::vector<int> n_overlap; //size of overlap
-        
+      
+      // needed for intersection (Why?)
       std::sort(cell_NNs.begin(), cell_NNs.end());
       std::sort(cell_idxs.begin(), cell_idxs.end());
       
@@ -62,23 +66,19 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
       double nn_size = cell_NNs.size();
       perc_ov = ov_size / nn_size; //percent of overlap
       
-      // update entry in overlap matrix
-      overlap.coeffRef(cell_idxs[k], i) = perc_ov;
-  
+      // update triplet list for overlap matrix
+      trp.push_back(Trip(cell_idxs[k],i, perc_ov)); // (index, index, value)
+
     }
   }
   
-  // std::cout << Eigen::MatrixXd(overlap) << std::endl;
-  
-  overlap.makeCompressed(); //removes an error with R Matrix
+  // build Matrix from triplets
+  Eigen::SparseMatrix<double> overlap(cg_adj.rows(), cg_adj.cols());
+  overlap.setFromTriplets(trp.begin(), trp.end());
+
   return overlap;
 }
 
-
-// You can include R code blocks in C++ files processed with sourceCpp
-// (useful for testing and development). The R code will be automatically 
-// run after the compilation.
-//
 
 // /*** R
 // 
