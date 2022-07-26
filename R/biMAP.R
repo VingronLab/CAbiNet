@@ -165,3 +165,4 @@ run_biMAP <- function(caobj,
   
   return(umap_coords)
 }
+

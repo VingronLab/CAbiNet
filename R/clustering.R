@@ -400,4 +400,148 @@ run_caclust <- function(caobj,
 }
 
 
+#' Add caclust clustering results to SingleCellExperiment object
+#' @param sce SingleCellExperiment object
+#' @param caclust caclust::caclust object
+#' @param col_name column name not listed in colData(sce) or metadata(sce)
+#' @export
+#' 
+add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
+  cell.clust <- cell_clusters(caclust)
+  gene.clust <- gene_clusters(caclust)
+  idx <- rownames(sce) %in% gene.clust
+  matched_genes <- match(rownames(sce)[idx], names(gene.clust))
+  
+  if (isTRUE(caclust_meta_name %in% colnames(colData(sce))) | 
+      isTRUE(caclust_meta_name %in% colnames(rowData(sce))) |
+      isTRUE(caclust_meta_name %in% names(metadata(sce)))){
+    stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
+  }
+  
+  colData(sce)[[caclust_meta_name]] <- cell.clust
+  rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
+  rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
+  
+  metadata(sce)[[caclust_meta_name]] <- caclust
+  
+  return(sce)
+}
 
+#' Add cacomp obj results to SingleCellExperiment object
+#' @param sce SingleCellExperiment object
+#' @param caobj caclust::caclust object
+#' @param col_name column name not listed in colData(sce) or metadata(sce)
+#' @export
+#' 
+add_caobj_sce <- function(sce, caobj, cacomp_meta_name = 'caobj'){
+  
+  if (isTRUE(cacomp_meta_name %in% colnames(colData(sce))) | 
+      isTRUE(cacomp_meta_name %in% colnames(rowData(sce))) |
+      isTRUE(cacomp_meta_name %in% names(metadata(sce)))){
+    stop('The given cacomp_meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
+  }
+  
+  metadata(sce)[[cacomp_meta_name]] <- caobj
+  
+  return(sce)
+}
+
+#' check if cacomp object is already added to SingleCellExperiment object
+#' @param sce SingleCellExperiment object
+#' 
+check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
+  
+ ix <- 'cacomp' %in% unlist(lapply(metadata(sce), class))
+ if(isFALSE(ix)){
+   stop('cacomp object is missing from SingleCellExperiment object sce, plese make sure you have
+        run cacomp and add_caobj_sce in ahead!')
+ }
+ 
+ ix <- cacomp_meta_name %in% names(metadata(sce))
+ if(isFALSE(ix)){
+   stop('cacomp object with the given name is missing from SingleCellExperiment object sce, plese make 
+   sure you have run add_caobj_sce with the same cacomp_meta_name!')
+ }
+  
+}
+
+
+#' Plot of 2D CA projection of the data.
+#'
+#' @description
+#' Plots the first 2 dimensions of the rows and columns in the same plot.
+#' @param obj A cacomp object or SingleCellExperiment object  
+#' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
+#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
+#' @inheritParams run_caclust
+#' @details
+#' Choosing type "plotly" will generate an interactive html plot with the 
+#' package plotly.
+#' Type "ggplot" generates a static plot.
+#' Depending on whether `princ_coords` is set to 1 or 2 either
+#' the principal coordinates of either the rows (1) or the columns (2)
+#' are chosen. For the other the standard coordinates are plotted 
+#' (assymetric biplot).
+#' Labels for rows and columns should be stored in the row and column names 
+#' respectively.
+#' @return
+#' an caclust object or SingleCellExperiment objects
+
+#' @export
+setGeneric("caclust", function(obj,
+                               k_sym,
+                               k_asym = k_sym,
+                               cacomp_meta_name = 'caobj',
+                               caclust_meta_name = 'caclust',
+                               ...){
+  standardGeneric("caclust")
+})
+
+
+#
+#' @rdname caclust
+#' @inheritParams run_caclust
+#' @export
+setMethod(f = "caclust",
+          signature(obj = "caclust"),
+          function(obj, 
+                   k_sym,
+                   ...){
+          
+          caclust_res <- run_caclust(caobj = obj,
+                                 k_sym,
+                                 ...)
+          return(caclust_res)
+            
+})
+
+#
+#' @rdname caclust
+#' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
+#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
+#' @export
+setMethod(f = "caclust",
+          signature(obj = "SingleCellExperiment"),
+          function(obj, 
+                   k_sym,
+                   cacomp_meta_name = 'caobj',
+                   caclust_meta_name = 'caclust',
+                   ...){
+          
+            check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+              
+            caobj <- metadata(sce)[[cacomp_meta_name]]
+            
+            caclust_res <- run_caclust(caobj = obj,
+                                         k_sym,
+                                         ...)
+            obj <- add_caclust_sce(sce = obj, 
+                                   caclust = caclust_res,
+                                   caclust_meta_name = caclust_meta_name)
+          
+          return(obj)
+          
+})
+
+
+          
