@@ -8,7 +8,6 @@ run_spectral(
   SNN,
   use_gap = TRUE,
   nclust = NULL,
-  python = TRUE,
   clust.method = "kmeans",
   iter.max = 10,
   num.seeds = 10,
