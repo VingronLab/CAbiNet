@@ -34,8 +34,10 @@ Config/testthat/edition: 3
 Collate: 
     'constructor.R'
     'CAclust.R'
-    'RcppExports.R'
+    'biMAP.R'
     'classes.R'
     'clustering.R'
+    'graph.R'
+    'helpers.R'
     'importPackages.R'
     'plot.R'

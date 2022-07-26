@@ -17,9 +17,9 @@ mix_rgb <- function(df, colors, cell, color_by){
   return(rgb_new)
 }
 
-#' Plot biUMAP
+#' Plot biMAP
 #' 
-#' @param umap_coords data frame as outputted by `run_biUMAP_*`
+#' @param umap_coords data frame as outputted by `run_biMAP_*`
 #' @param color_by Either "type" or "cluster". "type" colors by the type 
 #' (cell or gene) while "cluster" colors by the assigned cluster.
 #' @param metadata optional. data.frame that should have either gene or cell names
@@ -30,7 +30,7 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biUMAP <- function(umap_coords,
+plot_biMAP <- function(umap_coords,
                         color_by = "type",
                         metadata = NULL,
                         type = "scatter",
@@ -388,7 +388,7 @@ plot_biUMAP <- function(umap_coords,
 }
 
 
-#' plot biUMAP with gene expression
+#' plot biMAP with gene expression
 #' 
 #' @param umap_coords
 #' @param sce
@@ -396,7 +396,12 @@ plot_biUMAP <- function(umap_coords,
 #' @param color_cells_by
 #' @param assay
 #' @export
-feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="expression", assay = "logcounts"){
+feature_biMAP <- function(umap_coords, 
+                          sce, 
+                          feature = NULL, 
+                          color_cells_by="expression", 
+                          assay = "logcounts"){
+  
   stopifnot(length(feature)<=1)
   
   if(color_cells_by == "expression") {
@@ -446,7 +451,10 @@ feature_biUMAP <- function(umap_coords, sce, feature = NULL, color_cells_by="exp
 }
 
 
-metadata_biUMAP <- function(umap_coords, sce, color_cells_by, continous = FALSE){
+metadata_biMAP <- function(umap_coords, 
+                           sce, 
+                           color_cells_by, 
+                           continous = FALSE){
   metadata <- colData(sce)
 
   cell_idx <- which(umap_coords$type == "cell")
@@ -485,6 +493,10 @@ metadata_biUMAP <- function(umap_coords, sce, color_cells_by, continous = FALSE)
 mix <- function(df){
   df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
 }
+
+
+
+
   
 #' Plot of 2D CA projection of the data.
 #'
