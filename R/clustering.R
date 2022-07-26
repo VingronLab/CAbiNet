@@ -75,10 +75,10 @@ NormLaplacian = function(adj){
 #' with different random seeds, The clustering result with smallest 
 #' within-cluster-sum
 #' of squared distances will be selected.
-#' @param method see skmeans method
-#' @param m see skmeans 'm'
-#' @param weights
-#' @param control
+#' @param method see skmeans::skmeans function
+#' @param m A number not less than 1 controlling the softness of the partition.(see skmeans::skmeans 'm')
+#' @param weights A numeric vector of non-negative case weights.(see skmeans::skmeans 'm')
+#' @param control A list of control parameters for different methods.
 #' @param num.seeds number of trials with random seeds
 #' @return 
 #' The optimal skmeans clustering result
@@ -143,7 +143,6 @@ SKMeans <- function (x, k,
 run_spectral <- function(SNN, 
                          use_gap = TRUE, 
                          nclust = NULL,
-                         python = TRUE,
                          clust.method = 'kmeans',
                          iter.max=10, 
                          num.seeds=10,
@@ -158,22 +157,9 @@ run_spectral <- function(SNN,
     
   }
   
-  if (python == TRUE){
     
-    svds_scipy <- NULL
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
-
-    SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
-    names(SVD) <- c("U", "D", "V")
-  
-    SVD$D <- as.vector(SVD$D) # eigenvalues in a decreasing order
-    
-  } else {
-    
-    SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
-    names(SVD)[1:3] <- c("D", "U", "V")
-    
-  }
+  SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
+  names(SVD)[1:3] <- c("D", "U", "V")
   
   idx = order(SVD$D, decreasing = FALSE)
   eigenvalues = SVD$D[idx]
