@@ -25,7 +25,9 @@ SKMeans(
 The optimal skmeans clustering result
 }
 \description{
-This function will select the optimal clustering result from several skmeans::skmeans runs
-with different random seeds, The clustering result with smallest within-cluster-sum
+This function will select the optimal clustering result from several 
+skmeans::skmeans runs
+with different random seeds, The clustering result with smallest 
+within-cluster-sum
 of squared distances will be selected.
 }
