@@ -26,6 +26,7 @@ bicplot(
   row_labels = NULL,
   col_labels = NULL,
   type = "plotly",
+  rm.show = TRUE,
   ...
 )
 }

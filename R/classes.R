@@ -15,10 +15,10 @@ check_caclust <- function(object){
     errors <- c(errors, msg)
   }
   
-  if(!identical(levels(object@cell_clusters), levels(object@gene_clusters))){
-    msg <- "factor levels for cells and genes are not the same!"
-    errors <- c(errors, msg)
-  }
+#  if(!identical(levels(object@cell_clusters), levels(object@gene_clusters))){
+#    msg <- "factor levels for cells and genes are not the same!"
+#    errors <- c(errors, msg)
+#  }
   
   if(nrow(object@SNN) != ncol(object@SNN)){
     msg <- "SNN number of rows not equal to number of columns!"
@@ -293,7 +293,7 @@ setMethod(f = "rm_monoclusters",
         cc <- unique(cell_clusters(bic))
         gc <- unique(gene_clusters(bic))
         
-        keep <- order(as.character(intersect(cc,gc)))
+        keep <- sort(as.character(intersect(cc,gc)))
         
         if(length(keep > 0)){
           
@@ -347,7 +347,6 @@ setMethod(f = "rm_monoclusters",
             return(bic)            
             
 })
-
 
 
 

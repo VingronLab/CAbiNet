@@ -19,9 +19,13 @@
 run_leiden <- function(SNN, 
                        resolution = 1,
                        n.int = 10, 
-                       rand_seed = 2358) {
+                       rand_seed = 2358,
+                       dense = TRUE) {
+  if(isTRUE(dense)){
+    SNN = as.matrix(SNN)
+  }
   
-  clusters <- leiden::leiden(object = as.matrix(SNN),
+  clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
                      partition_type = "RBConfigurationVertexPartition",
                      initial_membership = NULL,
@@ -144,31 +148,37 @@ run_spectral <- function(SNN,
                          iter.max=10, 
                          num.seeds=10,
                          return.eig = TRUE,
-                         dims = NULL) {
+                         dims = 30) {
   diag(SNN) = 0
   L = NormLaplacian(SNN)
+  
+  if (dims > ncol(SNN)){
+    
+    dims = ncol(SNN)
+    
+  }
+  
   if (python == TRUE){
     
-    svd_torch <- NULL
-    L = as.matrix(L)
+    svds_scipy <- NULL
+    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"), envir = globalenv())
 
-    reticulate::source_python(system.file("python/python_svd.py", package = "CAclust"))
-    
-    SVD <- svd_torch(L)
+    SVD <- svds_scipy(L, k = dims, which = 'SM', solver = 'lobpcg')
     names(SVD) <- c("U", "D", "V")
+  
     SVD$D <- as.vector(SVD$D) # eigenvalues in a decreasing order
     
   } else {
     
-    SVD <- svd(L) # eigenvalues in a decreasing order
-    names(SVD) <- c("D", "U", "V")
-    SVD <- SVD[c(2, 1, 3)]
+    SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
+    names(SVD)[1:3] <- c("D", "U", "V")
     
   }
-
+  
   idx = order(SVD$D, decreasing = FALSE)
   eigenvalues = SVD$D[idx]
   eigenvectors = SVD$U[,idx]
+  
   # cat('SVD for graph laplacian is done....\n')
   
   if (use_gap == FALSE){
@@ -177,19 +187,28 @@ run_spectral <- function(SNN,
       
         stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
     
-      }else{
-        
-      eig = eigenvectors[,1:nclust] # in an increasing order
+      # }else if (nclust > dims){
+      #   
+      #   stop('Number of dims should be larger than number of clusters (nclust)')
       
-    }} else if (use_gap == TRUE){
+      }else{
+      
+        eig = eigenvectors[,1:nclust] # in an increasing order
+        # eig = eigenvectors
+        
+    }
     
+    } else if (use_gap == TRUE){
+      
+      
     eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
+    nclust = ncol(eig)
     
   }
   
   if (clust.method == 'skmeans'){
     
-    clusters = SKMeans(eig, k = ncol(eig), num.seeds = num.seeds)$cluster
+    clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
   
   }else if (clust.method == 'kmeans'){
     
@@ -296,12 +315,15 @@ run_caclust <- function(caobj,
                         spectral_method = 'kmeans',
                         iter.max=10, 
                         num.seeds=10,
-                        return.eig = TRUE) {
+                        return.eig = TRUE,
+                        sc.dims = NULL,
+                        leiden.dense = TRUE,
+                        appx = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj)
+  distances <- calc_distances(caobj = caobj, appx = appx)
   
   SNN <- create_SNN(caobj = caobj, 
                     distances = distances,
@@ -323,32 +345,36 @@ run_caclust <- function(caobj,
     clusters <- run_leiden(SNN = SNN, 
                            resolution = resolution,
                            n.int = n.int, 
-                           rand_seed = rand_seed)
+                           rand_seed = rand_seed,
+                           dense = leiden.dense)
     
     eigen <- matrix()
     
   } else if (algorithm == "spectral"){
     
-    dims = length(caobj@D)
+    if (is.null(sc.dims)){
+      sc.dims = length(caobj@D)
+    }
+      clusters <- run_spectral(SNN = SNN,
+                               use_gap = use_gap,
+                               nclust = nclust,
+                               python = python,
+                               clust.method = spectral_method,
+                               iter.max = iter.max, 
+                               num.seeds = num.seeds,
+                               return.eig = return.eig,
+                               dims = sc.dims)
 
-    clusters <- run_spectral(SNN = SNN,
-                             use_gap = use_gap,
-                             nclust = nclust,
-                             python = python,
-                             clust.method = spectral_method,
-                             iter.max = iter.max, 
-                             num.seeds = num.seeds,
-                             return.eig = return.eig,
-                             dims = dims)
-    # if (isTRUE(return.eig)){
-    #   
-    #   eigen <- clusters$eigen
-    #   rownames(eigen) <- rownames(SNN)
-    #   
-    # } else {
-    #   
-    #   eigen <- matrix()
-    # }
+
+    if (isTRUE(return.eig)){
+      
+      eigen <- clusters$eigen
+      rownames(eigen) <- rownames(SNN)
+      
+    } else {
+      
+      eigen <- matrix()
+    }
     
     if (spectral_method == "GMM"){
       
@@ -376,6 +402,7 @@ run_caclust <- function(caobj,
     }
 
       
+
     
   } else{
     stop("algorithm should choose from 'leiden' and 'spectral'!")

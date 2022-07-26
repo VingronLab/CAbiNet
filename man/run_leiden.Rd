@@ -4,7 +4,7 @@
 \alias{run_leiden}
 \title{Leiden clustering on bigraph}
 \usage{
-run_leiden(SNN, resolution = 1, n.int = 10, rand_seed = 2358)
+run_leiden(SNN, resolution = 1, n.int = 10, rand_seed = 2358, dense = TRUE)
 }
 \arguments{
 \item{SNN}{dense or sparse matrix. A SNN graph.}

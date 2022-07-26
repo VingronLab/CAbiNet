@@ -2,7 +2,7 @@ import numpy #as np
 #import numpy.random
 import torch
 from scipy.sparse.linalg import eigsh
-
+from scipy.sparse.linalg import svds
 
 def svd_torch(x):
 	x2 = torch.from_numpy(numpy.array(x))
@@ -25,3 +25,10 @@ def eig_torch(x):
 def eigsh_scipy(x, k=6,which = 'SM'):
 	e,u = eigsh(x, k = int(k), which = which)
 	return e, u
+
+def svds_scipy(x, k=6,which = 'LM',ncv=None, tol=0, v0=None, maxiter=None, return_singular_vectors=True, solver='propack'):
+	u, s, vh = svds(x, k = int(k), which = which, ncv=ncv, tol=tol, v0=v0, maxiter=maxiter, return_singular_vectors=return_singular_vectors, solver=solver)
+	v = vh.transpose()
+	return u, s, v
+
+

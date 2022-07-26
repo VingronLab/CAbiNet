@@ -17,7 +17,12 @@ plot_biMAP(
   cell_alpha = 0.5,
   gene_alpha = 1,
   show_density = FALSE,
-  color_genes = FALSE
+  color_genes = FALSE,
+  label_groups = TRUE,
+  group_label_size = 4,
+  labels_per_group = 1,
+  show_gene_meta = TRUE,
+  label_marker_gene = FALSE
 )
 }
 \arguments{
