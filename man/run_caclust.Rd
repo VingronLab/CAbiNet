@@ -23,7 +23,7 @@ run_caclust(
   use_gap = TRUE,
   nclust = NULL,
   python = TRUE,
-  clust.method = "kmeans",
+  spectral_method = "kmeans",
   iter.max = 10,
   num.seeds = 10,
   return.eig = TRUE,
