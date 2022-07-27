@@ -210,25 +210,27 @@ run_spectral <- function(SNN,
                         em_iter = 30,
                         verbose = F)   
     
-    cluster_probs = predict_GMM(data = eig,
+    clusters = ClusterR::predict_GMM(data = eig,
                                  CENTROIDS = gmm$centroids, 
                                  COVARIANCE = gmm$covariance_matrices,
                                  WEIGHTS = gmm$weights)
     
-    cluster_probs <- cluster_probs[-which(names(cluster_probs)=="log_likelihood")]
-    rownames(cluster_probs$cluster_proba) <- rownames(SNN)
-    colnames(cluster_probs$cluster_proba) <- paste("BC", seq_len(ncol(cluster_probs$cluster_proba)))
-    cluster_probs$cluster_labels <- as.factor(cluster_probs$cluster_labels)
-    names(cluster_probs$cluster_labels) <- rownames(SNN)
+    clusters <- clusters[-which(names(clusters)=="log_likelihood")]
     
-    return(cluster_probs)
+    rownames(clusters$cluster_proba) <- rownames(SNN)
+    colnames(clusters$cluster_proba) <- paste("BC", seq_len(ncol(clusters$cluster_proba)))
+    
+    clusters$cluster_labels <- as.factor(clusters$cluster_labels)
+    names(clusters$cluster_labels) <- rownames(SNN)
     
   }else{
   stop('clustering method should be chosen from kmeans and skmeans!')
   }
   
-  clusters <- as.factor(clusters)
-  names(clusters) <- rownames(SNN)
+  if(clust.method != 'GMM'){
+    clusters <- as.factor(clusters)
+    names(clusters) <- rownames(SNN)
+  }
   
   if (return.eig){
     
@@ -236,11 +238,19 @@ run_spectral <- function(SNN,
       dims = min(30, ncol(SNN))
     }
     
-    return(list(clusters = clusters,
-                eigen = eigenvectors[,1:dims]))
+    eigenv <- eigenvectors[,1:dims]
+    
+    rownames(eigenv) <- rownames(SNN)
+    
+    
   }else{
-    return(clusters)
+    eigenv <- matrix()
   }
+  
+  
+  
+  return(list(clusters = clusters,
+              eigen = eigenv))
 }
 
 #' Run biclustering
@@ -334,7 +344,7 @@ run_caclust <- function(caobj,
                                use_gap = use_gap,
                                nclust = nclust,
                                python = python,
-                               clust.method = clust.method,
+                               clust.method = spectral_method,
                                iter.max = iter.max, 
                                num.seeds = num.seeds,
                                return.eig = return.eig,
@@ -351,7 +361,7 @@ run_caclust <- function(caobj,
       eigen <- matrix()
     }
     
-    if (clust.method == "GMM"){
+    if (spectral_method == "GMM"){
       
       cell_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_cols))
       gene_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_rows))

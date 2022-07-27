@@ -25,7 +25,8 @@ Imports:
   plotly,
   skmeans,
   SingleCellExperiment,
-  SummarizedExperiment
+  SummarizedExperiment,
+  ClusterR
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
 Suggests: 
