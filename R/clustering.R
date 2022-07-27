@@ -293,13 +293,12 @@ run_caclust <- function(caobj,
                         num.seeds=10,
                         return.eig = TRUE,
                         sc.dims = NULL,
-                        leiden.dense = TRUE,
-                        appx = TRUE) {
+                        leiden.dense = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj, appx = appx)
+  distances <- calc_distances(caobj = caobj)
   
   SNN <- create_SNN(caobj = caobj, 
                     distances = distances,
@@ -403,7 +402,7 @@ run_caclust <- function(caobj,
 #' Add caclust clustering results to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
 #' @param caclust caclust::caclust object
-#' @param col_name column name not listed in colData(sce) or metadata(sce)
+#' @param caclust_meta_name column name not listed in colData(sce), rowData(sce), or metadata(sce)
 #' @export
 #' 
 add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
@@ -411,12 +410,6 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
   gene.clust <- gene_clusters(caclust)
   idx <- rownames(sce) %in% gene.clust
   matched_genes <- match(rownames(sce)[idx], names(gene.clust))
-  
-  if (isTRUE(caclust_meta_name %in% colnames(colData(sce))) | 
-      isTRUE(caclust_meta_name %in% colnames(rowData(sce))) |
-      isTRUE(caclust_meta_name %in% names(metadata(sce)))){
-    stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
-  }
   
   colData(sce)[[caclust_meta_name]] <- cell.clust
   rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
@@ -430,7 +423,7 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
 #' Add cacomp obj results to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
 #' @param caobj caclust::caclust object
-#' @param col_name column name not listed in colData(sce) or metadata(sce)
+#' @param cacomp_meta_name column name not listed in colData(sce), rowData(sce), or metadata(sce)
 #' @export
 #' 
 add_caobj_sce <- function(sce, caobj, cacomp_meta_name = 'caobj'){
@@ -438,7 +431,7 @@ add_caobj_sce <- function(sce, caobj, cacomp_meta_name = 'caobj'){
   if (isTRUE(cacomp_meta_name %in% colnames(colData(sce))) | 
       isTRUE(cacomp_meta_name %in% colnames(rowData(sce))) |
       isTRUE(cacomp_meta_name %in% names(metadata(sce)))){
-    stop('The given cacomp_meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
+    stop('The given cacomp_meta_name is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
   }
   
   metadata(sce)[[cacomp_meta_name]] <- caobj
@@ -466,7 +459,7 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 }
 
 
-#' Plot of 2D CA projection of the data.
+
 #'
 #' @description
 #' Plots the first 2 dimensions of the rows and columns in the same plot.
@@ -475,15 +468,7 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @inheritParams run_caclust
 #' @details
-#' Choosing type "plotly" will generate an interactive html plot with the 
-#' package plotly.
-#' Type "ggplot" generates a static plot.
-#' Depending on whether `princ_coords` is set to 1 or 2 either
-#' the principal coordinates of either the rows (1) or the columns (2)
-#' are chosen. For the other the standard coordinates are plotted 
-#' (assymetric biplot).
-#' Labels for rows and columns should be stored in the row and column names 
-#' respectively.
+#' TODO
 #' @return
 #' an caclust object or SingleCellExperiment objects
 
@@ -517,6 +502,8 @@ setMethod(f = "caclust",
 
 #
 #' @rdname caclust
+#' @param obj SingleCellExperiment object
+#' @param k_sym neighour of nearest neighours, see run_caclust  function
 #' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @export
@@ -529,10 +516,13 @@ setMethod(f = "caclust",
                    ...){
           
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
-              
-            caobj <- metadata(sce)[[cacomp_meta_name]]
+            if (isTRUE(caclust_meta_name %in% names(metadata(sce)))){
+              stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
+            }
             
-            caclust_res <- run_caclust(caobj = obj,
+            caobj <- metadata(obj)[[cacomp_meta_name]]
+            
+            caclust_res <- run_caclust(caobj = caobj,
                                          k_sym,
                                          ...)
             obj <- add_caclust_sce(sce = obj, 
