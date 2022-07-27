@@ -30,9 +30,9 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' ggplot of UMAP
 #' 
 #' @export
-plot_biMAP <- function(umap_coords,
-                        color_by = "type",
+run_plot_biMAP <- function(umap_coords,
                         metadata = NULL,
+                        color_by = "cluster",
                         type = "scatter",
                         cell_size = 1,
                         gene_size = 3,
@@ -746,5 +746,72 @@ setMethod(f = "bicplot",
             
           })
 
+#'
+#' @description
+#' TODO
+#' @param obj A data,frame or SingleCellExperiment object  
+#' @param biMAP_meta_name character. The name of cacomp object stored in metadata(SingleCellExperiment object)
+#' @inheritParams plot_biMAP
+#' @details
+#' TODO
+#' @return
+#' an caclust object or SingleCellExperiment objects
 
+#' @export
+setGeneric("plot_biMAP", function(obj,
+                                  biMAP_meta_name = NULL,
+                                  metadata = NULL,
+                                  color_by = "cluster",
+                                  ...){
+  standardGeneric("plot_biMAP")
+})
 
+#
+#' @rdname plot_biMAP
+#' @param color_by character which can be chosen from 'type', 'cluster' and column in the input metadata
+#' @param metadata data.frame.
+#' @inheritParams plot_biMAP
+#' @export
+setMethod(f = "plot_biMAP",
+          signature(obj = "data.frame"),
+          function(obj, 
+                   metadata = NULL,
+                   color_by = "cluster",
+                   ...){
+            
+            p <- run_plot_biMAP(umap_coords = obj,
+                                metadata = NULL,
+                                color_by = "cluster",
+                                     ...)
+            return(p)
+            
+          })
+
+#
+#' @rdname plot_biMAP
+#' @param obj SingleCellExperiment object
+#' @param color_by character which can be chosen from 'type', 'cluster',column in the input metadata and columns in colData of the obj
+#' @param metadata data.frame.
+#' @inheritParams plot_biMAP
+#' @export
+setMethod(f = "plot_biMAP",
+          signature(obj = "SingleCellExperiment"),
+          function(obj, 
+                   biMAP_meta_name = 'biMAP_SNNdist',
+                   metadata = NULL,
+                   color_by = "cluster",
+                   ...){
+            
+            if(isFALSE(biMAP_meta_name %in% names(metadata(obj)))){
+              stop(paste('The biMAP coordinate data.frame with name', biMAP_meta_name, 'is not found in metadata, please try a different "biMAP_meta_name".'))
+            }
+            umap_coords <- metadata(obj)[[biMAP_meta_name]]
+            if(!is(umap_coords, 'data.frame')){
+              umap_coords = as.data.frame(umap_coords)
+            }
+            print(head(umap_coords ))
+            p <- run_plot_biMAP(umap_coords = umap_coords,
+                            ...)
+            return(p)
+            
+          })

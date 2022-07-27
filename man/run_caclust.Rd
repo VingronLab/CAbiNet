@@ -28,8 +28,7 @@ run_caclust(
   num.seeds = 10,
   return.eig = TRUE,
   sc.dims = NULL,
-  leiden.dense = TRUE,
-  appx = TRUE
+  leiden.dense = TRUE
 )
 }
 \arguments{

@@ -33,7 +33,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
-    'constructor.R'
     'CAclust.R'
     'biMAP.R'
     'classes.R'
