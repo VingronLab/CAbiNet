@@ -46,7 +46,6 @@ run_plot_biMAP <- function(umap_coords,
                         label_groups = TRUE,
                         group_label_size=4,
                         labels_per_group=1,
-                        show_gene_meta = TRUE,
                         label_marker_gene = FALSE){
   
   if(!is.null(metadata)){
@@ -67,16 +66,6 @@ run_plot_biMAP <- function(umap_coords,
     matched_names <- match(umap_coords$name[sel], metadata$name)
     umap_coords[,color_by] <- "not_in_metadata"
     umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
-    # if (color_by %in% colnames(metadata)){
-    #   umap_coords[,color_by] <- "not_in_metadata"
-    #   umap_coords[sel, color_by] <- as.character(metadata[matched_names, color_by])
-    # } else {
-    #   
-    #   umap_coords[!sel,color_by] <- "not_in_metadata"
-    # }
-    if(show_gene_meta){
-      umap_coords = umap_coords[sel,]
-    }
     
   }
   
@@ -351,18 +340,7 @@ run_plot_biMAP <- function(umap_coords,
     text_df = NULL
   }
   
-  # 
-  # p <- ggplot(umap_coords,aes(x=x, y=y)) +
-  #   # umap_coords, aes_(x=~x, y=~y, color = as.name(color_by),
-  #   #                            text = paste0(
-  #   #                              "Type: ", quote(type), "\n",
-  #   #                              "Name: ", quote(name), "\n",
-  #   #                              "Cluster: ", quote(cluster)))) +
-  #   geom_jitter(aes(color =group_color),alpha = alpha, size = size) +
-  #   geom_point(data = umap_coords[umap_coords$type == 'gene',],
-  #              shape = 1, aes(fill = group_color ), color = 'black', alpha = 0.5)+
-  #   geom_point(data = umap_coords[!sel,],
-  #              shape = 1, aes(fill = group_color ) , color = 'black', alpha = 0.5)
+
   if(label_groups) {
     p <- p + ggrepel::geom_text_repel(data = text_df,
                                       mapping = aes(x = text_x,
@@ -390,18 +368,18 @@ run_plot_biMAP <- function(umap_coords,
 
 #' plot biMAP with gene expression
 #' 
-#' @param umap_coords
-#' @param sce
-#' @param feature
-#' @param color_cells_by
-#' @param assay
+#' @param sce SinleCellExperiment object
+#' @param umap_coords data.frame with biMAP coordinates
+#' @param feature character. Name of gene to visualize
+#' @param color_cells_by character. Default: expression
+#' @param assay character. Name of assay in SingleCellExperiment used for visualization.
 #' @export
-feature_biMAP <- function(umap_coords, 
-                          sce, 
-                          feature = NULL, 
-                          color_cells_by="expression", 
-                          assay = "logcounts"){
-  
+plot_feature_biMAP <- function(sce,
+                               umap_coords, 
+                              feature = NULL, 
+                              color_cells_by="expression", 
+                              assay = "logcounts"){
+      
   stopifnot(length(feature)<=1)
   
   if(color_cells_by == "expression") {
@@ -416,7 +394,7 @@ feature_biMAP <- function(umap_coords,
   
   if(!is.null(feature)){
     
-    stopifnot(isTRUE(feature %in% umap_coords$name))
+    # stopifnot(isTRUE(feature %in% umap_coords$name))
     cnts <- SummarizedExperiment::assay(sce, assay)
     umap_coords$expression <- NA
     umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
@@ -762,6 +740,20 @@ setGeneric("plot_biMAP", function(obj,
                                   biMAP_meta_name = NULL,
                                   metadata = NULL,
                                   color_by = "cluster",
+                                  type = "scatter",
+                                  cell_size = 1,
+                                  gene_size = 3,
+                                  hex_n = 40,
+                                  min_bin = 2,
+                                  contour_n = 5,
+                                  cell_alpha = 0.5,
+                                  gene_alpha = 1,
+                                  show_density = FALSE,
+                                  color_genes = FALSE,
+                                  label_groups = TRUE,
+                                  group_label_size=4,
+                                  labels_per_group=1,
+                                  label_marker_gene = FALSE,
                                   ...){
   standardGeneric("plot_biMAP")
 })
@@ -780,8 +772,8 @@ setMethod(f = "plot_biMAP",
                    ...){
             
             p <- run_plot_biMAP(umap_coords = obj,
-                                metadata = NULL,
-                                color_by = "cluster",
+                                metadata = metadata,
+                                color_by = color_by,
                                      ...)
             return(p)
             
@@ -790,7 +782,7 @@ setMethod(f = "plot_biMAP",
 #
 #' @rdname plot_biMAP
 #' @param obj SingleCellExperiment object
-#' @param color_by character which can be chosen from 'type', 'cluster',column in the input metadata and columns in colData of the obj
+#' @param color_by character which can be chosen from 'type', 'cluster',column in the input metadata and columns in colData of the obj (if metadata == NULL)
 #' @param metadata data.frame.
 #' @inheritParams plot_biMAP
 #' @export
@@ -809,9 +801,90 @@ setMethod(f = "plot_biMAP",
             if(!is(umap_coords, 'data.frame')){
               umap_coords = as.data.frame(umap_coords)
             }
-            print(head(umap_coords ))
+            if (is.null(metadata)){
+              metadata = colData(obj)
+            }
+            if(isFALSE(color_by %in% c(colnames(metadata), colnames(umap_coords)))){
+              stop('color_by not found in either metadata or obj')
+            }
             p <- run_plot_biMAP(umap_coords = umap_coords,
-                            ...)
+                                metadata = metadata,
+                                color_by = color_by,
+                                ...)
+            return(p)
+            
+          })
+
+
+#
+#' @rdname feature_biMAP
+#' @param obj SinleCellExperiment object
+#' @param umap_coords data.frame with biMAP coordinates or NULL
+#' @export
+setGeneric("feature_biMAP", function(obj,
+                                  umap_coords = NULL,
+                                  biMAP_meta_name = 'biMAP_SNNdist',
+                                  feature = NULL, 
+                                  color_cells_by="expression", 
+                                  assay = "logcounts",
+                                  ...){
+  standardGeneric("feature_biMAP")
+})
+
+#
+#' @rdname feature_biMAP
+#' @param sce SinleCellExperiment object
+#' @param umap_coords data.frame with biMAP coordinates
+#' @export
+#' 
+setMethod(f = "feature_biMAP",
+          signature(obj = "SingleCellExperiment", umap_coords = "data.frame"),
+          function(obj, 
+                   umap_coords,
+                   feature = NULL, 
+                   color_cells_by="expression", 
+                   assay = "logcounts",
+                   ...){
+            
+            p <- plot_feature_biMAP(sce = obj,
+                                umap_coords = umap_coords,
+                                feature = feature, 
+                                color_cells_by=color_cells_by, 
+                                assay =assay)
+            return(p)
+            
+          })
+
+#
+#' @rdname feature_biMAP
+#' @param sce SinleCellExperiment object
+#' @param umap_coords data.frame with biMAP coordinates
+#' @export
+#' 
+setMethod(f = "feature_biMAP",
+          signature(obj = "SingleCellExperiment"),
+          function(obj, 
+                   umap_coords,
+                   biMAP_meta_name = 'biMAP_SNNdist',
+                   feature = NULL, 
+                   color_cells_by="expression", 
+                   assay = "logcounts",
+                   ...){
+            if(is.null(umap_coords)){
+              if(biMAP_meta_name %in% names(metadata(obj))){
+                umap_coords <- metadata(obj)[[biMAP_meta_name]]
+                cat(paste0('Plotting by data.frame ', biMAP_meta_name, ' from metadata(sce).\n'))
+              }else{
+                stop(paste('The biMAP coordinate data.frame with name', 
+                           biMAP_meta_name, 'is not found in metadata, please try a different "biMAP_meta_name".'))
+              }
+            }
+            
+            p <- plot_feature_biMAP(sce = obj,
+                                    umap_coords = umap_coords,
+                                    feature = feature, 
+                                    color_cells_by=color_cells_by, 
+                                    assay =assay)
             return(p)
             
           })
