@@ -3,6 +3,7 @@
 
 
 #' Make a kNN graph
+#' 
 #' @description Given a distance matrix `make_knn()` outputs the adjacency
 #' matrix of the k-nearest-neighbours graph.
 #'

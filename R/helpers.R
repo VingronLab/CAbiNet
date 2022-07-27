@@ -194,6 +194,8 @@ aR_metric <- function(matrix, origin, target){
   # assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
 }
 
+
+
 assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
   if(type == "genes"){
     prob_slot <- "gene_prob"

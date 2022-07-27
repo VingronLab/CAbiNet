@@ -16,14 +16,21 @@
 #' The names of cells and genes are saved in the names of the 
 #' vector. 
 #' 
-run_leiden <- function(SNN, 
+run_leiden <- function(caclust, 
                        resolution = 1,
                        n.int = 10, 
                        rand_seed = 2358,
                        dense = TRUE) {
-  if(isTRUE(dense)){
-    SNN = as.matrix(SNN)
+  
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "run_leiden"
+  
+  if (is(caclust@SNN, "dgCMatrix") & isTRUE(dense)){
+      SNN <- as.matrix(SNN)
+  } else {
+    SNN <- caclust@SNN
   }
+
   
   clusters <- leiden::leiden(object = SNN,
                      resolution_parameter = resolution,
@@ -37,7 +44,26 @@ run_leiden <- function(SNN,
   
   clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
-  return(clusters)
+  
+  
+  cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
+  
+  cell_clusters <- clusters[cell_idx]
+  gene_clusters <- clusters[gene_idx]
+  
+  
+  caclust@cell_cluster <- cell_clusters
+  caclust@gene_clusters <- gene_clusters
+  
+  
+  caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
+                                           "gene_clusters" = gene_clusters,
+                                           "SNN" = SNN,
+                                           "eigen" = matrix(),
+                                           "parameters" = call_params))
+  
+  return(caclust_res)
 }
 
 #' Calculate Normalized Graph Laplacian
@@ -83,7 +109,8 @@ NormLaplacian = function(adj){
 #' @return 
 #' The optimal skmeans clustering result
 #' @export
-SKMeans <- function (x, k, 
+SKMeans <- function (x, 
+                     k, 
                      method = NULL, 
                      m = 1, 
                      weights = 1, 
@@ -129,6 +156,7 @@ SKMeans <- function (x, k,
 #' @description 
 #' This function is designed for detecting clusters from input graph adjacency 
 #' matrix by using spectral clustering with normalized graph laplacian.
+#' 
 #' @param SNN The adjacency matrix of graph
 #' @param use_gap TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 #' most important eigenvector automatically, and the number of output clusters 
@@ -137,6 +165,12 @@ SKMeans <- function (x, k,
 #' selcted and 'nclust' clusters will be detected by skmeans.
 #' @param python TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
 #' decompositon, else R-base function 'svd' will be used for calculation. 
+#' @param clust.method
+#' @param iter.max 
+#' @param num.seed 
+#' @param return.eig 
+#' @param dims
+#' 
 #' @return 
 #' The clustering results
 #' 
@@ -299,8 +333,8 @@ run_caclust <- function(caobj,
                         nclust = NULL,
                         python = TRUE,
                         spectral_method = 'kmeans',
-                        iter.max=10, 
-                        num.seeds=10,
+                        iter.max = 10, 
+                        num.seeds = 10,
                         return.eig = TRUE,
                         sc.dims = NULL,
                         leiden.dense = TRUE,
@@ -309,7 +343,7 @@ run_caclust <- function(caobj,
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj, appx = appx)
+  distances <- calc_distances(caobj = caobj)
   
   SNN <- create_SNN(caobj = caobj, 
                     distances = distances,
