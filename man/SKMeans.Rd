@@ -15,9 +15,13 @@ SKMeans(
 )
 }
 \arguments{
-\item{method}{see skmeans method}
+\item{method}{see skmeans::skmeans function}
 
-\item{m}{see skmeans 'm'}
+\item{m}{A number not less than 1 controlling the softness of the partition.(see skmeans::skmeans 'm')}
+
+\item{weights}{A numeric vector of non-negative case weights.(see skmeans::skmeans 'm')}
+
+\item{control}{A list of control parameters for different methods.}
 
 \item{num.seeds}{number of trials with random seeds}
 }
