@@ -6,11 +6,10 @@
 \usage{
 create_SNN(
   caobj,
-  distances,
   k_c,
-  k_g,
-  k_cg,
-  k_gc,
+  k_g = k_c,
+  k_cg = k_c,
+  k_gc = k_c,
   SNN_prune = 1/15,
   loops = FALSE,
   mode = "out",
@@ -24,15 +23,6 @@ create_SNN(
 \arguments{
 \item{caobj}{A cacomp object with standard and principal coordinates
 calculated.}
-
-\item{distances}{A list containing the cell-cell, gene-gene, cell-gene and
-gene-cell distances/association ratios. Must be named list as follows:
-\itemize{
-\item "cc": cell-cell euclidean distances
-\item "gg": gene-gene euclidean distances
-\item "cg": cell-gene association ratio
-\item "gc": gene-cell association ratio
-}}
 
 \item{k_c}{k for cell-cell kNN}
 
@@ -68,6 +58,15 @@ prune_overlap = TRUE.}
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
+
+\item{distances}{A list containing the cell-cell, gene-gene, cell-gene and
+gene-cell distances/association ratios. Must be named list as follows:
+\itemize{
+\item "cc": cell-cell euclidean distances
+\item "gg": gene-gene euclidean distances
+\item "cg": cell-gene association ratio
+\item "gc": gene-cell association ratio
+}}
 
 \item{calc_cell_gene_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene

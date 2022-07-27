@@ -326,11 +326,11 @@ run_plot_biMAP <- function(umap_coords,
     
   }
   
-  umap_coords$group_color = umap_coords[,color_by]
+  umap_coords$group_color <- umap_coords[,color_by]
   
   if(label_groups){
     
-    text_df = umap_coords %>%
+    text_df <- umap_coords %>%
       filter(type == 'cell') %>%
       dplyr::group_by(group_color) %>%
       dplyr::mutate(cells_in_cluster= dplyr::n()) %>%
@@ -348,7 +348,7 @@ run_plot_biMAP <- function(umap_coords,
       dplyr::top_n(labels_per_group, per)
     text_df$label = as.character(text_df %>% dplyr::pull(group_color))
   }else{
-    text_df = NULL
+    text_df <- NULL
   }
   
   # 
@@ -380,7 +380,7 @@ run_plot_biMAP <- function(umap_coords,
                                       max.overlaps = 12,
                                       size=I(group_label_size-1))
   }
-  p = p + theme_bw()
+  p <- p + theme_bw()
   
   
   return(p)

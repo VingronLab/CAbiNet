@@ -1,3 +1,5 @@
+#' @include classes.R
+NULL
 
 #' Plots UMAP depicting both cells and genes.
 #' 
@@ -271,7 +273,7 @@ setMethod(f = "biMAP",
                                  biMAP_meta_name = biMAP_meta_name)
             
             if(isTRUE(message)){
-              cat('bimap coordinates data.frame is added to metadata(sce obj) with name ', biMAP_meta_name, '.\n')
+              message('bimap coordinates data.frame is added to metadata(sce obj) with name ', biMAP_meta_name, '.\n')
             }
             
             

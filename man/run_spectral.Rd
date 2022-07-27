@@ -5,10 +5,10 @@
 \title{run spectral clustering}
 \usage{
 run_spectral(
-  SNN,
+  caclust,
   use_gap = TRUE,
   nclust = NULL,
-  clust.method = "kmeans",
+  clust_method = "kmeans",
   iter.max = 10,
   num.seeds = 10,
   return.eig = TRUE,
@@ -16,16 +16,24 @@ run_spectral(
 )
 }
 \arguments{
-\item{SNN}{The adjacency matrix of graph}
-
 \item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 most important eigenvector automatically, and the number of output clusters 
 equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
 The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
 selcted and 'nclust' clusters will be detected by skmeans.}
 
+\item{iter.max}{}
+
+\item{return.eig}{}
+
+\item{dims}{}
+
+\item{SNN}{The adjacency matrix of graph}
+
 \item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
 decompositon, else R-base function 'svd' will be used for calculation.}
+
+\item{num.seed}{}
 }
 \value{
 The clustering results

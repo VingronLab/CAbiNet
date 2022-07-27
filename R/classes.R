@@ -20,37 +20,46 @@ check_caclust <- function(object){
 #    errors <- c(errors, msg)
 #  }
   
-  if(nrow(object@SNN) != ncol(object@SNN)){
+  if(isTRUE(!is.empty(object@SNN)) & nrow(object@SNN) != ncol(object@SNN)){
     msg <- "SNN number of rows not equal to number of columns!"
     errors <- c(errors, msg)
   }
   
-  if(is.null(names(object@cell_clusters))){
+  if(isTRUE(!is.empty(object@cell_clusters)) & 
+            is.null(names(object@cell_clusters))){
     msg <- "cell clusters are not named!"
     errors <- c(errors, msg)
   }
   
-  if(is.null(names(object@gene_clusters))){
+  if(isTRUE(!is.empty(object@gene_clusters)) & 
+     is.null(names(object@gene_clusters))){
     msg <- "gene clusters are not named!"
     errors <- c(errors, msg)
   }
   
-  if(!identical(rownames(object@SNN), colnames(object@SNN))){
+  if(isTRUE(!is.empty(object@SNN)) & 
+     !identical(rownames(object@SNN), colnames(object@SNN))){
     msg <- "SNN rownames not identical to colnames!"
     errors <- c(errors, msg)
   }
   
-  if(!all(c(names(object@cell_clusters),
-            names(object@gene_clusters)) %in% rownames(object@SNN))){
-    msg <- "not all cell & gene names in SNN!"
-    errors <- c(errors, msg)
+  if (isTRUE(!is.empty(object@SNN)) &
+      isTRUE(!is.empty(object@cell_clusters)) &
+      isTRUE(!is.empty(object@gene_clusters))){
+    
+    if(!all(c(names(object@cell_clusters),
+              names(object@gene_clusters)) %in% rownames(object@SNN))){
+      msg <- "not all cell & gene names in SNN!"
+      errors <- c(errors, msg)
+    }
+    
+    if(!all(rownames(object@SNN) %in% c(names(object@cell_clusters),
+                                        names(object@gene_clusters)))){
+      msg <- "not all SNN names in cell & gene names!"
+      errors <- c(errors, msg)
+    }
   }
   
-  if(!all(rownames(object@SNN) %in% c(names(object@cell_clusters),
-                                      names(object@gene_clusters)))){
-    msg <- "not all SNN names in cell & gene names!"
-    errors <- c(errors, msg)
-  }
   
   if (length(errors) == 0) TRUE else errors
 }
@@ -82,8 +91,21 @@ setClass("caclust",
            eigen = 'matrix',
            parameters = "list",
            cell_prob = "matrix",
-           gene_prob = "matrix"
+           gene_prob = "matrix",
+           cell_idxs = "integer",
+           gene_idxs = "integer"
          ),
+         prototype(
+           cell_clusters = factor(),
+           gene_clusters = factor(),
+           SNN = as(matrix(0,0,0), "dgCMatrix"),
+           eigen = matrix(0,0,0),
+           parameters = list(),
+           cell_prob = matrix(0,0,0),
+           gene_prob = matrix(0,0,0),
+           cell_idxs = NA_integer_,
+           gene_idxs = NA_integer_),
+         # contains = "cacomp",
          validity = check_caclust
 )
 
@@ -191,20 +213,26 @@ show.caclust <- function(object, n_rows = 10){
   
   stopifnot(is(object, "caclust"))
   
-  ncells <- length(cell_clusters(object)) 
-  ngenes <- length(gene_clusters(object)) 
+  ncells <- length(object@cell_idxs) 
+  ngenes <- length(object@gene_idxs) 
   cat("caclust object with", ncells, "cells and", ngenes, "genes.")
-
-  stopifnot(identical(levels(cell_clusters(object)),
-                      levels(gene_clusters(object))))
-  cat("\n")
-  cat(length(levels(gene_clusters(object))), "clusters found.")
-  cat("\nClustering results:\n\n")
-  df <- data.frame("cluster" = levels(cell_clusters(object)),
-                   "ncells" = summary(cell_clusters(object), maxsum = Inf),
-                   "ngenes" = summary(gene_clusters(object), maxsum = Inf))
   
-  print(df, row.names = FALSE, right = FALSE)
+  if (!is.empty(cell_clusters(object)) & !is.empty(gene_clusters(object))){
+    stopifnot(identical(levels(cell_clusters(object)),
+                        levels(gene_clusters(object))))
+    cat("\n")
+    cat(length(levels(gene_clusters(object))), "clusters found.")
+    cat("\nClustering results:\n\n")
+    df <- data.frame("cluster" = levels(cell_clusters(object)),
+                     "ncells" = summary(cell_clusters(object), maxsum = Inf),
+                     "ngenes" = summary(gene_clusters(object), maxsum = Inf))
+    
+    print(df, row.names = FALSE, right = FALSE)
+    
+  } else {
+    cat("\nNo biclustering run yet.\n\n")
+  }
+
   # print(df[seq_len(min(n_rows, nrows(df))),], row.names = FALSE, right = FALSE)
 }
 

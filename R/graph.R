@@ -48,7 +48,7 @@ make_knn <- function(dists,
     knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[nns]
     # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
   }
-  nn.ranked <- knn.mat[,seq_len(k)]
+  # nn.ranked <- knn.mat[,seq_len(k)]
   
   # convert nn.ranked into a Graph
   j <- as.numeric(t(knn.mat))
@@ -215,10 +215,12 @@ create_bigraph <- function(cell_dists,
 #' * "gg": gene-gene euclidean distances
 #' * "cg": cell-gene association ratio
 #' * "gc": gene-cell association ratio
-#' @param k_c k for cell-cell kNN
-#' @param k_g k for gene-gene kNN
-#' @param k_cg k for cell-gene kNN
-#' @param k_gc k for gene-cell kNN
+#' @param k Either an integer (same k for all subgraphs) or a vector of 
+#' exactly four integers specifying in this order: 
+#' * k_c for the cell-cell kNN-graph
+#' * k_g for the gene-gene kNN-graph
+#' * k_cg for the cell-gene kNN-graph
+#' * k_gc for the gene-cell kNN-graph.
 #' @param SNN_prune numeric. Value between 0-1. Sets cutoff of acceptable jaccard 
 #' similarity scores for neighborhood overlap of vertices in SNN. Edges with values 
 #' less than this will be set as 0. The default value is 1/15.
@@ -246,12 +248,8 @@ create_bigraph <- function(cell_dists,
 #' 
 #' @md 
 #' @export
-create_SNN <- function(caobj,
-                       distances,
-                       k_c,
-                       k_g,
-                       k_cg,
-                       k_gc,
+make_SNN <- function(caobj,
+                       k,
                        SNN_prune = 1/15,
                        loops = FALSE,
                        mode = "out",
@@ -261,6 +259,18 @@ create_SNN <- function(caobj,
                        calc_gene_cell_kNN = FALSE,
                        marker_genes = NULL) {
   
+  if (length(k) == 1){
+    k_c <- k_g <- k_cg <- k_gc <- k
+  } else if (length(k) == 4){
+    k_c <- k[1]
+    k_g <- k[2]
+    k_cg <- k[3]
+    k_gc <- k[4]
+  } else {
+    stop("invalid k.")
+  }
+  
+  distances <- calc_distances(caobj = caobj)
   
   stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
   stopifnot(mode %in% c("out", "in", "all"))
@@ -292,5 +302,13 @@ create_SNN <- function(caobj,
   
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)
-  return(snn.matrix)
+  
+  cidxs <- which(rownames(snn.matrix) %in% rownames(caobj@std_coords_cols))
+  gidxs <- which(rownames(snn.matrix) %in% rownames(caobj@std_coords_rows))
+  
+  caclust <- new("caclust",
+                 SNN=snn.matrix,
+                 cell_idxs = cidxs,
+                 gene_idxs = gidxs)
+  return(caclust)
 }

@@ -28,14 +28,15 @@ Imports:
   SummarizedExperiment,
   ClusterR
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
     'CAclust.R'
-    'biMAP.R'
+    'RcppExports.R'
     'classes.R'
+    'biMAP.R'
     'clustering.R'
     'graph.R'
     'helpers.R'

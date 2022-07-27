@@ -1,70 +1,7 @@
+#' @include classes.R
+NULL
 
 
-
-#' Leiden clustering on bigraph
-#' 
-#' @description 
-#' TODO
-#' 
-#' @param SNN dense or sparse matrix. A SNN graph.
-#' @param resolution resolution for leiden algorithm.
-#' @param n.int Number of iterations for leiden algorithm.
-#' @param rand_seed Random seed.
-#' 
-#' @return 
-#' vector of type `factor.` Assigned clusters of cells and genes. 
-#' The names of cells and genes are saved in the names of the 
-#' vector. 
-#' 
-run_leiden <- function(caclust, 
-                       resolution = 1,
-                       n.int = 10, 
-                       rand_seed = 2358,
-                       dense = TRUE) {
-  
-  call_params <- as.list(match.call())
-  names(call_params)[1] <- "run_leiden"
-  
-  if (is(caclust@SNN, "dgCMatrix") & isTRUE(dense)){
-      SNN <- as.matrix(SNN)
-  } else {
-    SNN <- caclust@SNN
-  }
-
-  
-  clusters <- leiden::leiden(object = SNN,
-                     resolution_parameter = resolution,
-                     partition_type = "RBConfigurationVertexPartition",
-                     initial_membership = NULL,
-                     weights = NULL,
-                     node_sizes = NULL,
-                     n_iterations = n.int,
-                     seed = rand_seed)
-  
-  
-  clusters <- as.factor(clusters)
-  names(clusters) <- rownames(SNN)
-  
-  
-  cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
-  gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
-  
-  cell_clusters <- clusters[cell_idx]
-  gene_clusters <- clusters[gene_idx]
-  
-  
-  caclust@cell_cluster <- cell_clusters
-  caclust@gene_clusters <- gene_clusters
-  
-  
-  caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
-                                           "gene_clusters" = gene_clusters,
-                                           "SNN" = SNN,
-                                           "eigen" = matrix(),
-                                           "parameters" = call_params))
-  
-  return(caclust_res)
-}
 
 #' Calculate Normalized Graph Laplacian
 #' @description 
@@ -93,6 +30,8 @@ NormLaplacian = function(adj){
   
   return(L)
 }
+
+
 
 #' An integration of several runs of skmens with different random seeds
 #' @description 
@@ -165,7 +104,7 @@ SKMeans <- function (x,
 #' selcted and 'nclust' clusters will be detected by skmeans.
 #' @param python TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
 #' decompositon, else R-base function 'svd' will be used for calculation. 
-#' @param clust.method
+#' @param clust_method
 #' @param iter.max 
 #' @param num.seed 
 #' @param return.eig 
@@ -174,14 +113,22 @@ SKMeans <- function (x,
 #' @return 
 #' The clustering results
 #' 
-run_spectral <- function(SNN, 
+run_spectral <- function(caclust, 
                          use_gap = TRUE, 
                          nclust = NULL,
-                         clust.method = 'kmeans',
+                         clust_method = 'kmeans',
                          iter.max=10, 
                          num.seeds=10,
                          return.eig = TRUE,
                          dims = 30) {
+  
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "run_spectral"
+  
+  
+  stopifnot(is(caclust, "caclust"))
+  SNN <- caclust@SNN
+  
   diag(SNN) = 0
   L = NormLaplacian(SNN)
   
@@ -191,7 +138,6 @@ run_spectral <- function(SNN,
     
   }
   
-    
   SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
   names(SVD)[1:3] <- c("D", "U", "V")
   
@@ -226,15 +172,15 @@ run_spectral <- function(SNN,
     
   }
   
-  if (clust.method == 'skmeans'){
+  if (clust_method == 'skmeans'){
     
     clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
   
-  }else if (clust.method == 'kmeans'){
+  }else if (clust_method == 'kmeans'){
     
   clusters = RcmdrMisc::KMeans(eig, centers = ncol(eig), iter.max=iter.max, num.seeds= num.seeds)$cluster
 
-  }else if (clust.method == 'GMM'){
+  }else if (clust_method == 'GMM'){
     
     gmm = ClusterR::GMM(eig,
                         gaussian_comps = ncol(eig),
@@ -244,27 +190,45 @@ run_spectral <- function(SNN,
                         em_iter = 30,
                         verbose = F)   
     
-    clusters = ClusterR::predict_GMM(data = eig,
+    gmm_res = ClusterR::predict_GMM(data = eig,
                                  CENTROIDS = gmm$centroids, 
                                  COVARIANCE = gmm$covariance_matrices,
                                  WEIGHTS = gmm$weights)
     
-    clusters <- clusters[-which(names(clusters)=="log_likelihood")]
+    gmm_res <- gmm_res[-which(names(gmm_res)=="log_likelihood")]
     
-    rownames(clusters$cluster_proba) <- rownames(SNN)
-    colnames(clusters$cluster_proba) <- paste("BC", seq_len(ncol(clusters$cluster_proba)))
+    cluster_proba <- gmm_res$cluster_proba
+    clusters <- gmm_res$cluster_labels
     
-    clusters$cluster_labels <- as.factor(clusters$cluster_labels)
-    names(clusters$cluster_labels) <- rownames(SNN)
+    rownames(cluster_proba) <- rownames(SNN)
+    colnames(cluster_proba) <- paste("BC", seq_len(ncol(cluster_proba)))
+
+    # cell_idx <- which(rownames(cluster_proba) %in% rownames(caobj@prin_coords_cols))
+    # gene_idx <- which(rownames(cluster_proba) %in% rownames(caobj@prin_coords_rows))
+    
+    cell_prob <- cluster_proba[caclust@cell_idxs,]
+    gene_prob <- cluster_proba[caclust@gene_idxs,]
+    
+    caclust@cell_prob <- cell_prob
+    caclust@gene_prob <- gene_prob
+    
+    
     
   }else{
   stop('clustering method should be chosen from kmeans and skmeans!')
   }
   
-  if(clust.method != 'GMM'){
-    clusters <- as.factor(clusters)
-    names(clusters) <- rownames(SNN)
-  }
+  # cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  # gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
+  
+  clusters <- as.factor(clusters)
+  names(clusters) <- rownames(SNN)
+  
+  cell_clusters <- clusters[caclust@cell_idxs]
+  gene_clusters <- clusters[caclust@gene_idxs]
+  
+  caclust@cell_clusters <- cell_clusters
+  caclust@gene_clusters <- gene_clusters
   
   if (return.eig){
     
@@ -281,11 +245,86 @@ run_spectral <- function(SNN,
     eigenv <- matrix()
   }
   
+  caclust@eigen <- eigenv
   
+  stopifnot(validObject(caclust))
   
-  return(list(clusters = clusters,
-              eigen = eigenv))
+  return(caclust)
 }
+
+
+
+
+#' Leiden clustering on bigraph
+#' 
+#' @description 
+#' TODO
+#' 
+#' @param SNN dense or sparse matrix. A SNN graph.
+#' @param resolution resolution for leiden algorithm.
+#' @param n.int Number of iterations for leiden algorithm.
+#' @param rand_seed Random seed.
+#' 
+#' @return 
+#' vector of type `factor.` Assigned clusters of cells and genes. 
+#' The names of cells and genes are saved in the names of the 
+#' vector. 
+#' 
+run_leiden <- function(caclust,
+                       resolution = 1,
+                       n.int = 10, 
+                       rand_seed = 2358,
+                       dense = TRUE) {
+  
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "run_leiden"
+  
+  stopifnot(is(caclust, "caclust"))
+  
+  
+  if (is(caclust@SNN, "dgCMatrix") & isTRUE(dense)){
+    SNN <- as.matrix(caclust@SNN)
+  } else {
+    SNN <- caclust@SNN
+  }
+  
+  
+  clusters <- leiden::leiden(object = SNN,
+                             resolution_parameter = resolution,
+                             partition_type = "RBConfigurationVertexPartition",
+                             initial_membership = NULL,
+                             weights = NULL,
+                             node_sizes = NULL,
+                             n_iterations = n.int,
+                             seed = rand_seed)
+  
+  
+  clusters <- as.factor(clusters)
+  names(clusters) <- rownames(SNN)
+  
+  # 
+  # cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  # gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
+  
+  cell_clusters <- clusters[caclust@cell_idxs]
+  gene_clusters <- clusters[caclust@gene_idxs]
+  
+  caclust@cell_clusters <- cell_clusters
+  caclust@gene_clusters <- gene_clusters
+  caclust@parameters <- append(caclust@parameters, call_params)
+  
+  # caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
+  #                                          "gene_clusters" = gene_clusters,
+  #                                          "SNN" = SNN,
+  #                                          "eigen" = matrix(),
+  #                                          "parameters" = call_params))
+  # 
+  
+  stopifnot(validObject(caclust))
+  return(caclust)
+}
+
+
 
 #' Run biclustering
 #' 
@@ -294,11 +333,13 @@ run_spectral <- function(SNN,
 #' 
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
-#' @param k_sym k for cell-cell and gene-gene kNN graph
-#' @param k_asym k for cell-gene and gene-cell kNN graph
+#' @param k Either an integer (same k for all subgraphs) or a vector of 
+#' exactly four integers specifying in this order: the k_c for the cell-cell 
+#' kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene 
+#' kNN-graph, k_gc for the gene-cell kNN-graph.
 #' @param algorithm Algorithm for clustering. Options are "leiden" or "spectral".
 #' @inheritParams create_bigraph
-#' @inheritParams create_SNN
+#' @inheritParams make_SNN
 #' @inheritParams run_leiden
 #' @inheritParams run_spectral
 #' 
@@ -315,8 +356,7 @@ run_spectral <- function(SNN,
 #' @md
 #' @export
 run_caclust <- function(caobj,
-                        k_sym,
-                        k_asym = k_sym,
+                        k,
                         algorithm = "leiden",
                         SNN_prune = 1/15,
                         loops = FALSE,
@@ -331,7 +371,6 @@ run_caclust <- function(caobj,
                         rand_seed = 2358,
                         use_gap = TRUE,
                         nclust = NULL,
-                        python = TRUE,
                         spectral_method = 'kmeans',
                         iter.max = 10, 
                         num.seeds = 10,
@@ -342,104 +381,49 @@ run_caclust <- function(caobj,
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
   
-  distances <- calc_distances(caobj = caobj)
+
+  stopifnot("Invalid k! Should be either a single integer or of lenght 4!" =
+              (length(k) == 1 | length(k) == 4))
   
-  SNN <- create_SNN(caobj = caobj, 
-                    distances = distances,
-                    k_c = k_sym,
-                    k_g = k_sym,
-                    k_cg = k_asym,
-                    k_gc = k_asym,
-                    loops = loops,
-                    mode = mode,
-                    SNN_prune = SNN_prune,
-                    select_genes = select_genes,
-                    prune_overlap = prune_overlap,
-                    overlap = overlap,
-                    calc_gene_cell_kNN = calc_gene_cell_kNN,
-                    marker_genes = marker_genes)
+  
+  caclust <- make_SNN(caobj = caobj, 
+                      k = k,
+                      loops = loops,
+                      mode = mode,
+                      SNN_prune = SNN_prune,
+                      select_genes = select_genes,
+                      prune_overlap = prune_overlap,
+                      overlap = overlap,
+                      calc_gene_cell_kNN = calc_gene_cell_kNN,
+                      marker_genes = marker_genes)
   
   if (algorithm == "leiden"){
     
-    clusters <- run_leiden(SNN = SNN, 
+    caclust <- run_leiden(caclust = caclust, 
                            resolution = resolution,
                            n.int = n.int, 
                            rand_seed = rand_seed,
                            dense = leiden.dense)
-    
-    eigen <- matrix()
     
   } else if (algorithm == "spectral"){
     
     if (is.null(sc.dims)){
       sc.dims = length(caobj@D)
     }
-      clusters <- run_spectral(SNN = SNN,
+    caclust <- run_spectral(caclust = caclust,
                                use_gap = use_gap,
                                nclust = nclust,
-                               python = python,
-                               clust.method = spectral_method,
+                               clust_method = spectral_method,
                                iter.max = iter.max, 
                                num.seeds = num.seeds,
                                return.eig = return.eig,
                                dims = sc.dims)
 
-
-    if (isTRUE(return.eig)){
-      
-      eigen <- clusters$eigen
-      rownames(eigen) <- rownames(SNN)
-      
-    } else {
-      
-      eigen <- matrix()
-    }
-    
-    if (spectral_method == "GMM"){
-      
-      cell_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_cols))
-      gene_idx <- which(names(clusters$cluster_labels) %in% rownames(caobj@prin_coords_rows))
-      
-      cell_clusters <- clusters$cluster_labels[cell_idx]
-      gene_clusters <- clusters$cluster_labels[gene_idx]
-      
-      cell_idx <- which(rownames(clusters$cluster_proba) %in% rownames(caobj@prin_coords_cols))
-      gene_idx <- which(rownames(clusters$cluster_proba) %in% rownames(caobj@prin_coords_rows))
-      cell_prob <- clusters$cluster_proba[cell_idx,]
-      gene_prob <- clusters$cluster_proba[gene_idx,]
-      
-      caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
-                                               "gene_clusters" = gene_clusters,
-                                               "SNN" = SNN,
-                                               "eigen" = eigen,
-                                               "parameters" = call_params,
-                                               "cell_prob" = cell_prob,
-                                               "gene_prob" = gene_prob))
-      return(caclust_res)
-    } else {
-      clusters <- as.factor(clusters$clusters)
-    }
-
-      
-
-    
   } else{
     stop("algorithm should choose from 'leiden' and 'spectral'!")
   }
 
-  cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
-  gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
-  
-  cell_clusters <- clusters[cell_idx]
-  gene_clusters <- clusters[gene_idx]
-  
-  
-  caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
-                                           "gene_clusters" = gene_clusters,
-                                           "SNN" = SNN,
-                                           "eigen" = eigen,
-                                           "parameters" = call_params))
-  return(caclust_res)
+  return(caclust)
 }
 
 
@@ -515,7 +499,6 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 #' TODO
 #' @return
 #' an caclust object or SingleCellExperiment objects
-
 #' @export
 setGeneric("caclust", function(obj,
                                k_sym,

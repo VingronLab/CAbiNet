@@ -171,7 +171,9 @@ eigengap = function(e, v){
   n = length(e)
   gaps = abs(e[1:(n-1)] - e[2:n])
   idx = which(gaps == max(gaps))[1]
-  cat('eigengap idx',idx,'\n')
+  
+  message(paste0('Using eigengap at index ', idx, '\n'))
+  
   if ( idx <2){
     selected_eigen = v[, 1:2]
   }else{

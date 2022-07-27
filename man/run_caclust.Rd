@@ -83,6 +83,10 @@ selcted and 'nclust' clusters will be detected by skmeans.}
 
 \item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
 decompositon, else R-base function 'svd' will be used for calculation.}
+
+\item{iter.max}{}
+
+\item{return.eig}{}
 }
 \value{
 Returns list:
