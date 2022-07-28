@@ -14,7 +14,7 @@ NULL
 #' @param rand_seed Random seed for UMAP.
 #' 
 #' @return 
-#' data frame containing the UMAP coordinates of cells and genes.
+#' caclust object with biMAP coordinates stored in the `bimap` slot.
 #' 
 #' @export 
 run_biMAP <- function(caobj,
@@ -164,8 +164,8 @@ run_biMAP <- function(caobj,
   
   umap_coords <- umap_coords %>% dplyr::arrange(desc(type))
   
-  
-  return(umap_coords)
+  caclust_obj@bimap <- umap_coords
+  return(caclust_obj)
 }
 
 #' Add cacomp obj results to SingleCellExperiment object

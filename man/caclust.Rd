@@ -38,8 +38,6 @@ caclust(
 
 \item{k_sym}{neighour of nearest neighours, see run_caclust  function}
 
-\item{k_asym}{k for cell-gene and gene-cell kNN graph}
-
 \item{cacomp_meta_name}{the name of cacomp object stored in metadata(SingleCellExperiment object)}
 
 \item{caclust_meta_name}{the name of caclust object stored in metadata(SingleCellExperiment object)}
