@@ -8,6 +8,8 @@ check_caobj_sce(sce, cacomp_meta_name = "caobj")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
+
+\item{cacomp_meta_name}{Character. Name of cacomp slpt in sce object.}
 }
 \description{
 check if cacomp object is already added to SingleCellExperiment object

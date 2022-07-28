@@ -36,64 +36,106 @@ NormLaplacian = function(adj){
 #' An integration of several runs of skmens with different random seeds
 #' @description 
 #' This function will select the optimal clustering result from several 
-#' skmeans::skmeans runs
-#' with different random seeds, The clustering result with the smallest 
+#' skmeans::skmeans runs with different random seeds, The clustering result with the smallest 
 #' within-cluster-sum of squared distances will be selected.
+#' @param k Integer. Number of cluters to detect for skmeans.
+#' @param x Matrix. This function will cluster the rows of the input matrix.
+#' @param num_seeds Integer. Number of trials with random seeds
 #' @inheritParams skmeans::skmeans
-#' @param num_seeds number of trials with random seeds
 #' 
 #' @return 
-#' The optimal skmeans clustering result
-#' TODO return
-SKMeans <- function (x, 
-                     k, 
-                     method = NULL, 
-                     m = 1, 
-                     weights = 1, 
-                     control = list(), 
-                     num_seeds = 10){
+#' Returns an object inheriting from classes skmeans and pclust (see ?skmeans) which 
+#' gives the local optimal skmeans clustering result within several trials.
+#' 
+optimal_skm <- function (x,
+                        k, 
+                        num_seeds = 10,
+                        method = NULL,
+                        m = 1,
+                        weights = 1,
+                        control = list(),
+                        ...){
   
-  # if (mode(x) == "numeric")  x <- data.frame(new.x = x)
+  if(!is(x, 'matrix')){
+    x = as.matrix(x)
+  }
   
-  ###############
-  ## IMPORTANT ##
-  ###############
-  # This code seems to be heavily inspired by RcmdrMisc::KMeans
-  # https://github.com/cran/RcmdrMisc/blob/master/R/cluster.R
-  # Do we need a citation? 
+  if (num_seeds < 1){
+    stop('num_seeds should be larger than 0.')
+  }
   
-  KM <- skmeans::skmeans(x = x, 
-                         k = k, 
-                         method = method,
-                         m = m,
-                         weights = weights,
-                         control = control)
-  wss <- do.call(sum, lapply(list(1:length(KM$cluster)), function(i){
-    sum((x[i,]-KM$prototypes[KM$cluster[i],])^2)
-  }))
+  wcs <- Inf
   
-  for (i in 2:num_seeds) {
-    newKM <- skmeans::skmeans(x = x, 
+  for (i in 1:num_seeds) {
+    newres <- skmeans::skmeans(x = x, 
                               k = k, 
                               method = method,
                               m = m,
                               weights = weights,
                               control = control)
     
-    newwss <- do.call(sum, lapply(list(1:length(newKM$cluster)), function(i){
-      sum((x[i,]-newKM$prototypes[newKM$cluster[i],])^2)
-    }))
-    if (newwss <wss) {
-      KM <- newKM
-      wss <- newwss
+    newwcs <- do.call(sum, 
+                      lapply(list(1:length(newres$cluster)), 
+                                  function(i){
+                                    sum((x[i,]-newres$prototypes[newres$cluster[i],])^2)
+                                    }))
+    
+    if (newwcs <= wcs) {
+      res <- newres
+      wcs <- newwcs
     }
   }
-  # xmean <- apply(x, 2, mean)
-  # centers <- rbind(KM$centers, xmean)
-  # bss1 <- as.matrix(dist(centers)^2)
-  # KM$betweenss <- sum(as.vector(bss1[nrow(bss1), ]) * c(KM$size, 
-  #                                                       0))
-  return(KM)
+                                                     
+  return(res)
+}
+
+#' An integration of several runs of kmens with different random seeds
+#' @description 
+#' This function will select the optimal clustering result from several kmeans runs
+#' with different random seeds, The clustering result with the smallest 
+#' within-cluster-sum of squared distances will be selected.
+#' @param k Integer. Number of cluters to detect for kmeans.
+#' @param x Matrix. This function will cluster the rows of the input matrix.
+#' @inheritParams stats::kmeans
+#' @param num_seeds Integer. Number of trials with random seeds
+#' 
+#' @return 
+#' Returns an object of class "kmeans" with is a list with several components 
+#' (see ?kmeans) which guves the local optimal kmeans clustering result within 
+#' #num_seeds trials.
+
+optimal_km <- function (x,
+                         k, 
+                         num_seeds = 10,
+                        iter.max = 10,
+                        ...){
+  
+  if(!is(x, 'matrix')){
+    x = as.matrix(x)
+  }
+  
+  if (num_seeds < 1){
+    stop('num_seeds should be larger than 0.')
+  }
+  
+  wcs <- Inf
+  res<-NULL
+  
+  for (i in 1:num_seeds) {
+    newres <- stats::kmeans(x = x, 
+                     centers = k, 
+                     iter.max = iter.max,
+                     ...)
+
+    newwcs <- sum(newres$withinss)
+    
+    if (newwcs <= wcs) {
+      res <- newres
+      wcs <- newwcs
+    }
+  }
+  
+  return(res)
 }
 
 #' Run spectral clustering
@@ -187,14 +229,14 @@ run_spectral <- function(caclust,
   
   if (spectral_method == 'skmeans'){
     
-    clusters = SKMeans(eig, k = nclust, num_seeds = num_seeds)$cluster
+    clusters = optimal_skm(eig, k = nclust, num_seeds = num_seeds)$cluster
   
   }else if (spectral_method == 'kmeans'){
     
-    clusters = RcmdrMisc::KMeans(eig,
-                                 centers = ncol(eig),
-                                 iter.max = iter_max,
-                                 num.seeds = num_seeds)$cluster
+    clusters = optimal_km(eig,
+                         centers = ncol(eig),
+                         iter.max = iter_max,
+                         num.seeds = num_seeds)$cluster
 
   }else if (spectral_method == 'GMM'){
     
@@ -459,46 +501,25 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
   rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
   rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
   
-  metadata(sce)[[caclust_meta_name]] <- caclust
+  S4Vectors::metadata(sce)[[caclust_meta_name]] <- caclust
   
   return(sce)
 }
 
-#' Add cacomp obj results to SingleCellExperiment object
-#' @param sce SingleCellExperiment object
-#' @param caobj caclust::caclust object
-#' @param cacomp_meta_name column name not listed in colData(sce), rowData(sce), or metadata(sce)
-#' @export
-#' 
-add_caobj_sce <- function(sce, caobj, cacomp_meta_name = 'caobj'){
-  
-  if (isTRUE(cacomp_meta_name %in% colnames(colData(sce))) | 
-      isTRUE(cacomp_meta_name %in% colnames(rowData(sce))) |
-      isTRUE(cacomp_meta_name %in% names(metadata(sce)))){
-    stop('The given cacomp_meta_name is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
-  }
-  
-  metadata(sce)[[cacomp_meta_name]] <- caobj
-  
-  return(sce)
-}
 
 #' check if cacomp object is already added to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
+#' @param cacomp_meta_name Character. Name of cacomp slpt in sce object.
 #' 
 check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
   
- ix <- 'cacomp' %in% unlist(lapply(metadata(sce), class))
- if(isFALSE(ix)){
-   stop('cacomp object is missing from SingleCellExperiment object sce, plese make sure you have
-        run cacomp and add_caobj_sce in ahead!')
- }
- 
- ix <- cacomp_meta_name %in% names(metadata(sce))
- if(isFALSE(ix)){
-   stop('cacomp object with the given name is missing from SingleCellExperiment object sce, plese make 
-   sure you have run add_caobj_sce with the same cacomp_meta_name!')
- }
+  ix <- cacomp_meta_name %in% SingleCellExperiment::reducedDimNames(sce)
+  
+  if(isFALSE(ix)){
+    stop("No 'CA' dimension reduction object found. ",
+         "Please run cacomp(seurat_obj, top, coords = FALSE, ",
+         "return_input=TRUE) first.")
+  }
   
 }
 
@@ -506,7 +527,7 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 
 #' caclust
 #' @description
-#' run biclustering algorithm, compatible for matrix and sce input
+#' A biclustering algorithm which is compatible for both matrix and sce inputs
 #' @name caclust
 #' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
@@ -519,27 +540,85 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 #' an caclust object or SingleCellExperiment objects
 #' @export
 setGeneric("caclust", function(obj,
-                               k_sym,
-                               k_asym = k_sym,
+                               k,
                                cacomp_meta_name = 'caobj',
                                caclust_meta_name = 'caclust',
+                               algorithm = "leiden",
+                               SNN_prune = 1/15,
+                               loops = FALSE,
+                               mode = "out",
+                               select_genes = TRUE,
+                               prune_overlap = TRUE,
+                               overlap = 0.2,
+                               calc_gene_cell_kNN = FALSE,
+                               resolution = 1,
+                               marker_genes = NULL,
+                               n.int = 10,
+                               rand_seed = 2358,
+                               use_gap = TRUE,
+                               nclust = NULL,
+                               spectral_method = 'kmeans',
+                               iter_max = 10, 
+                               num_seeds = 10,
+                               return_eig = TRUE,
+                               dims = NULL,
+                               cast_to_dense = TRUE,
                                ...){
   standardGeneric("caclust")
 })
 
 
-#
+#' 
 #' @rdname caclust
-#' @inheritParams run_caclust
 #' @export
 setMethod(f = "caclust",
           signature(obj = "caclust"),
           function(obj, 
-                   k_sym,
+                   k,
+                   algorithm = "leiden",
+                   SNN_prune = 1/15,
+                   loops = FALSE,
+                   mode = "out",
+                   select_genes = TRUE,
+                   prune_overlap = TRUE,
+                   overlap = 0.2,
+                   calc_gene_cell_kNN = FALSE,
+                   resolution = 1,
+                   marker_genes = NULL,
+                   n.int = 10,
+                   rand_seed = 2358,
+                   use_gap = TRUE,
+                   nclust = NULL,
+                   spectral_method = 'kmeans',
+                   iter_max = 10, 
+                   num_seeds = 10,
+                   return_eig = TRUE,
+                   dims = NULL,
+                   cast_to_dense = TRUE,
                    ...){
           
           caclust_res <- run_caclust(caobj = obj,
-                                 k_sym,
+                                 k,
+                                 algorithm = algorithm,
+                                 SNN_prune = SNN_prune,
+                                 loops = loops,
+                                 mode = mode,
+                                 select_genes = select_genes,
+                                 prune_overlap = prune_overlap,
+                                 overlap =overlap,
+                                 calc_gene_cell_kNN = calc_gene_cell_kNN,
+                                 resolution = resolution ,
+                                 marker_genes =marker_genes,
+                                 n.int = n.int,
+                                 rand_seed = rand_seed,
+                                 use_gap = use_gap,
+                                 nclust = nclust,
+                                 spectral_method = spectral_method ,
+                                 iter_max = iter_max, 
+                                 num_seeds = num_seeds,
+                                 return_eig =return_eig,
+                                 dims = dims,
+                                 cast_to_dense = cast_to_dense,
                                  ...)
           return(caclust_res)
             
@@ -547,28 +626,65 @@ setMethod(f = "caclust",
 
 #
 #' @rdname caclust
-#' @param obj SingleCellExperiment object
-#' @param k_sym neighour of nearest neighours, see run_caclust  function
-#' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
-#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @export
 setMethod(f = "caclust",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
-                   k_sym,
-                   cacomp_meta_name = 'caobj',
+                   k,
+                   cacomp_meta_name = 'CA',
                    caclust_meta_name = 'caclust',
+                   algorithm = "leiden",
+                   SNN_prune = 1/15,
+                   loops = FALSE,
+                   mode = "out",
+                   select_genes = TRUE,
+                   prune_overlap = TRUE,
+                   overlap = 0.2,
+                   calc_gene_cell_kNN = FALSE,
+                   resolution = 1,
+                   marker_genes = NULL,
+                   n.int = 10,
+                   rand_seed = 2358,
+                   use_gap = TRUE,
+                   nclust = NULL,
+                   spectral_method = 'kmeans',
+                   iter_max = 10, 
+                   num_seeds = 10,
+                   return_eig = TRUE,
+                   dims = NULL,
+                   cast_to_dense = TRUE,
                    ...){
           
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
-            if (isTRUE(caclust_meta_name %in% names(metadata(sce)))){
+            
+            if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(sce)))){
               stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
             }
             
-            caobj <- metadata(obj)[[cacomp_meta_name]]
+            caobj <- as.cacomp(obj)
             
             caclust_res <- run_caclust(caobj = caobj,
-                                         k_sym,
+                                         k,
+                                       algorithm = algorithm,
+                                       SNN_prune = SNN_prune,
+                                       loops = loops,
+                                       mode = mode,
+                                       select_genes = select_genes,
+                                       prune_overlap = prune_overlap,
+                                       overlap =overlap,
+                                       calc_gene_cell_kNN = calc_gene_cell_kNN,
+                                       resolution = resolution ,
+                                       marker_genes =marker_genes,
+                                       n.int = n.int,
+                                       rand_seed = rand_seed,
+                                       use_gap = use_gap,
+                                       nclust = nclust,
+                                       spectral_method = spectral_method ,
+                                       iter_max = iter_max, 
+                                       num_seeds = num_seeds,
+                                       return_eig =return_eig,
+                                       dims = dims,
+                                       cast_to_dense = cast_to_dense,
                                          ...)
             obj <- add_caclust_sce(sce = obj, 
                                    caclust = caclust_res,

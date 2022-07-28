@@ -54,7 +54,7 @@ UMAP}
 
 \item{caclust_meta_name}{the name of caclust object stored in metadata(SingleCellExperiment object)}
 
-\item{biMAP_meta_name}{}
+\item{biMAP_meta_name}{character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$algorithm.}
 }
 \value{
 an caclust object or SingleCellExperiment objects

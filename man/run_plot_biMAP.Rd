@@ -6,7 +6,7 @@
 \usage{
 run_plot_biMAP(
   umap_coords,
-  metadata = NULL,
+  metadf = NULL,
   color_by = "cluster",
   type = "scatter",
   cell_size = 1,
@@ -27,7 +27,7 @@ run_plot_biMAP(
 \arguments{
 \item{umap_coords}{data frame as outputted by `run_biMAP_*`}
 
-\item{metadata}{optional. data.frame that should have either gene or cell names
+\item{metadf}{optional. data.frame that should have either gene or cell names
 (or both) in as rownames or a column named `name` and a column with the same name as 
 `color_by`.}
 

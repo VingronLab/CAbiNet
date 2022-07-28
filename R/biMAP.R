@@ -176,7 +176,7 @@ run_biMAP <- function(caobj,
 #' 
 add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
   
-  metadata(sce)[[biMAP_meta_name]] <- umap_coords
+  S4Vectors::metadata(sce)[[biMAP_meta_name]] <- umap_coords
   
   return(sce)
 }
@@ -213,9 +213,6 @@ setGeneric("biMAP", function(obj,
 #' @description
 #' TODO
 #' @rdname biMAP
-#' @param obj A cacomp object or SingleCellExperiment object 
-#' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
-#' @inheritParams run_biMAP
 #' @return
 #' @export
 setMethod(f = "biMAP",
@@ -236,11 +233,6 @@ setMethod(f = "biMAP",
 #' @description
 #' TODO
 #' @rdname biMAP
-#' @param obj A cacomp object or SingleCellExperiment object 
-#' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
-#' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
-#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
-#' @param biMAP_meta_name 
 #' @inheritParams run_biMAP
 #' @return
 #' @export
@@ -262,16 +254,16 @@ setMethod(f = "biMAP",
             }
             
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
-            if (isFALSE(caclust_meta_name %in% names(metadata(obj)))){
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop('The caclust_meta_name in not found in metadata(sce obj), change meta_name')
             }
-            if (isTRUE(biMAP_meta_name %in% names(metadata(obj)))){
+            if (isTRUE(biMAP_meta_name %in% names(S4Vectors::metadata(obj)))){
               warning('The biMAP coordinates with name biMAP_meta_name already exist in metadata(sce obj), the old data will be overwritten!')
             }
             
-            caobj <- metadata(obj)[[cacomp_meta_name]]
+            caobj <- S4Vectors::metadata(obj)[[cacomp_meta_name]]
             
-            caclust_obj <- metadata(obj)[[caclust_meta_name]]
+            caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
             umap_coords <- run_biMAP(caobj = caobj,
                                      caclust_obj = caclust_obj,
