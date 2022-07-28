@@ -37,37 +37,42 @@ NormLaplacian = function(adj){
 #' @description 
 #' This function will select the optimal clustering result from several 
 #' skmeans::skmeans runs
-#' with different random seeds, The clustering result with smallest 
-#' within-cluster-sum
-#' of squared distances will be selected.
-#' @param method see skmeans::skmeans function
-#' @param m A number not less than 1 controlling the softness of the partition.(see skmeans::skmeans 'm')
-#' @param weights A numeric vector of non-negative case weights.(see skmeans::skmeans 'm')
-#' @param control A list of control parameters for different methods.
-#' @param num.seeds number of trials with random seeds
+#' with different random seeds, The clustering result with the smallest 
+#' within-cluster-sum of squared distances will be selected.
+#' @inheritParams skmeans::skmeans
+#' @param num_seeds number of trials with random seeds
+#' 
 #' @return 
 #' The optimal skmeans clustering result
-#' @export
+#' TODO return
 SKMeans <- function (x, 
                      k, 
                      method = NULL, 
                      m = 1, 
                      weights = 1, 
                      control = list(), 
-                     num.seeds = 10) 
-{
-  if (mode(x) == "numeric") 
-    # x <- data.frame(new.x = x)
+                     num_seeds = 10){
+  
+  # if (mode(x) == "numeric")  x <- data.frame(new.x = x)
+  
+  ###############
+  ## IMPORTANT ##
+  ###############
+  # This code seems to be heavily inspired by RcmdrMisc::KMeans
+  # https://github.com/cran/RcmdrMisc/blob/master/R/cluster.R
+  # Do we need a citation? 
+  
   KM <- skmeans::skmeans(x = x, 
                          k = k, 
                          method = method,
                          m = m,
                          weights = weights,
                          control = control)
-  wss = do.call(sum, lapply(list(1:length(KM$cluster)), function(i){
+  wss <- do.call(sum, lapply(list(1:length(KM$cluster)), function(i){
     sum((x[i,]-KM$prototypes[KM$cluster[i],])^2)
   }))
-  for (i in 2:num.seeds) {
+  
+  for (i in 2:num_seeds) {
     newKM <- skmeans::skmeans(x = x, 
                               k = k, 
                               method = method,
@@ -75,12 +80,12 @@ SKMeans <- function (x,
                               weights = weights,
                               control = control)
     
-    newwss = do.call(sum, lapply(list(1:length(newKM$cluster)), function(i){
+    newwss <- do.call(sum, lapply(list(1:length(newKM$cluster)), function(i){
       sum((x[i,]-newKM$prototypes[newKM$cluster[i],])^2)
     }))
     if (newwss <wss) {
       KM <- newKM
-      wss = newwss
+      wss <- newwss
     }
   }
   # xmean <- apply(x, 2, mean)
@@ -91,42 +96,50 @@ SKMeans <- function (x,
   return(KM)
 }
 
-#' run spectral clustering
+#' Run spectral clustering
+#'
 #' @description 
 #' This function is designed for detecting clusters from input graph adjacency 
 #' matrix by using spectral clustering with normalized graph laplacian.
 #' 
-#' @param SNN The adjacency matrix of graph
+#' @param caclust caclust object.
+#' @param dims integer. Number of dimensions to compute during SVD for spectral clustering.
 #' @param use_gap TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 #' most important eigenvector automatically, and the number of output clusters 
 #' equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
 #' The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
 #' selcted and 'nclust' clusters will be detected by skmeans.
-#' @param python TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
-#' decompositon, else R-base function 'svd' will be used for calculation. 
-#' @param clust_method
-#' @param iter.max 
-#' @param num.seed 
-#' @param return.eig 
-#' @param dims
+#' @param spectral_method character. Name of the method to cluster the eigenvectors.
+#' Can be on of the following 3:
+#' * "kmeans": k-means clustering
+#' * "skmeans": spherical k-means clustering
+#' * "GMM": Gaussian-Mixture-Model fuzzy clustering.
+#' @param iter_max Number of iterations for k-means clustering and GMM.
+#' @param num_seeds Number of times k-means clustering is repeated.
+#' @param return_eig Whether or not to return eigenvectors.
 #' 
 #' @return 
 #' The clustering results
-#' 
+#' @md 
+#' @export
 run_spectral <- function(caclust, 
+                         dims = 30,
                          use_gap = TRUE, 
                          nclust = NULL,
-                         clust_method = 'kmeans',
-                         iter.max=10, 
-                         num.seeds=10,
-                         return.eig = TRUE,
-                         dims = 30) {
+                         spectral_method = 'kmeans',
+                         iter_max = 10, 
+                         num_seeds = 10,
+                         return_eig = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "run_spectral"
   
   
   stopifnot(is(caclust, "caclust"))
+  if (is.empty(caclust@SNN)){
+    stop("No SNN graph found. Please run make_SNN() first!")
+  }
+  
   SNN <- caclust@SNN
   
   diag(SNN) = 0
@@ -138,7 +151,7 @@ run_spectral <- function(caclust,
     
   }
   
-  SVD <- irlba::irlba(L, nv =dims, smallest = TRUE) # eigenvalues in a decreasing order
+  SVD <- irlba::irlba(L, nv = dims, smallest = TRUE) # eigenvalues in a decreasing order
   names(SVD)[1:3] <- c("D", "U", "V")
   
   idx = order(SVD$D, decreasing = FALSE)
@@ -172,22 +185,25 @@ run_spectral <- function(caclust,
     
   }
   
-  if (clust_method == 'skmeans'){
+  if (spectral_method == 'skmeans'){
     
-    clusters = SKMeans(eig, k = nclust, num.seeds = num.seeds)$cluster
+    clusters = SKMeans(eig, k = nclust, num_seeds = num_seeds)$cluster
   
-  }else if (clust_method == 'kmeans'){
+  }else if (spectral_method == 'kmeans'){
     
-  clusters = RcmdrMisc::KMeans(eig, centers = ncol(eig), iter.max=iter.max, num.seeds= num.seeds)$cluster
+    clusters = RcmdrMisc::KMeans(eig,
+                                 centers = ncol(eig),
+                                 iter.max = iter_max,
+                                 num.seeds = num_seeds)$cluster
 
-  }else if (clust_method == 'GMM'){
+  }else if (spectral_method == 'GMM'){
     
     gmm = ClusterR::GMM(eig,
                         gaussian_comps = ncol(eig),
                         dist_mode = "maha_dist",
                         seed_mode = "random_subset",
-                        km_iter = 30,
-                        em_iter = 30,
+                        km_iter = iter_max,
+                        em_iter = iter_max,
                         verbose = F)   
     
     gmm_res = ClusterR::predict_GMM(data = eig,
@@ -230,7 +246,7 @@ run_spectral <- function(caclust,
   caclust@cell_clusters <- cell_clusters
   caclust@gene_clusters <- gene_clusters
   
-  if (return.eig){
+  if (return_eig){
     
     if (is.null(dims)){
       dims = min(30, ncol(SNN))
@@ -258,31 +274,36 @@ run_spectral <- function(caclust,
 #' Leiden clustering on bigraph
 #' 
 #' @description 
-#' TODO
+#' This function takes a caclust object with precomputed SNN-graph and 
+#' clusters cells and genes simultaneously.
 #' 
-#' @param SNN dense or sparse matrix. A SNN graph.
-#' @param resolution resolution for leiden algorithm.
-#' @param n.int Number of iterations for leiden algorithm.
+#' @param caclust caclust object with SNN calculated.
+#' @param resolution integer. Resolution for leiden algorithm.
+#' @param n.int integer. Number of iterations for leiden algorithm.
 #' @param rand_seed Random seed.
+#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense 
+#' matrix before running leiden clustering?
+#' Casting to dense speeds up the leiden algorithm.
 #' 
 #' @return 
-#' vector of type `factor.` Assigned clusters of cells and genes. 
-#' The names of cells and genes are saved in the names of the 
-#' vector. 
+#' Object of type "caclust" with cell and gene clusters saved.
 #' 
 run_leiden <- function(caclust,
                        resolution = 1,
                        n.int = 10, 
                        rand_seed = 2358,
-                       dense = TRUE) {
+                       cast_to_dense = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "run_leiden"
   
   stopifnot(is(caclust, "caclust"))
   
+  if (is.empty(caclust@SNN)){
+    stop("No SNN graph found. Please run make_SNN() first!")
+  }
   
-  if (is(caclust@SNN, "dgCMatrix") & isTRUE(dense)){
+  if (is(caclust@SNN, "dgCMatrix") & isTRUE(cast_to_dense)){
     SNN <- as.matrix(caclust@SNN)
   } else {
     SNN <- caclust@SNN
@@ -329,7 +350,8 @@ run_leiden <- function(caclust,
 #' Run biclustering
 #' 
 #' @description 
-#' TODO
+#' Convenient wrapper around `make_SNN` and `run_leiden`/`run_spectral`.
+#' `run_caclust` takes a cacomp object and biclusters cells and genes.
 #' 
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
@@ -344,14 +366,8 @@ run_leiden <- function(caclust,
 #' @inheritParams run_spectral
 #' 
 #' @return
-#' Returns list:
-#' * 'cell_clusters': factor vector containing assigned clusters for the cell 
-#' specified in the elements name.
-#' * 'gene_clusters': factor vector containing assigned clusters for the genes
-#' specified in the elements name.
-#' * 'umap_coords': If `return_umap = TRUE` additionally a data frame with 
-#' the umap_coordinates of cells and genes is returned.
-#'  
+#' Returns caclust objec with clustering results stored. The cell and gene
+#' clusters can be accessed via `cell_clusters(obj)`/`gene_clusters(obj)`.
 #' 
 #' @md
 #' @export
@@ -372,11 +388,11 @@ run_caclust <- function(caobj,
                         use_gap = TRUE,
                         nclust = NULL,
                         spectral_method = 'kmeans',
-                        iter.max = 10, 
-                        num.seeds = 10,
-                        return.eig = TRUE,
-                        sc.dims = NULL,
-                        leiden.dense = TRUE) {
+                        iter_max = 10, 
+                        num_seeds = 10,
+                        return_eig = TRUE,
+                        dims = NULL,
+                        cast_to_dense = TRUE) {
   
   call_params <- as.list(match.call())
   names(call_params)[1] <- "Call"
@@ -403,21 +419,21 @@ run_caclust <- function(caobj,
                            resolution = resolution,
                            n.int = n.int, 
                            rand_seed = rand_seed,
-                           dense = leiden.dense)
+                           cast_to_dense = cast_to_dense)
     
   } else if (algorithm == "spectral"){
     
-    if (is.null(sc.dims)){
-      sc.dims = length(caobj@D)
+    if (is.null(dims)){
+      dims = length(caobj@D)
     }
     caclust <- run_spectral(caclust = caclust,
                                use_gap = use_gap,
                                nclust = nclust,
-                               clust_method = spectral_method,
-                               iter.max = iter.max, 
-                               num.seeds = num.seeds,
-                               return.eig = return.eig,
-                               dims = sc.dims)
+                               spectral_method = spectral_method,
+                               iter_max = iter_max, 
+                               num_seeds = num_seeds,
+                               return_eig = return_eig,
+                               dims = dims)
 
   } else{
     stop("algorithm should choose from 'leiden' and 'spectral'!")

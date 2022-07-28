@@ -1,3 +1,15 @@
+
+#' Mixes the colors of two clusters proportionally.
+#' 
+#' @param df data.frame of cells with clusters in `color_by` and assigned 
+#' hex bin in `hexbin`.
+#' @param colors colors to be mixed.
+#' @param cell Which hexbin to mix colors in.
+#' @param color_by Column name where the clusters/groups are stored in `df`.
+#' 
+#' @returns 
+#' Mixed color as hex code.
+#' 
 mix_rgb <- function(df, colors, cell, color_by){
   rgbcols <- col2rgb(colors)
   

@@ -47,17 +47,22 @@ an edge in the cell-gene kNN graph?}
 than `overlap` of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
-\item{overlap}{Numeric between 0 and 1. Overlap cutoff if
+\item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
+
+\item{marker_genes}{character. Optional. Names of known marker genes that 
+should be excempt from any pruning on the graph and be kept.}
 }
 \value{
-"Bigraph" of type `dgCMatrix`. The combined adjacency matrix consists of the
-cell-cell graph, gene-gene graph and cell-gene/gene-cell graph.
+Adjacency matrix of type `dgCMatrix`. 
+The combined adjacency matrix consists of the cell-cell graph, gene-gene 
+graph and cell-gene/gene-cell graph.
 }
 \description{
-TODO
+Builds a single adjacency matrix consisting of cells and genes from 4 
+seperate sub kNN-graphs.
 }

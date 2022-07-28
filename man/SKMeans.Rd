@@ -11,27 +11,52 @@ SKMeans(
   m = 1,
   weights = 1,
   control = list(),
-  num.seeds = 10
+  num_seeds = 10
 )
 }
 \arguments{
-\item{method}{see skmeans::skmeans function}
+\item{x}{A numeric data matrix, with rows corresponding to the objects
+    to be partitioned (such that row \eqn{b} contains \eqn{x_b}).  Can
+    be a dense matrix, a
+    \link[slam:matrix]{simple triplet matrix}
+    (package \pkg{slam}), or a
+    \link[Matrix:dgTMatrix-class]{dgTMatrix}
+    (package \pkg{Matrix}).
+    Zero rows are not allowed.
+  }
 
-\item{m}{A number not less than 1 controlling the softness of the partition.(see skmeans::skmeans 'm')}
+\item{k}{an integer giving the number of classes to be used in the
+    partition.}
 
-\item{weights}{A numeric vector of non-negative case weights.(see skmeans::skmeans 'm')}
+\item{method}{a character string specifying one of the built-in
+    methods for computing spherical \eqn{k}-means partitions, or a
+    function to be taken as a user-defined method, or \code{NULL}
+    (default value).  If a character string, its lower-cased version is
+    matched against the lower-cased names of the available built-in
+    methods using \code{\link{pmatch}}.  See \bold{Details} for
+    available built-in methods and defaults.}
 
-\item{control}{A list of control parameters for different methods.}
+\item{m}{a number not less than 1 controlling the softness of the
+    partition (as the \dQuote{fuzzification parameter} of the fuzzy
+    \eqn{c}-means algorithm).  The default value of 1 corresponds to
+    hard partitions; values greater than one give partitions of
+    increasing softness obtained from a generalized soft spherical
+    \eqn{k}-means problem.}
 
-\item{num.seeds}{number of trials with random seeds}
+\item{weights}{a numeric vector of non-negative case weights.
+    Recycled to the number of objects given by \code{x} if necessary.}
+
+\item{control}{a list of control parameters.  See \bold{Details}.}
+
+\item{num_seeds}{number of trials with random seeds}
 }
 \value{
 The optimal skmeans clustering result
+TODO return
 }
 \description{
 This function will select the optimal clustering result from several 
 skmeans::skmeans runs
-with different random seeds, The clustering result with smallest 
-within-cluster-sum
-of squared distances will be selected.
+with different random seeds, The clustering result with the smallest 
+within-cluster-sum of squared distances will be selected.
 }

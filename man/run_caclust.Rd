@@ -6,8 +6,7 @@
 \usage{
 run_caclust(
   caobj,
-  k_sym,
-  k_asym = k_sym,
+  k,
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -22,22 +21,22 @@ run_caclust(
   rand_seed = 2358,
   use_gap = TRUE,
   nclust = NULL,
-  python = TRUE,
   spectral_method = "kmeans",
-  iter.max = 10,
-  num.seeds = 10,
-  return.eig = TRUE,
-  sc.dims = NULL,
-  leiden.dense = TRUE
+  iter_max = 10,
+  num_seeds = 10,
+  return_eig = TRUE,
+  dims = NULL,
+  cast_to_dense = TRUE
 )
 }
 \arguments{
 \item{caobj}{A cacomp object with principal and standard coordinates
 calculated.}
 
-\item{k_sym}{k for cell-cell and gene-gene kNN graph}
-
-\item{k_asym}{k for cell-gene and gene-cell kNN graph}
+\item{k}{Either an integer (same k for all subgraphs) or a vector of
+exactly four integers specifying in this order: the k_c for the cell-cell
+kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
+kNN-graph, k_gc for the gene-cell kNN-graph.}
 
 \item{algorithm}{Algorithm for clustering. Options are "leiden" or "spectral".}
 
@@ -62,43 +61,53 @@ an edge in the cell-gene kNN graph?}
 than `overlap` of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
-\item{overlap}{Numeric between 0 and 1. Overlap cutoff if
+\item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
-\item{resolution}{resolution for leiden algorithm.}
+\item{resolution}{integer. Resolution for leiden algorithm.}
 
-\item{n.int}{Number of iterations for leiden algorithm.}
+\item{marker_genes}{character. Optional. Names of known marker genes that 
+should be excempt from any pruning on the graph and be kept.}
+
+\item{n.int}{integer. Number of iterations for leiden algorithm.}
 
 \item{rand_seed}{Random seed.}
 
 \item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
-most important eigenvector automatically, and the number of output clusters 
-equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+most important eigenvector automatically, and the number of output clusters
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given.
 The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
 selcted and 'nclust' clusters will be detected by skmeans.}
 
-\item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
-decompositon, else R-base function 'svd' will be used for calculation.}
+\item{spectral_method}{character. Name of the method to cluster the eigenvectors.
+Can be on of the following 3:
+\itemize{
+\item "kmeans": k-means clustering
+\item "skmeans": spherical k-means clustering
+\item "GMM": Gaussian-Mixture-Model fuzzy clustering.
+}}
 
-\item{iter.max}{}
+\item{iter_max}{Number of iterations for k-means clustering and GMM.}
 
-\item{return.eig}{}
+\item{num_seeds}{Number of times k-means clustering is repeated.}
+
+\item{return_eig}{Whether or not to return eigenvectors.}
+
+\item{dims}{integer. Number of dimensions to compute during SVD for spectral clustering.}
+
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
+matrix before running leiden clustering?
+Casting to dense speeds up the leiden algorithm.}
 }
 \value{
-Returns list:
-\itemize{
-\item 'cell_clusters': factor vector containing assigned clusters for the cell
-specified in the elements name.
-\item 'gene_clusters': factor vector containing assigned clusters for the genes
-specified in the elements name.
-\item 'umap_coords': If \code{return_umap = TRUE} additionally a data frame with
-the umap_coordinates of cells and genes is returned.
-}
+Returns caclust objec with clustering results stored. The cell and gene
+clusters can be accessed via \code{cell_clusters(obj)}/\code{gene_clusters(obj)}.
 }
 \description{
-TODO
+Convenient wrapper around \code{make_SNN} and \code{run_leiden}/\code{run_spectral}.
+\code{run_caclust} takes a cacomp object and biclusters cells and genes.
 }

@@ -71,7 +71,8 @@ make_knn <- function(dists,
 #' Combine kNN graphs to large cell-gene adjecency matrix
 #'
 #' @description
-#' TODO
+#' Builds a single adjacency matrix consisting of cells and genes from 4 
+#' seperate sub kNN-graphs.
 #' 
 #' @param cell_dists cell-cell euclidean distances
 #' @param gene_dists gene-gene euclidean distances
@@ -87,15 +88,18 @@ make_knn <- function(dists,
 #' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
 #' than `overlap` of genes with the nearest neighbours of the cell are removed.
 #' Pruning is only performed if select_genes = TRUE.
-#' @param overlap Numeric between 0 and 1. Overlap cutoff if
+#' @param overlap Numeric between 0 and 1. Overlap cutoff applied if
 #' prune_overlap = TRUE.
 #' @param calc_gene_cell_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
 #' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 #' graph is transposed.
+#' @param marker_genes character. Optional. Names of known marker genes that 
+#' should be excempt from any pruning on the graph and be kept.
 #'
 #' @return
-#' "Bigraph" of type `dgCMatrix`. The combined adjacency matrix consists of the
-#' cell-cell graph, gene-gene graph and cell-gene/gene-cell graph.
+#' Adjacency matrix of type `dgCMatrix`. 
+#' The combined adjacency matrix consists of the cell-cell graph, gene-gene 
+#' graph and cell-gene/gene-cell graph.
 #'
 #' @export
 create_bigraph <- function(cell_dists,
@@ -202,19 +206,13 @@ create_bigraph <- function(cell_dists,
 
 
 
-#' Create SNN graph from caobj
+#' Create SNN-graph from caobj
 #'
 #' @description 
-#' TODO
+#' Builds a shared nearest neighbour graph (SNN) from a "cacomp" object.
 #' 
 #' @param caobj A cacomp object with standard and principal coordinates 
 #' calculated.
-#' @param distances A list containing the cell-cell, gene-gene, cell-gene and 
-#' gene-cell distances/association ratios. Must be named list as follows:
-#' * "cc": cell-cell euclidean distances
-#' * "gg": gene-gene euclidean distances
-#' * "cg": cell-gene association ratio
-#' * "gc": gene-cell association ratio
 #' @param k Either an integer (same k for all subgraphs) or a vector of 
 #' exactly four integers specifying in this order: 
 #' * k_c for the cell-cell kNN-graph
@@ -224,15 +222,6 @@ create_bigraph <- function(cell_dists,
 #' @param SNN_prune numeric. Value between 0-1. Sets cutoff of acceptable jaccard 
 #' similarity scores for neighborhood overlap of vertices in SNN. Edges with values 
 #' less than this will be set as 0. The default value is 1/15.
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
-#' an edge in the cell-gene kNN graph?
-#' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
-#' than `overlap` of genes with the nearest neighbours of the cell are removed.
-#' @param overlap Numeric between 0 and 1. Overlap cutoff if
-#' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
-#' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
-#' graph is transposed.
 #' @param mode The type of neighboring vertices to use for calculating similarity
 #'  scores(Jaccard Index). Three options: "out", "in" and "all":
 #' * "out": Selecting neighbouring vertices by out-going edges;

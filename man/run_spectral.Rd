@@ -2,43 +2,48 @@
 % Please edit documentation in R/clustering.R
 \name{run_spectral}
 \alias{run_spectral}
-\title{run spectral clustering}
+\title{Run spectral clustering}
 \usage{
 run_spectral(
   caclust,
+  dims = 30,
   use_gap = TRUE,
   nclust = NULL,
-  clust_method = "kmeans",
-  iter.max = 10,
-  num.seeds = 10,
-  return.eig = TRUE,
-  dims = 30
+  spectral_method = "kmeans",
+  iter_max = 10,
+  num_seeds = 10,
+  return_eig = TRUE
 )
 }
 \arguments{
+\item{caclust}{caclust object.}
+
+\item{dims}{integer. Number of dimensions to compute during SVD for spectral clustering.}
+
 \item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
-most important eigenvector automatically, and the number of output clusters 
-equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+most important eigenvector automatically, and the number of output clusters
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given.
 The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
 selcted and 'nclust' clusters will be detected by skmeans.}
 
-\item{iter.max}{}
+\item{spectral_method}{character. Name of the method to cluster the eigenvectors.
+Can be on of the following 3:
+\itemize{
+\item "kmeans": k-means clustering
+\item "skmeans": spherical k-means clustering
+\item "GMM": Gaussian-Mixture-Model fuzzy clustering.
+}}
 
-\item{return.eig}{}
+\item{iter_max}{Number of iterations for k-means clustering and GMM.}
 
-\item{dims}{}
+\item{num_seeds}{Number of times k-means clustering is repeated.}
 
-\item{SNN}{The adjacency matrix of graph}
-
-\item{python}{TRUE/FALSE. If TRUE, pytorch function will be used to do eigenvalue
-decompositon, else R-base function 'svd' will be used for calculation.}
-
-\item{num.seed}{}
+\item{return_eig}{Whether or not to return eigenvectors.}
 }
 \value{
 The clustering results
 }
 \description{
-This function is designed for detecting clusters from input graph adjacency 
+This function is designed for detecting clusters from input graph adjacency
 matrix by using spectral clustering with normalized graph laplacian.
 }
