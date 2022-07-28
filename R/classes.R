@@ -79,8 +79,12 @@ check_caclust <- function(object){
 #' @slot parameters List of used parameters and function name with which results
 #' were generated.
 #' @slot eigen matrix, Slot for storing eigenvectors from spectral clustering
-#' @slot cell_prob matrix.
-#' @slot gene_prob matrix.
+#' @slot cell_prob matrix. Matrix that stores the probabilities that a cell belongs
+#' to a cluster. Only filled when running spectral clustering with GMM.
+#' @slot gene_prob matrix. Matrix that stores the probabilities that a gene belongs
+#' to a cluster. Only filled when running spectral clustering with GMM.
+#' @slot cell_idxs integer. Indices of the cells in the SNN adjacency matrix.
+#' @slot gene_idxs integer. Indices of the genes in the SNN adjacency matrix.
 #' 
 #' @export
 setClass("caclust",
@@ -93,7 +97,8 @@ setClass("caclust",
            cell_prob = "matrix",
            gene_prob = "matrix",
            cell_idxs = "integer",
-           gene_idxs = "integer"
+           gene_idxs = "integer",
+           bimap = "data.frame"
          ),
          prototype(
            cell_clusters = factor(),
@@ -104,7 +109,8 @@ setClass("caclust",
            cell_prob = matrix(0,0,0),
            gene_prob = matrix(0,0,0),
            cell_idxs = NA_integer_,
-           gene_idxs = NA_integer_),
+           gene_idxs = NA_integer_,
+           bimap = data.frame()),
          # contains = "cacomp",
          validity = check_caclust
 )
