@@ -18,7 +18,7 @@ mix_rgb <- function(df, colors, cell, color_by){
 }
 
 #' Plot biMAP
-#' 
+#' @rdname run_plot_biMAP
 #' @param umap_coords data frame as outputted by `run_biMAP_*`
 #' @param color_by Either "type" or "cluster". "type" colors by the type 
 #' (cell or gene) while "cluster" colors by the assigned cluster.
@@ -367,7 +367,7 @@ run_plot_biMAP <- function(umap_coords,
 
 
 #' plot biMAP with gene expression
-#' 
+#' @rdname plot_feature_biMAP
 #' @param sce SinleCellExperiment object
 #' @param umap_coords data.frame with biMAP coordinates
 #' @param feature character. Name of gene to visualize
@@ -724,7 +724,7 @@ setMethod(f = "bicplot",
             
           })
 
-#'
+#' Plotting biMAP embedding
 #' @description
 #' TODO
 #' @param obj A data,frame or SingleCellExperiment object  
@@ -816,10 +816,12 @@ setMethod(f = "plot_biMAP",
           })
 
 
-#
+#' BiMAP visualzation of expression of features
 #' @rdname feature_biMAP
 #' @param obj SinleCellExperiment object
 #' @param umap_coords data.frame with biMAP coordinates or NULL
+#' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
+#' @inheritParams plot_feature_biMAP
 #' @export
 setGeneric("feature_biMAP", function(obj,
                                   umap_coords = NULL,
@@ -833,8 +835,9 @@ setGeneric("feature_biMAP", function(obj,
 
 #
 #' @rdname feature_biMAP
-#' @param sce SinleCellExperiment object
+#' @param obj SinleCellExperiment object
 #' @param umap_coords data.frame with biMAP coordinates
+#' @inheritParams plot_feature_biMAP
 #' @export
 #' 
 setMethod(f = "feature_biMAP",
@@ -857,8 +860,10 @@ setMethod(f = "feature_biMAP",
 
 #
 #' @rdname feature_biMAP
-#' @param sce SinleCellExperiment object
+#' @param obj SinleCellExperiment object
 #' @param umap_coords data.frame with biMAP coordinates
+#' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
+#' @inheritParams plot_feature_biMAP
 #' @export
 #' 
 setMethod(f = "feature_biMAP",

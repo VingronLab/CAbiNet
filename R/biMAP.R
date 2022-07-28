@@ -3,7 +3,7 @@
 #' 
 #' @description 
 #' TODO
-#' 
+#' @rdname run_biMAP
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
 #' @param caclust_obj results from biclustering of class "caclust"
@@ -179,19 +179,21 @@ add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
   return(sce)
 }
 
-#'
+#' biMAP
 #' @description
 #' TODO
+#' @name biMAP
+#' @rdname biMAP
 #' @param obj A cacomp object or SingleCellExperiment object  
 #' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
+#' @param biMAP_meta_name character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$algorithm.
 #' @inheritParams run_biMAP
 #' @details
 #' TODO
 #' @return
 #' an caclust object or SingleCellExperiment objects
-
 #' @export
 setGeneric("biMAP", function(obj,
                              caclust_obj,
@@ -206,9 +208,13 @@ setGeneric("biMAP", function(obj,
 })
 
 
-#
+#' @description
+#' TODO
 #' @rdname biMAP
+#' @param obj A cacomp object or SingleCellExperiment object 
+#' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @inheritParams run_biMAP
+#' @return
 #' @export
 setMethod(f = "biMAP",
           signature(obj = "cacomp", caclust_obj = "caclust"),
@@ -225,12 +231,16 @@ setMethod(f = "biMAP",
             
           })
 
-
+#' @description
+#' TODO
 #' @rdname biMAP
+#' @param obj A cacomp object or SingleCellExperiment object 
+#' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @param biMAP_meta_name 
 #' @inheritParams run_biMAP
+#' @return
 #' @export
 setMethod(f = "biMAP",
           signature(obj = 'SingleCellExperiment'),
