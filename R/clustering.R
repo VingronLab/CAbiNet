@@ -504,9 +504,11 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 
 
 
-#'
+#' caclust
 #' @description
-#' Plots the first 2 dimensions of the rows and columns in the same plot.
+#' run biclustering algorithm, compatible for matrix and sce input
+#' @name caclust
+#' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
 #' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)

@@ -2,16 +2,53 @@
 % Please edit documentation in R/plot.R
 \name{feature_biMAP}
 \alias{feature_biMAP}
-\title{plot biMAP with gene expression}
+\alias{feature_biMAP,SingleCellExperiment,data.frame-method}
+\alias{feature_biMAP,SingleCellExperiment,ANY-method}
+\title{BiMAP visualzation of expression of features}
 \usage{
 feature_biMAP(
-  umap_coords,
-  sce,
+  obj,
+  umap_coords = NULL,
+  biMAP_meta_name = "biMAP_SNNdist",
   feature = NULL,
   color_cells_by = "expression",
-  assay = "logcounts"
+  assay = "logcounts",
+  ...
+)
+
+\S4method{feature_biMAP}{SingleCellExperiment,data.frame}(
+  obj,
+  umap_coords = NULL,
+  biMAP_meta_name = "biMAP_SNNdist",
+  feature = NULL,
+  color_cells_by = "expression",
+  assay = "logcounts",
+  ...
+)
+
+\S4method{feature_biMAP}{SingleCellExperiment,ANY}(
+  obj,
+  umap_coords = NULL,
+  biMAP_meta_name = "biMAP_SNNdist",
+  feature = NULL,
+  color_cells_by = "expression",
+  assay = "logcounts",
+  ...
 )
 }
+\arguments{
+\item{obj}{SinleCellExperiment object}
+
+\item{umap_coords}{data.frame with biMAP coordinates}
+
+\item{biMAP_meta_name}{character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)}
+
+\item{feature}{character. Name of gene to visualize}
+
+\item{color_cells_by}{character. Default: expression}
+
+\item{assay}{character. Name of assay in SingleCellExperiment used for visualization.}
+}
 \description{
-plot biMAP with gene expression
+BiMAP visualzation of expression of features
 }
