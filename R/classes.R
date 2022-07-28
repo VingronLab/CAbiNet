@@ -78,9 +78,9 @@ check_caclust <- function(object){
 #' jaccard similarity.
 #' @slot parameters List of used parameters and function name with which results
 #' were generated.
-#' @slot eigen
-#' @slot cell_prob
-#' @slot gene_prob
+#' @slot eigen matrix, Slot for storing eigenvectors from spectral clustering
+#' @slot cell_prob matrix.
+#' @slot gene_prob matrix.
 #' 
 #' @export
 setClass("caclust",

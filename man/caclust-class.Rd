@@ -22,6 +22,10 @@ jaccard similarity.}
 \item{\code{parameters}}{List of used parameters and function name with which results
 were generated.}
 
-\item{\code{gene_prob}}{}
+\item{\code{eigen}}{matrix, Slot for storing eigenvectors from spectral clustering}
+
+\item{\code{cell_prob}}{matrix.}
+
+\item{\code{gene_prob}}{matrix.}
 }}
 
