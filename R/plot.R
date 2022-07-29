@@ -29,54 +29,82 @@ mix_rgb <- function(df, colors, cell, color_by){
   return(rgb_new)
 }
 
-#' Plot biMAP
-#' @rdname run_plot_biMAP
-#' @param umap_coords data frame as outputted by `run_biMAP_*`
-#' @param color_by Either "type" or "cluster". "type" colors by the type 
-#' (cell or gene) while "cluster" colors by the assigned cluster.
-#' @param metadf optional. data.frame that should have either gene or cell names
-#' (or both) in as rownames or a column named `name` and a column with the same name as 
-#' `color_by`.
-#' @param type Either "scatter", "contour" or "hex".
-#' @return 
-#' ggplot of UMAP
+#' biMAP plotter
 #' 
-#' @export
-run_plot_biMAP <- function(umap_coords,
-                            metadf = NULL,
-                            color_by = "cluster",
-                            type = "scatter",
-                            cell_size = 1,
-                            gene_size = 3,
-                            hex_n = 40,
-                            min_bin = 2,
-                            contour_n = 5,
-                            cell_alpha = 0.5,
-                            gene_alpha = 1,
-                            show_density = FALSE,
-                            color_genes = FALSE,
-                            label_groups = TRUE,
-                            group_label_size=4,
-                            label_marker_gene = FALSE){
+#' @description 
+#' This function plots the different variants of biMAP
+#'
+#' @rdname biMAP_plotter
+#' @param caclust caclust object with biMAP stored.
+#' @param color_by Either "type" or "cluster". "type" colors by the type 
+#' (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
+#' provided a column from the data.frame can be specified.
+#' @param meta_df optional. data.frame that should have either gene or cell names
+#' (or both) as rownames or a column named `name` and a column with the same name as 
+#' `color_by`.
+#' @param type Determines the kind of plot outputted. Either "scatter" 
+#' (scatter plot), "contour" (density contour plot) or "hex" (binned hexagonals).
+#' @param cell_size integer. Size of the cells in the plot.
+#' @param gene_size integer. Size of the genes in the plot.
+#' @param cell_alpha numeric. Alpha value of cells (between 0 and 1).
+#' @param gene_alpha numeric. Alpha value of genes (between 0 and 1).
+#' @param hex_n integer. Number of hexagonal bins that partition the x-axis.
+#' @param min_bin integer. Only bins with more than `min_bin` cells are plotted.
+#' @param show_density logical. Should the alpha value for plot type "hex" be
+#' adjusted by the number of cells in the bin?
+#' @param contour_n integer. Number of contour lines to plot.
+#' @param color_genes logical. If TRUE colors genes by color_by.
+#' @param label_groups logical. If TRUE puts the group label on the median 
+#' coordinates of the point.
+#' @param group_label_size integer. Size of the group label.
+#' @param label_marker_genes logical. If TRUE, names of genes are displayed.
+#' 
+#' @returns
+#' biMAP plot as ggplot object.
+#' 
+biMAP_plotter <- function(caclust,
+                          color_by = "cluster",
+                          meta_df = NULL,
+                          type = "scatter",
+                          cell_size = 1,
+                          gene_size = 3,
+                          cell_alpha = 0.5,
+                          gene_alpha = 1,
+                          hex_n = 40,
+                          min_bin = 2,
+                          show_density = FALSE,
+                          contour_n = 5,
+                          color_genes = FALSE,
+                          label_groups = TRUE,
+                          group_label_size = 4,
+                          label_marker_genes = FALSE){
   
-  if(!is.null(metadf)){
+  stopifnot(is(caclust, "caclust"))
+  
+  if (is.emtpy(caclust@bimap)){
+    stop("Please run biMAP() first!")
+  }
+  
+  umap_coords <- caclust@bimap
+  
+  if(!is.null(meta_df)){
     
-    if(!is(metadf,"data.frame")){
-      metadf <- as.data.frame(metadf)
+    if(!is(meta_df,"data.frame")){
+      meta_df <- as.data.frame(meta_df)
     }
-    stopifnot((color_by %in% colnames(metadf)) | (color_by %in% colnames(umap_coords)))
+    stopifnot((color_by %in% colnames(meta_df)) | (color_by %in% colnames(umap_coords)))
     
-    if(!"name" %in% colnames(metadf)){
-      metadf$name <- rownames(metadf)
+    if(!"name" %in% colnames(meta_df)){
+      meta_df$name <- rownames(meta_df)
     }
     
-    sel <- metadf$name %in% umap_coords$name
-    metadf <- metadf[sel,]
+    sel <- meta_df$name %in% umap_coords$name
+    meta_df <- meta_df[sel,]
     
-    sel <- umap_coords$name %in% metadf$name
-    matched_names <- match(umap_coords$name[sel], metadf$name)
-    umap_coords[,color_by] <- "not_in_metadf"
-    umap_coords[sel, color_by] <- as.character(metadf[matched_names, color_by])
+    sel <- umap_coords$name %in% meta_df$name
+    matched_names <- match(umap_coords$name[sel], meta_df$name)
+    umap_coords[,color_by] <- "not_in_meta_df"
+    umap_coords[sel, color_by] <- as.character(meta_df[matched_names, color_by])
     
   }
   
@@ -185,7 +213,7 @@ run_plot_biMAP <- function(umap_coords,
                                       fontface = "bold")
   }
 
-  if(label_marker_gene){
+  if(label_marker_genes){
     
     p <- p + ggrepel::geom_text_repel(data = umap_genes,
                                       mapping = ggplot2::aes(x = x,
@@ -201,72 +229,20 @@ run_plot_biMAP <- function(umap_coords,
   
 }
 
-#' TODO
-contour_plot <- function(umap_cells,
-                         umap_genes,
-                         color_by,
-                         color_genes,
-                         colors,
-                         interact_genes,
-                         cell_size,
-                         gene_size,
-                         gene_alpha,
-                         contour_n){
-  
-  xrange <- max(umap_cells$x)-min(umap_cells$x)
-  yrange <- max(umap_cells$y)-min(umap_cells$y)
-  
-  if (isTRUE(color_genes)){
-    color_by_genes <- color_by
-    
-  } else {
-    color_by_genes <- "type"
-    
-    if("not_in_metadata" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_metadata")
-      if(all(umap_coords[idx, "type"] == "gene")){
-        colors <- colors[-which(names(colors) == "not_in_metadata")]
-      }
-    }
-    
-    if (is(color_genes, "character")){
-      gene_colors <- c("gene" = color_genes)
-    } else {
-      gene_colors <- c("gene" = "#7393B3")
-    }
-  }
-  
-  p <- ggplot2::ggplot() +
-    ggplot2::geom_density_2d(data = umap_cells,
-                    mapping = ggplot2::aes_(x = ~x,
-                                            y = ~y,
-                                            colour = as.name(color_by)),
-                    contour_var = "ndensity",
-                    breaks = seq(0, 1.0, length.out = contour_n),
-    ) +
-    ggplot2::geom_point(data = umap_genes,
-               mapping = ggplot2::aes_(x = ~x,
-                                       y = ~y,
-                                       fill = as.name(color_by_genes),
-                                       text = quote(interact_genes)
-               ),
-               color = "black",
-               size = gene_size,
-               shape = 21,
-               # stroke = 0.25,
-               alpha = gene_alpha ) +
-    ggplot2::scale_fill_manual(values = gene_colors) +
-    ggplot2::scale_color_manual(values = colors) +
-    ggplot2::labs(x="Dim 1",
-         y="Dim 2") +
-    ggplot2::theme_bw()
-  
-  
-  return(p)
-  
-}
 
-#' TODO
+#' internal helper to plot scatter biMAP
+#' 
+#' @param umap_cells biMAP coordinates data.frame subsetted to cells.
+#' @param umap_genes biMAP coordinates data.frame subsetted to genes.
+#' @param colors named vector of of length equal to the group size.
+#' @param interact_cells character string with text and labels for cells in 
+#' interactive plot.
+#' @param interact_genes character string with text and labels for genes in 
+#' interactive plots.
+#' @inheritParams biMAP_plotter
+#'
+#' @returns
+#' ggplot object
 scatter_plot <- function(umap_cells, 
                          umap_genes,
                          color_by,
@@ -288,10 +264,10 @@ scatter_plot <- function(umap_cells,
     
     color_by_genes <- "type"
     
-    if("not_in_metadata" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_metadata")
+    if("not_in_meta_df" %in% names(colors)){
+      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
       if(all(umap_coords[idx, "type"] == "gene")){
-        colors <- colors[-which(names(colors) == "not_in_metadata")]
+        colors <- colors[-which(names(colors) == "not_in_meta_df")]
       }
     }
     
@@ -330,7 +306,16 @@ scatter_plot <- function(umap_cells,
   
 }
 
-#' TODO
+
+
+#' internal helper to plot hex biMAP
+#' 
+#' @inheritParams biMAP_plotter
+#' @inheritParams scatter_plot
+#' 
+#' @returns 
+#' ggplot object
+#' 
 hex_plot <- function(umap_cells,
                      umap_genes,
                      color_by,
@@ -354,10 +339,10 @@ hex_plot <- function(umap_cells,
   } else {
     color_by_genes <- "type"
     
-    if("not_in_metadata" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_metadata")
+    if("not_in_meta_df" %in% names(colors)){
+      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
       if(all(umap_coords[idx, "type"] == "gene")){
-        colors <- colors[-which(names(colors) == "not_in_metadata")]
+        colors <- colors[-which(names(colors) == "not_in_meta_df")]
       }
     }
     
@@ -393,7 +378,7 @@ hex_plot <- function(umap_cells,
     orig_id <- which(hexb@cID == cell_id)
     umap_cells[orig_id,"hexbin"] <- cell_id
     
-    gghex$hexclust[i] <- mclust::majorityVote(umap_cells[orig_id, color_by])$majority
+    gghex$hexclust[i] <- get_majority(umap_cells[orig_id, color_by])
     
   }
   
@@ -421,11 +406,11 @@ hex_plot <- function(umap_cells,
   if (isTRUE(show_density)){
     
     p <- p + ggplot2::geom_hex(data = gghex,
-                      mapping = ggplot2::aes(x = x,
-                                             y = y,
-                                             alpha = count),
-                      fill = gghex$colors,
-                      stat = "identity") + 
+                               mapping = ggplot2::aes(x = x,
+                                                      y = y,
+                                                      alpha = count),
+                               fill = gghex$colors,
+                               stat = "identity") + 
       ggplot2::scale_alpha(range = c(0.2, 1))
     
   } else {
@@ -442,14 +427,14 @@ hex_plot <- function(umap_cells,
   
   p <- p + ggplot2::geom_point(data = umap_genes,
                                mapping = ggplot2::aes_(x = ~x,
-                                                 y = ~y,
-                                                 fill = as.name(color_by_genes),
-                                                 text = quote(interact_genes)
-                                ),
-                                color = "black",
-                                shape = 21,
-                                size = gene_size,
-                                alpha = gene_alpha ) +
+                                                       y = ~y,
+                                                       fill = as.name(color_by_genes),
+                                                       text = quote(interact_genes)
+                               ),
+                               color = "black",
+                               shape = 21,
+                               size = gene_size,
+                               alpha = gene_alpha ) +
     ggplot2::scale_fill_manual(values = colors) +
     ggplot2::labs(x="Dim 1",
                   y="Dim 2") +
@@ -460,20 +445,293 @@ hex_plot <- function(umap_cells,
 
 
 
+#' internal helper to plot contour biMAP
+#' 
+#' @inheritParams biMAP_plotter
+#' @inheritParams scatter_plot
+#' @returns 
+#' contour plot as ggplot object.
+#' 
+contour_plot <- function(umap_cells,
+                         umap_genes,
+                         color_by,
+                         color_genes,
+                         colors,
+                         interact_genes,
+                         gene_size,
+                         gene_alpha,
+                         contour_n){
+  
+  xrange <- max(umap_cells$x)-min(umap_cells$x)
+  yrange <- max(umap_cells$y)-min(umap_cells$y)
+  
+  if (isTRUE(color_genes)){
+    color_by_genes <- color_by
+    
+  } else {
+    color_by_genes <- "type"
+    
+    if("not_in_metadata" %in% names(colors)){
+      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
+      if(all(umap_coords[idx, "type"] == "gene")){
+        colors <- colors[-which(names(colors) == "not_in_meta_df")]
+      }
+    }
+    
+    if (is(color_genes, "character")){
+      gene_colors <- c("gene" = color_genes)
+    } else {
+      gene_colors <- c("gene" = "#7393B3")
+    }
+  }
+  
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_density_2d(data = umap_cells,
+                             mapping = ggplot2::aes_(x = ~x,
+                                                     y = ~y,
+                                                     colour = as.name(color_by)),
+                             contour_var = "ndensity",
+                             breaks = seq(0, 1.0, length.out = contour_n),
+    ) +
+    ggplot2::geom_point(data = umap_genes,
+                        mapping = ggplot2::aes_(x = ~x,
+                                                y = ~y,
+                                                fill = as.name(color_by_genes),
+                                                text = quote(interact_genes)
+                        ),
+                        color = "black",
+                        size = gene_size,
+                        shape = 21,
+                        # stroke = 0.25,
+                        alpha = gene_alpha ) +
+    ggplot2::scale_fill_manual(values = gene_colors) +
+    ggplot2::scale_color_manual(values = colors) +
+    ggplot2::labs(x="Dim 1",
+                  y="Dim 2") +
+    ggplot2::theme_bw()
+  
+  
+  return(p)
+  
+}
+
+#' Plot biMAP with hexagonal bins
+#' 
+#' @description 
+#' Bins cells into hexagons and colors them proportionally to their group label.
+#' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
+#' object or of class "SingleCellExperiment".
+#' @inheritParams biMAP_plotter
+#' @param ... Further arguments
+#' @returns 
+#' hex-plot biMAP as a ggplot.
+#' 
+#' @export
+setGeneric("plot_hex_biMAP", function(obj,
+                                      meta_df = NULL,
+                                      color_by = "cluster",
+                                      gene_size = 2,
+                                      cell_alpha = 0.8,
+                                      gene_alpha = 0.8,
+                                      hex_n = 40,
+                                      min_bin = 2,
+                                      show_density = FALSE,
+                                      color_genes = FALSE,
+                                      label_groups = TRUE,
+                                      group_label_size=4,
+                                      label_marker_genes = FALSE,
+                                      ...) {
+  standardGeneric("plot_hex_biMAP")
+})
+
+#' @rdname plot_hex_biMAP
+#' @export
+setMethod(f = "plot_hex_biMAP",
+          signature(obj = "caclust"),
+          function(obj,
+                   meta_df = NULL,
+                   color_by = "cluster",
+                   gene_size = 2,
+                   cell_alpha = 0.8,
+                   gene_alpha = 0.8,
+                   hex_n = 40,
+                   min_bin = 2,
+                   show_density = FALSE,
+                   color_genes = FALSE,
+                   label_groups = TRUE,
+                   group_label_size=4,
+                   label_marker_genes = FALSE,
+                   ...){
+
+  
+  
+  p <- biMAP_plotter(caclust = obj,
+                     meta_df = meta_df,
+                     color_by = color_by,
+                     type = "hex",
+                     cell_size = NA,
+                     gene_size = gene_size,
+                     hex_n = hex_n,
+                     min_bin = min_bin,
+                     contour_n = NA,
+                     cell_alpha = cell_alpha,
+                     gene_alpha = gene_alpha,
+                     show_density = show_density,
+                     color_genes = color_genes,
+                     label_groups = label_groups,
+                     group_label_size = group_label_size,
+                     label_marker_genes = label_marker_genes)
+  
+  return(p)
+})
+
+
+
+#' Plots a biMAP scatter plot
+#' @description 
+#' Plots cells and genes as points. Genes are plotted on top of the cells in
+#' a larger size to make visual differentiation easier.
+#' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
+#' object or of class "SingleCellExperiment".
+#' @inheritParams biMAP_plotter
+#' @param ... Further arguments.
+#' @returns 
+#' biMAP scatter plot as ggplot object.
+#' 
+#' @export
+setGeneric("plot_scatter_biMAP", function(obj,
+                                          meta_df = NULL,
+                                          color_by = "cluster",
+                                          cell_size = 1,
+                                          gene_size = 2,
+                                          cell_alpha = 0.7,
+                                          gene_alpha = 0.8,
+                                          color_genes = FALSE,
+                                          label_groups = TRUE,
+                                          group_label_size = 4,
+                                          label_marker_genes = FALSE,
+                                          ...) {
+  standardGeneric("plot_scatter_biMAP")
+})
+
+#' @rdname plot_scatter_biMAP
+#' @export
+setMethod(f = "plot_scatter_biMAP", 
+          signature = (obj = "caclust"),
+          function(obj,
+                  meta_df = NULL,
+                  color_by = "cluster",
+                  cell_size = 1,
+                  gene_size = 2,
+                  cell_alpha = 0.7,
+                  gene_alpha = 0.8,
+                  color_genes = FALSE,
+                  label_groups = TRUE,
+                  group_label_size = 4,
+                  label_marker_genes = FALSE,
+                  ...){
+  
+  p <- biMAP_plotter(caclust = obj,
+                      meta_df = meta_df,
+                      color_by = color_by,
+                      type = "scatter",
+                      cell_size = cell_size,
+                      gene_size = gene_size,
+                      hex_n = NA,
+                      min_bin = NA,
+                      contour_n = NA,
+                      cell_alpha = cell_alpha,
+                      gene_alpha = gene_alpha,
+                      show_density = NA,
+                      color_genes = color_genes,
+                      label_groups = label_groups,
+                      group_label_size = group_label_size,
+                      label_marker_genes = label_marker_genes)
+  
+  return(p)
+})
+
+#' Plot contour biMAP
+#' @description 
+#' Cell density is plotted as contour lines and genes are plotted as points
+#' over the contours.
+#' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
+#' object or of class "SingleCellExperiment".
+#' @inheritParams biMAP_plotter
+#' @param ... Further arguments.
+#' @returns 
+#' contour biMAP plot as ggplot object.
+#' @export
+setGeneric("plot_contour_biMAP", function(obj,
+                                          meta_df = NULL,
+                                          color_by = "cluster",
+                                          gene_size = 2,
+                                          gene_alpha = 0.8,
+                                          contour_n = 5,
+                                          color_genes = FALSE,
+                                          label_groups = TRUE,
+                                          group_label_size = 4,
+                                          label_marker_genes = FALSE,
+                                          ...) {
+  standardGeneric("plot_contour_biMAP")
+})
+
+#' @rdname plot_contour_biMAP
+#' @export
+setMethod(f = "plot_contour_biMAP", 
+          signature = (obj = "caclust"),
+          function(obj,
+                   meta_df = NULL,
+                   color_by = "cluster",
+                   gene_size = 2,
+                   gene_alpha = 0.8,
+                   contour_n = 5,
+                   color_genes = FALSE,
+                   label_groups = TRUE,
+                   group_label_size = 4,
+                   label_marker_genes = FALSE,
+                   ...){
+  
+  p <- biMAP_plotter(caclust = obj,
+                      meta_df = meta_df,
+                      color_by = color_by,
+                      type = "contour",
+                      cell_size = NA,
+                      gene_size = gene_size,
+                      hex_n = NA,
+                      min_bin = NA,
+                      contour_n = contour_n,
+                      cell_alpha = NA,
+                      gene_alpha = gene_alpha,
+                      show_density = FALSE,
+                      color_genes = color_genes,
+                      label_groups = label_groups,
+                      group_label_size = group_label_size,
+                      label_marker_genes = label_marker_genes)
+  
+  return(p)
+  
+})
+
+
 #' plot biMAP with gene expression
 #' @rdname plot_feature_biMAP
 #' @param sce SinleCellExperiment object
-#' @param umap_coords data.frame with biMAP coordinates
+#' @param caclust caclust object
 #' @param feature character. Name of gene to visualize
 #' @param color_cells_by character. Default: expression
 #' @param assay character. Name of assay in SingleCellExperiment used for visualization.
 #' @export
 plot_feature_biMAP <- function(sce,
-                               umap_coords, 
+                               caclust, 
                               feature = NULL, 
                               color_cells_by="expression", 
                               assay = "logcounts"){
-      
+  
+  stopifnot(is(caclust, "caclust"))
+  umap_coords <- caclust@bimap
+  
+  stopifnot(is(sce, "SingleCellExperiment"))
   stopifnot(length(feature)<=1)
   
   if(color_cells_by == "expression") {
@@ -523,16 +781,16 @@ plot_feature_biMAP <- function(sce,
 }
 
 
-metadf_biMAP <- function(umap_coords, 
+metadata_biMAP <- function(umap_coords, 
                            sce, 
                            color_cells_by, 
                            continous = FALSE){
-  metadf <- colData(sce)
+  meta_df <- colData(sce)
 
   cell_idx <- which(umap_coords$type == "cell")
 
   umap_coords[,color_cells_by] <- NA
-  umap_coords[cell_idx, color_cells_by] <- metadf[umap_coords[cell_idx,]$name, color_cells_by] 
+  umap_coords[cell_idx, color_cells_by] <- meta_df[umap_coords[cell_idx,]$name, color_cells_by] 
 
 
 
@@ -832,7 +1090,7 @@ setMethod(f = "bicplot",
 #' @export
 setGeneric("plot_biMAP", function(obj,
                                   biMAP_meta_name = NULL,
-                                  metadf = NULL,
+                                  meta_df = NULL,
                                   color_by = "cluster",
                                   type = "scatter",
                                   cell_size = 1,
@@ -847,26 +1105,26 @@ setGeneric("plot_biMAP", function(obj,
                                   label_groups = TRUE,
                                   group_label_size=4,
                                   labels_per_group=1,
-                                  label_marker_gene = FALSE,
+                                  label_marker_genes = FALSE,
                                   ...){
   standardGeneric("plot_biMAP")
 })
 
 #
 #' @rdname plot_biMAP
-#' @param color_by character which can be chosen from 'type', 'cluster' and column in the input metadf
-#' @param metadf data.frame.
+#' @param color_by character which can be chosen from 'type', 'cluster' and column in the input meta_df
+#' @param meta_df data.frame.
 #' @inheritParams plot_biMAP
 #' @export
 setMethod(f = "plot_biMAP",
           signature(obj = "data.frame"),
           function(obj, 
-                   metadf = NULL,
+                   meta_df = NULL,
                    color_by = "cluster",
                    ...){
             
-            p <- run_plot_biMAP(umap_coords = obj,
-                                metadf = metadf,
+            p <- biMAP_plotter(umap_coords = obj,
+                                meta_df = meta_df,
                                 color_by = color_by,
                                      ...)
             return(p)
@@ -876,15 +1134,15 @@ setMethod(f = "plot_biMAP",
 #
 #' @rdname plot_biMAP
 #' @param obj SingleCellExperiment object
-#' @param color_by character which can be chosen from 'type', 'cluster',column in the input metadf and columns in colData of the obj (if metadf == NULL)
-#' @param metadf data.frame.
+#' @param color_by character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)
+#' @param meta_df data.frame.
 #' @inheritParams plot_biMAP
 #' @export
 setMethod(f = "plot_biMAP",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
                    biMAP_meta_name = 'biMAP_SNNdist',
-                   metadf = NULL,
+                   meta_df = NULL,
                    color_by = "cluster",
                    ...){
             
@@ -895,14 +1153,14 @@ setMethod(f = "plot_biMAP",
             if(!is(umap_coords, 'data.frame')){
               umap_coords = as.data.frame(umap_coords)
             }
-            if (is.null(metadf)){
-              metadf = colData(obj)
+            if (is.null(meta_df)){
+              meta_df = colData(obj)
             }
-            if(isFALSE(color_by %in% c(colnames(metadf), colnames(umap_coords)))){
-              stop('color_by not found in either metadf or obj')
+            if(isFALSE(color_by %in% c(colnames(meta_df), colnames(umap_coords)))){
+              stop('color_by not found in either meta_df or obj')
             }
-            p <- run_plot_biMAP(umap_coords = umap_coords,
-                                metadf = metadf,
+            p <- biMAP_plotter(umap_coords = umap_coords,
+                                meta_df = meta_df,
                                 color_by = color_by,
                                 ...)
             return(p)

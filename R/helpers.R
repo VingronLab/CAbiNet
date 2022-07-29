@@ -187,7 +187,14 @@ eigengap = function(e, v){
 
 
 
-
+#' calculates association ratio between to columns in a matrix.
+#' 
+#' @param matrix a matrix
+#' @param origin origin column (name or index)
+#' @param target target column (name or index)
+#' 
+#' @returns
+#' Returns the association ratio between the columns from origin to target.
 aR_metric <- function(matrix, origin, target){
   
   assR <- matrix[,origin] %*% matrix[,target]
@@ -197,8 +204,19 @@ aR_metric <- function(matrix, origin, target){
 }
 
 
-
+#' Assign cluster to cells/genes
+#' @description 
+#' Based on a probability cutoff genes/cells are assigned to all clusters for
+#' which they have a probability higher than 'cutoff'.
+#' @param caclust_obj A caclust object
+#' @param type Either "cell" or "gene".
+#' @param cutoff Probability cutoff.
+#' 
+#' @returns 
+#' logical matrix indicating which gene belongs to which cluster.
+#' 
 assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
+  
   if(type == "genes"){
     prob_slot <- "gene_prob"
   } else if (type == "cells"){
@@ -206,6 +224,8 @@ assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
   }
   
   probs <- slot(caclust_obj, prob_slot)
+  stopifnot("No probabilities in caclust object." = !is.empty(probs))
+  
   probs <- probs > cutoff
   
   return(probs)
@@ -215,3 +235,28 @@ assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
 #' @param x object
 #' @return TRUE if x has length 0 and is not NULL. FALSE otherwise
 is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
+
+#' Determines majority in a vector
+#' @description 
+#' Changed version of mclust::majorityVote. Ties are broken randomly.
+#' 
+#' @param x a vector
+#' 
+#' @returns 
+#' A single element of x that has the highest count.
+#' 
+get_majority <- function(x){
+  
+  x <- as.vector(x)
+  tally <- table(x)
+  max_idx <- seq_along(tally)[tally == max(tally, na.rm = TRUE)]
+  
+  if(length(max_idx) > 1){
+    max_idx <- sample(max_idx, size = 1)
+  }
+  
+  majority <- names(tally)[max_idx]
+  
+  return(majority)
+  
+}

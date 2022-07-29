@@ -58,10 +58,6 @@ UMAP}
 }
 \value{
 an caclust object or SingleCellExperiment objects
-
-
-
-
 }
 \description{
 TODO

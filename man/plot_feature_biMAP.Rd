@@ -6,7 +6,7 @@
 \usage{
 plot_feature_biMAP(
   sce,
-  umap_coords,
+  caclust,
   feature = NULL,
   color_cells_by = "expression",
   assay = "logcounts"
@@ -15,7 +15,7 @@ plot_feature_biMAP(
 \arguments{
 \item{sce}{SinleCellExperiment object}
 
-\item{umap_coords}{data.frame with biMAP coordinates}
+\item{caclust}{caclust object}
 
 \item{feature}{character. Name of gene to visualize}
 

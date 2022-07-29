@@ -664,7 +664,7 @@ setMethod(f = "caclust",
             caobj <- as.cacomp(obj)
             
             caclust_res <- run_caclust(caobj = caobj,
-                                         k,
+                                       k = k,
                                        algorithm = algorithm,
                                        SNN_prune = SNN_prune,
                                        loops = loops,

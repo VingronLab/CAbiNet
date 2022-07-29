@@ -5,6 +5,7 @@ NULL
 #' 
 #' @description 
 #' TODO
+#' 
 #' @rdname run_biMAP
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.

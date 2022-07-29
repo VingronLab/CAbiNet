@@ -85,6 +85,8 @@ check_caclust <- function(object){
 #' to a cluster. Only filled when running spectral clustering with GMM.
 #' @slot cell_idxs integer. Indices of the cells in the SNN adjacency matrix.
 #' @slot gene_idxs integer. Indices of the genes in the SNN adjacency matrix.
+#' @slot bimap data.frame. Data frame storing the biMAP coordinates (x, y) and 
+#' the type (cell or gene) as well as the assigned clusters.
 #' 
 #' @export
 setClass("caclust",
@@ -212,6 +214,16 @@ get_gene_prob <- function(object){
   stopifnot(is(object, "caclust"))
   slot(object, "gene_prob")
 }
+
+
+#' Get biMAP coordinates
+#' @param object caclust object
+#' @export
+get_bimap <- function(object){
+  stopifnot(is(object, "caclust"))
+  slot(object, "bimap")
+}
+
 
 #' Print caclust object in console
 #' @param object a caclust object
