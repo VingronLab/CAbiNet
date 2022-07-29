@@ -1080,7 +1080,7 @@ setMethod(f = "bicplot",
 #' @description
 #' TODO
 #' @param obj A caclust object or SingleCellExperiment object  
-#' @param biMAP_meta_name character. The name of cacomp object stored in metadata(SingleCellExperiment object)
+#' @param caclust_meta_name character. The name of caclust object stored in metadata(SingleCellExperiment object)
 #' @inheritParams plot_biMAP
 #' @details
 #' TODO
@@ -1089,7 +1089,7 @@ setMethod(f = "bicplot",
 
 #' @export
 setGeneric("plot_biMAP", function(obj,
-                                  biMAP_meta_name = NULL,
+                                  caclust_meta_name = NULL,
                                   meta_df = NULL,
                                   color_by = "cluster",
                                   type = "scatter",
@@ -1134,6 +1134,7 @@ setMethod(f = "plot_biMAP",
 #
 #' @rdname plot_biMAP
 #' @param obj SingleCellExperiment object
+#' @param caclust_meta_name character. Slot name of caclust object stored in meatadata(obj)
 #' @param color_by character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)
 #' @param meta_df data.frame.
 #' @inheritParams plot_biMAP
@@ -1141,25 +1142,23 @@ setMethod(f = "plot_biMAP",
 setMethod(f = "plot_biMAP",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
-                   biMAP_meta_name = 'biMAP_SNNdist',
+                   caclust_meta_name = 'caclust',
                    meta_df = NULL,
                    color_by = "cluster",
                    ...){
             
-            if(isFALSE(biMAP_meta_name %in% names(S4Vectors::metadata(obj)))){
+            if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The biMAP coordinate data.frame with name', biMAP_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
-            umap_coords <- S4Vectors::metadata(obj)[[biMAP_meta_name]]
-            if(!is(umap_coords, 'data.frame')){
-              umap_coords = as.data.frame(umap_coords)
-            }
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
             if (is.null(meta_df)){
               meta_df = colData(obj)
             }
             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(umap_coords)))){
               stop('color_by not found in either meta_df or obj')
             }
-            p <- biMAP_plotter(caclust = umap_coords,
+            p <- biMAP_plotter(caclust = caclust,
                                 meta_df = meta_df,
                                 color_by = color_by,
                                 ...)

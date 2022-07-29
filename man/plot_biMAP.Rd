@@ -8,7 +8,7 @@
 \usage{
 plot_biMAP(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -30,7 +30,7 @@ plot_biMAP(
 
 \S4method{plot_biMAP}{caclust}(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -52,7 +52,7 @@ plot_biMAP(
 
 \S4method{plot_biMAP}{SingleCellExperiment}(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -75,7 +75,7 @@ plot_biMAP(
 \arguments{
 \item{obj}{SingleCellExperiment object}
 
-\item{biMAP_meta_name}{character. The name of cacomp object stored in metadata(SingleCellExperiment object)}
+\item{caclust_meta_name}{character. Slot name of caclust object stored in meatadata(obj)}
 
 \item{meta_df}{data.frame.}
 
