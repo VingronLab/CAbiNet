@@ -81,7 +81,7 @@ biMAP_plotter <- function(caclust,
   
   stopifnot(is(caclust, "caclust"))
   
-  if (is.emtpy(caclust@bimap)){
+  if (is.empty(caclust@bimap)){
     stop("Please run biMAP() first!")
   }
   
@@ -152,7 +152,6 @@ biMAP_plotter <- function(caclust,
                         color_genes = color_genes,
                         colors = colors,
                         interact_genes = interact_genes,
-                        cell_size = cell_size,
                         gene_size = gene_size,
                         gene_alpha = gene_alpha,
                         contour_n = contour_n)
@@ -265,8 +264,10 @@ scatter_plot <- function(umap_cells,
     color_by_genes <- "type"
     
     if("not_in_meta_df" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
-      if(all(umap_coords[idx, "type"] == "gene")){
+      cidx <- which(umap_cells[,color_by] == "not_in_meta_df")
+      gidx <- which(umap_genes[,color_by] == "not_in_meta_df")
+      
+      if(length(cidx) == 0 & length(gidx) == nrow(umap_genes)){
         colors <- colors[-which(names(colors) == "not_in_meta_df")]
       }
     }
@@ -340,8 +341,10 @@ hex_plot <- function(umap_cells,
     color_by_genes <- "type"
     
     if("not_in_meta_df" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
-      if(all(umap_coords[idx, "type"] == "gene")){
+      cidx <- which(umap_cells[,color_by] == "not_in_meta_df")
+      gidx <- which(umap_genes[,color_by] == "not_in_meta_df")
+      
+      if(length(cidx) == 0 & length(gidx) == nrow(umap_genes)){
         colors <- colors[-which(names(colors) == "not_in_meta_df")]
       }
     }
@@ -472,8 +475,10 @@ contour_plot <- function(umap_cells,
     color_by_genes <- "type"
     
     if("not_in_metadata" %in% names(colors)){
-      idx <- which(umap_coords[,color_by] == "not_in_meta_df")
-      if(all(umap_coords[idx, "type"] == "gene")){
+      cidx <- which(umap_cells[,color_by] == "not_in_meta_df")
+      gidx <- which(umap_genes[,color_by] == "not_in_meta_df")
+      
+      if(length(cidx) == 0 & length(gidx) == nrow(umap_genes)){
         colors <- colors[-which(names(colors) == "not_in_meta_df")]
       }
     }

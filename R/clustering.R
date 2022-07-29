@@ -123,9 +123,9 @@ optimal_km <- function (x,
   
   for (i in 1:num_seeds) {
     newres <- stats::kmeans(x = x, 
-                     centers = k, 
-                     iter.max = iter.max,
-                     ...)
+                            centers = k, 
+                            iter.max = iter.max,
+                            ...)
 
     newwcs <- sum(newres$withinss)
     
@@ -222,8 +222,8 @@ run_spectral <- function(caclust,
     } else if (use_gap == TRUE){
       
       
-    eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
-    nclust = ncol(eig)
+        eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
+        nclust = ncol(eig)
     
   }
   
@@ -234,7 +234,7 @@ run_spectral <- function(caclust,
   }else if (spectral_method == 'kmeans'){
     
     clusters = optimal_km(eig,
-                         centers = ncol(eig),
+                         centers = nclust,
                          iter.max = iter_max,
                          num.seeds = num_seeds)$cluster
 
@@ -695,4 +695,30 @@ setMethod(f = "caclust",
 })
 
 
+#' Assign cluster to cells/genes
+#' @description 
+#' Based on a probability cutoff genes/cells are assigned to all clusters for
+#' which they have a probability higher than 'cutoff'.
+#' @param caclust_obj A caclust object
+#' @param type Either "cell" or "gene".
+#' @param cutoff Probability cutoff.
+#' 
+#' @returns 
+#' logical matrix indicating which gene belongs to which cluster.
+#' @export
+assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
+  
+  if(type == "genes"){
+    prob_slot <- "gene_prob"
+  } else if (type == "cells"){
+    prob_slot <- "cells_prob"
+  }
+  
+  probs <- slot(caclust_obj, prob_slot)
+  stopifnot("No probabilities in caclust object." = !is.empty(probs))
+  
+  probs <- probs > cutoff
+  
+  return(probs)
+}
           

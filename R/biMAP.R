@@ -4,31 +4,48 @@ NULL
 #' Plots UMAP depicting both cells and genes.
 #' 
 #' @description 
-#' TODO
+#' Calcultes coordinates for the first 2 dimensions via UMAP for both cells and
+#' genes.
 #' 
 #' @rdname run_biMAP
-#' @param caobj A cacomp object with principal and standard coordinates 
-#' calculated.
 #' @param caclust_obj results from biclustering of class "caclust"
+#' @param caobj A cacomp object with principal and standard coordinates 
+#' calculated. Nedded when using method "ca" or "ca_assR"
 #' @param k_umap Number of nearest neighbours to use from the SNN graph for
 #' UMAP
 #' @param rand_seed Random seed for UMAP.
+#' @param method Can be either "SNNgraph", "SNNdist", "spectral", "ca" or "ca_assR".
+#' 
+#' @details 
+#' TODO
+#' The different methods change how the input to UMAP is calculated:
+#' * "SNNgraph": Uses the the Jaccard distances and the standard coordinates of
+#' columns and principal coordinates of rows as input to UMAP.
+#' * "SNNdist": Faster than "SNNgraph". Uses the Jaccard distances of the SNN
+#' graph to compute the kNN graph in UMAP.
+#' * "spectral": The eigenvectors obtained during spectral clustering are used 
+#' as input.
+#' * "ca": The eigenvectors of CA are used as input.
+#' * "ca_assR": The association ratio is used as distance matrix for UMAP.
 #' 
 #' @return 
 #' caclust object with biMAP coordinates stored in the `bimap` slot.
 #' 
+#' @md
 #' @export 
-run_biMAP <- function(caobj,
-                      caclust_obj,
-                      k_umap,
+run_biMAP <- function(caclust_obj,
+                      caobj = NULL,
+                      k_umap = 30,
                       rand_seed = 2358,
-                      algorithm = 'SNNdist'){
+                      method = 'SNNdist'){
   
-  stopifnot(is(caobj, "cacomp"))
   stopifnot(is(caclust_obj, "caclust"))
-  stopifnot(algorithm %in% c("SNNgraph", "SNNdist", "spectral", "ca", "ca_assR"))
+  stopifnot(method %in% c("SNNgraph", "SNNdist", "spectral", "ca", "ca_assR"))
   
-  if (algorithm == 'SNNgraph'){
+  if (method == 'SNNgraph'){
+    
+    stopifnot(!is.null(caobj))
+    stopifnot(is(caobj, "cacomp"))
     
     SNN <- get_snn(caclust_obj)
     
@@ -64,21 +81,20 @@ run_biMAP <- function(caobj,
     umap_coords <- as.data.frame(caclust_umap$layout)
     
     
-  }else if (algorithm == "SNNdist"){
+  }else if (method == "SNNdist"){
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     
     reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
     
-    umap_coords = python_umap(dm = SNNdist,
-                              metric = "precomputed",
-                              n_neighbors = as.integer(k_umap))
-    
+    umap_coords <- python_umap(dm = SNNdist,
+                                metric = "precomputed",
+                                n_neighbors = as.integer(k_umap))
+      
     umap_coords <- as.data.frame(umap_coords)
     rownames(umap_coords) <- colnames(SNNdist)
     
-  }else if (algorithm == 'spectral'){
-    
+  }else if (method == 'spectral'){
     eigen = get_eigen(caclust_obj)
     
     if(is.na(eigen)) stop("Spectral clustering not run.")
@@ -92,7 +108,9 @@ run_biMAP <- function(caobj,
     
     umap_coords <- as.data.frame(caclust_umap$layout)
     
-  }else if (algorithm == 'ca'){
+  }else if (method == 'ca'){
+    stopifnot(!is.null(caobj))
+    stopifnot(is(caobj, "cacomp"))
     
     SNN <- get_snn(caclust_obj)
     
@@ -110,7 +128,9 @@ run_biMAP <- function(caobj,
                               n_neighbors = k_umap)
     umap_coords <- as.data.frame(caclust_umap$layout)
     
-  }else if (algorithm == 'ca_assR'){
+  }else if (method == 'ca_assR'){
+    stopifnot(!is.null(caobj))
+    stopifnot(is(caobj, "cacomp"))
     
     SNN <- get_snn(caclust_obj)
     
@@ -132,9 +152,9 @@ run_biMAP <- function(caobj,
     
     reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
     
-    umap_coords = python_umap(dm = assR,
-                              metric = "precomputed",
-                              n_neighbors = as.integer(k_umap))
+    umap_coords <- python_umap(dm = assR,
+                               metric = "precomputed",
+                               n_neighbors = as.integer(k_umap))
     
     umap_coords <- as.data.frame(umap_coords)
     rownames(umap_coords) <- colnames(assR)
@@ -182,6 +202,9 @@ add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
   return(sce)
 }
 
+
+
+
 #' biMAP
 #' @description
 #' TODO
@@ -191,7 +214,7 @@ add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
 #' @param caclust_obj the name of caclust object stored in metadata(SingleCellExperiment object)
 #' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
-#' @param biMAP_meta_name character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$algorithm.
+#' @param biMAP_meta_name character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$method.
 #' @inheritParams run_biMAP
 #' @details
 #' TODO
@@ -204,7 +227,7 @@ setGeneric("biMAP", function(obj,
                              cacomp_meta_name = 'caobj',
                              caclust_meta_name = 'caclust',
                              biMAP_meta_name = NULL,
-                             algorithm = 'SNNdist',
+                             method = 'SNNdist',
                              message = TRUE,
                                ...){
   standardGeneric("biMAP")
@@ -245,12 +268,12 @@ setMethod(f = "biMAP",
                    cacomp_meta_name = 'caobj',
                    caclust_meta_name = 'caclust',
                    biMAP_meta_name = NULL,
-                   algorithm = 'SNNdist',
+                   method = 'SNNdist',
                    message = TRUE,
                    ...){
             
             if(is.null(biMAP_meta_name )){
-              biMAP_meta_name = paste0('biMAP_', algorithm)
+              biMAP_meta_name = paste0('biMAP_', method)
               print(biMAP_meta_name)
             }
             

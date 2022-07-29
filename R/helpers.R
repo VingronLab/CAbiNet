@@ -204,32 +204,6 @@ aR_metric <- function(matrix, origin, target){
 }
 
 
-#' Assign cluster to cells/genes
-#' @description 
-#' Based on a probability cutoff genes/cells are assigned to all clusters for
-#' which they have a probability higher than 'cutoff'.
-#' @param caclust_obj A caclust object
-#' @param type Either "cell" or "gene".
-#' @param cutoff Probability cutoff.
-#' 
-#' @returns 
-#' logical matrix indicating which gene belongs to which cluster.
-#' 
-assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
-  
-  if(type == "genes"){
-    prob_slot <- "gene_prob"
-  } else if (type == "cells"){
-    prob_slot <- "cells_prob"
-  }
-  
-  probs <- slot(caclust_obj, prob_slot)
-  stopifnot("No probabilities in caclust object." = !is.empty(probs))
-  
-  probs <- probs > cutoff
-  
-  return(probs)
-}
 
 #' Helper function to check if object is empty.
 #' @param x object
