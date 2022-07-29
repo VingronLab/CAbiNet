@@ -9,7 +9,7 @@ add_caclust_sce(sce, caclust, caclust_meta_name = "caclust")
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
-\item{caclust}{caclust::caclust object}
+\item{caclust}{CAclust::caclust object}
 
 \item{caclust_meta_name}{column name not listed in colData(sce), rowData(sce), or metadata(sce)}
 }

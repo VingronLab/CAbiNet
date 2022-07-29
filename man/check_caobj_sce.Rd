@@ -2,7 +2,7 @@
 % Please edit documentation in R/clustering.R
 \name{check_caobj_sce}
 \alias{check_caobj_sce}
-\title{check if cacomp object is already added to SingleCellExperiment object}
+\title{check_caobj_sce}
 \usage{
 check_caobj_sce(sce, cacomp_meta_name = "caobj")
 }
@@ -12,5 +12,5 @@ check_caobj_sce(sce, cacomp_meta_name = "caobj")
 \item{cacomp_meta_name}{Character. Name of cacomp slpt in sce object.}
 }
 \description{
-check if cacomp object is already added to SingleCellExperiment object
+Check if cacomp object is already added to SingleCellExperiment object
 }

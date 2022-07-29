@@ -7,7 +7,7 @@
 NormLaplacian(adj)
 }
 \arguments{
-\item{adj}{The adjacency matix of type 'matrix/array'}
+\item{adj}{The adjacency matix of type 'matrix/array'.}
 }
 \value{
 A sparsed normalized graph laplacian matrix of type "dgCmatrix".
