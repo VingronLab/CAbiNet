@@ -15,11 +15,11 @@ run_leiden(
 \arguments{
 \item{caclust}{caclust object with SNN calculated.}
 
-\item{resolution}{integer. Resolution for leiden algorithm.}
+\item{resolution}{Float number. Resolution for leiden algorithm.}
 
-\item{n.int}{integer. Number of iterations for leiden algorithm.}
+\item{n.int}{Integer. Number of iterations for leiden algorithm.}
 
-\item{rand_seed}{Random seed.}
+\item{rand_seed}{Intefer. Random seed.}
 
 \item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
 matrix before running leiden clustering?

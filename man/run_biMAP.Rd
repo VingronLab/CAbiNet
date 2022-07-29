@@ -18,7 +18,7 @@ UMAP}
 \item{rand_seed}{Random seed for UMAP.}
 }
 \value{
-data frame containing the UMAP coordinates of cells and genes.
+caclust object with biMAP coordinates stored in the `bimap` slot.
 }
 \description{
 TODO

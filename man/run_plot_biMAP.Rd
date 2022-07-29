@@ -20,7 +20,6 @@ run_plot_biMAP(
   color_genes = FALSE,
   label_groups = TRUE,
   group_label_size = 4,
-  labels_per_group = 1,
   label_marker_gene = FALSE
 )
 }

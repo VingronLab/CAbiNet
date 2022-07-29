@@ -24,8 +24,14 @@ were generated.}
 
 \item{\code{eigen}}{matrix, Slot for storing eigenvectors from spectral clustering}
 
-\item{\code{cell_prob}}{matrix.}
+\item{\code{cell_prob}}{matrix. Matrix that stores the probabilities that a cell belongs
+to a cluster. Only filled when running spectral clustering with GMM.}
 
-\item{\code{gene_prob}}{matrix.}
+\item{\code{gene_prob}}{matrix. Matrix that stores the probabilities that a gene belongs
+to a cluster. Only filled when running spectral clustering with GMM.}
+
+\item{\code{cell_idxs}}{integer. Indices of the cells in the SNN adjacency matrix.}
+
+\item{\code{gene_idxs}}{integer. Indices of the genes in the SNN adjacency matrix.}
 }}
 
