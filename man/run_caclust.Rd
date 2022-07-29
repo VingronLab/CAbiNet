@@ -38,7 +38,7 @@ exactly four integers specifying in this order: the k_c for the cell-cell
 kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
 kNN-graph, k_gc for the gene-cell kNN-graph.}
 
-\item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral".}
+\item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.}
 
 \item{SNN_prune}{numeric. Value between 0-1. Sets cutoff of acceptable jaccard
 similarity scores for neighborhood overlap of vertices in SNN. Edges with values
@@ -68,14 +68,14 @@ prune_overlap = TRUE.}
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
-\item{resolution}{Float number. Resolution for leiden algorithm.}
+\item{resolution}{float number. Resolution for leiden algorithm.}
 
 \item{marker_genes}{character. Optional. Names of known marker genes that 
 should be excempt from any pruning on the graph and be kept.}
 
 \item{n.int}{Integer. Number of iterations for leiden algorithm.}
 
-\item{rand_seed}{Intefer. Random seed.}
+\item{rand_seed}{integer. Random seed.}
 
 \item{use_gap}{Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 most important eigenvector automatically, and the number of output clusters

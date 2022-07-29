@@ -47,7 +47,7 @@ biMAP(
 
 \item{caclust_obj}{the name of caclust object stored in metadata(SingleCellExperiment object)}
 
-\item{k_umap}{Number of nearest neighbours to use from the SNN graph for
+\item{k_umap}{integer. Number of nearest neighbours to use from the SNN graph for
 UMAP}
 
 \item{cacomp_meta_name}{the name of cacomp object stored in metadata(SingleCellExperiment object)}
@@ -58,6 +58,10 @@ UMAP}
 }
 \value{
 an caclust object or SingleCellExperiment objects
+
+
+
+
 }
 \description{
 TODO

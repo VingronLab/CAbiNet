@@ -1079,13 +1079,13 @@ setMethod(f = "bicplot",
 #' Plotting biMAP embedding
 #' @description
 #' TODO
-#' @param obj A data,frame or SingleCellExperiment object  
+#' @param obj A caclust object or SingleCellExperiment object  
 #' @param biMAP_meta_name character. The name of cacomp object stored in metadata(SingleCellExperiment object)
 #' @inheritParams plot_biMAP
 #' @details
 #' TODO
 #' @return
-#' an caclust object or SingleCellExperiment objects
+#' A caclust object or SingleCellExperiment object.
 
 #' @export
 setGeneric("plot_biMAP", function(obj,
@@ -1117,13 +1117,13 @@ setGeneric("plot_biMAP", function(obj,
 #' @inheritParams plot_biMAP
 #' @export
 setMethod(f = "plot_biMAP",
-          signature(obj = "data.frame"),
+          signature(obj = "caclust"),
           function(obj, 
                    meta_df = NULL,
                    color_by = "cluster",
                    ...){
             
-            p <- biMAP_plotter(umap_coords = obj,
+            p <- biMAP_plotter(caclust = obj,
                                 meta_df = meta_df,
                                 color_by = color_by,
                                      ...)
@@ -1159,7 +1159,7 @@ setMethod(f = "plot_biMAP",
             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(umap_coords)))){
               stop('color_by not found in either meta_df or obj')
             }
-            p <- biMAP_plotter(umap_coords = umap_coords,
+            p <- biMAP_plotter(caclust = umap_coords,
                                 meta_df = meta_df,
                                 color_by = color_by,
                                 ...)
@@ -1171,12 +1171,12 @@ setMethod(f = "plot_biMAP",
 #' BiMAP visualzation of expression of features
 #' @rdname feature_biMAP
 #' @param obj SinleCellExperiment object
-#' @param umap_coords data.frame with biMAP coordinates or NULL
+#' @param caclust caclust object or NULL
 #' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
 #' @inheritParams plot_feature_biMAP
 #' @export
 setGeneric("feature_biMAP", function(obj,
-                                  umap_coords = NULL,
+                                  caclust = NULL,
                                   biMAP_meta_name = 'biMAP_SNNdist',
                                   feature = NULL, 
                                   color_cells_by="expression", 
@@ -1188,21 +1188,21 @@ setGeneric("feature_biMAP", function(obj,
 #
 #' @rdname feature_biMAP
 #' @param obj SinleCellExperiment object
-#' @param umap_coords data.frame with biMAP coordinates
+#' @param caclust caclust with bimap slot
 #' @inheritParams plot_feature_biMAP
 #' @export
 #' 
 setMethod(f = "feature_biMAP",
-          signature(obj = "SingleCellExperiment", umap_coords = "data.frame"),
+          signature(obj = "SingleCellExperiment", caclust = "caclust"),
           function(obj, 
-                   umap_coords,
+                   caclust,
                    feature = NULL, 
                    color_cells_by="expression", 
                    assay = "logcounts",
                    ...){
             
             p <- plot_feature_biMAP(sce = obj,
-                                umap_coords = umap_coords,
+                                caclust = caclust,
                                 feature = feature, 
                                 color_cells_by=color_cells_by, 
                                 assay =assay)
@@ -1213,7 +1213,7 @@ setMethod(f = "feature_biMAP",
 #
 #' @rdname feature_biMAP
 #' @param obj SinleCellExperiment object
-#' @param umap_coords data.frame with biMAP coordinates
+#' @param caclust caclust object with bimap slot
 #' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
 #' @inheritParams plot_feature_biMAP
 #' @export
@@ -1221,24 +1221,27 @@ setMethod(f = "feature_biMAP",
 setMethod(f = "feature_biMAP",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
-                   umap_coords,
-                   biMAP_meta_name = 'biMAP_SNNdist',
+                   caclust,
+                   caclust_meta_name = 'caclust',
                    feature = NULL, 
                    color_cells_by="expression", 
                    assay = "logcounts",
                    ...){
-            if(is.null(umap_coords)){
-              if(biMAP_meta_name %in% names(S4Vectors::metadata(obj))){
-                umap_coords <- S4Vectors::metadata(obj)[[biMAP_meta_name]]
-                cat(paste0('Plotting by data.frame ', biMAP_meta_name, ' from metadata(sce).\n'))
+            
+            if(is.null(caclust)){
+              if(caclust_meta_name %in% names(S4Vectors::metadata(obj))){
+                caclust <- S4Vectors::metadata(obj)[[biMAP_meta_name]]
+                # cat(paste0('Plotting by data.frame ', caclist_meta_name, ' from metadata(sce).\n'))
               }else{
-                stop(paste('The biMAP coordinate data.frame with name', 
-                           biMAP_meta_name, 'is not found in metadata, please try a different "biMAP_meta_name".'))
-              }
+              #   stop(paste('The biMAP coordinate data.frame with name', 
+              #              biMAP_meta_name, 'is not found in metadata, please try a different "biMAP_meta_name".'))
+              # }
+                stop()
+                }
             }
             
             p <- plot_feature_biMAP(sce = obj,
-                                    umap_coords = umap_coords,
+                                    caclust = caclust,
                                     feature = feature, 
                                     color_cells_by=color_cells_by, 
                                     assay =assay)

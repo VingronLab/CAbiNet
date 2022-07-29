@@ -11,7 +11,6 @@ contour_plot(
   color_genes,
   colors,
   interact_genes,
-  cell_size,
   gene_size,
   gene_alpha,
   contour_n

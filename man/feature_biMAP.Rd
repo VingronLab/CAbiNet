@@ -2,13 +2,13 @@
 % Please edit documentation in R/plot.R
 \name{feature_biMAP}
 \alias{feature_biMAP}
-\alias{feature_biMAP,SingleCellExperiment,data.frame-method}
+\alias{feature_biMAP,SingleCellExperiment,caclust-method}
 \alias{feature_biMAP,SingleCellExperiment,ANY-method}
 \title{BiMAP visualzation of expression of features}
 \usage{
 feature_biMAP(
   obj,
-  umap_coords = NULL,
+  caclust = NULL,
   biMAP_meta_name = "biMAP_SNNdist",
   feature = NULL,
   color_cells_by = "expression",
@@ -16,9 +16,9 @@ feature_biMAP(
   ...
 )
 
-\S4method{feature_biMAP}{SingleCellExperiment,data.frame}(
+\S4method{feature_biMAP}{SingleCellExperiment,caclust}(
   obj,
-  umap_coords = NULL,
+  caclust = NULL,
   biMAP_meta_name = "biMAP_SNNdist",
   feature = NULL,
   color_cells_by = "expression",
@@ -28,8 +28,8 @@ feature_biMAP(
 
 \S4method{feature_biMAP}{SingleCellExperiment,ANY}(
   obj,
-  umap_coords = NULL,
-  biMAP_meta_name = "biMAP_SNNdist",
+  caclust,
+  caclust_meta_name = "caclust",
   feature = NULL,
   color_cells_by = "expression",
   assay = "logcounts",
@@ -39,7 +39,7 @@ feature_biMAP(
 \arguments{
 \item{obj}{SinleCellExperiment object}
 
-\item{umap_coords}{data.frame with biMAP coordinates}
+\item{caclust}{caclust object with bimap slot}
 
 \item{biMAP_meta_name}{character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)}
 

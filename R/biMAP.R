@@ -270,14 +270,15 @@ setMethod(f = "biMAP",
             
             caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
-            umap_coords <- run_biMAP(caobj = caobj,
+            caclust_obj <- run_biMAP(caobj = caobj,
                                      caclust_obj = caclust_obj,
                                      k_umap,
                                      ...)
             
-            obj <- add_biMAP_sce(sce = obj, 
-                                 umap_coords = umap_coords,
-                                 biMAP_meta_name = biMAP_meta_name)
+            S4Vectors::metadata(obj)[[caclust_meta_name]] <- caclust_obj
+            #TODO
+            #allow adding multi-bimap coordinate slots to caclust with slot names 'biMAP_'+algorithm, eg. 'biMAP_SNNdist'
+            
             
             if(isTRUE(message)){
               message('bimap coordinates data.frame is added to metadata(sce obj) with name ', biMAP_meta_name, '.\n')
