@@ -38,7 +38,7 @@ exactly four integers specifying in this order: the k_c for the cell-cell
 kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
 kNN-graph, k_gc for the gene-cell kNN-graph.}
 
-\item{algorithm}{Algorithm for clustering. Options are "leiden" or "spectral".}
+\item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.}
 
 \item{SNN_prune}{numeric. Value between 0-1. Sets cutoff of acceptable jaccard
 similarity scores for neighborhood overlap of vertices in SNN. Edges with values
@@ -68,20 +68,22 @@ prune_overlap = TRUE.}
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
-\item{resolution}{integer. Resolution for leiden algorithm.}
+\item{resolution}{float number. Resolution for leiden algorithm.}
 
 \item{marker_genes}{character. Optional. Names of known marker genes that 
 should be excempt from any pruning on the graph and be kept.}
 
-\item{n.int}{integer. Number of iterations for leiden algorithm.}
+\item{n.int}{Integer. Number of iterations for leiden algorithm.}
 
-\item{rand_seed}{Random seed.}
+\item{rand_seed}{integer. Random seed.}
 
-\item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+\item{use_gap}{Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 most important eigenvector automatically, and the number of output clusters
-equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given.
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified.
 The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
-selcted and 'nclust' clusters will be detected by skmeans.}
+selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.}
+
+\item{nclust}{Integer. Number of clusters.}
 
 \item{spectral_method}{character. Name of the method to cluster the eigenvectors.
 Can be on of the following 3:
@@ -95,9 +97,9 @@ Can be on of the following 3:
 
 \item{num_seeds}{Number of times k-means clustering is repeated.}
 
-\item{return_eig}{Whether or not to return eigenvectors.}
+\item{return_eig}{Logical. Whether or not to return eigenvectors.}
 
-\item{dims}{integer. Number of dimensions to compute during SVD for spectral clustering.}
+\item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
 
 \item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
 matrix before running leiden clustering?

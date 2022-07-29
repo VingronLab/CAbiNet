@@ -9,7 +9,7 @@ make_knn(dists, k, decr = TRUE, loops = FALSE)
 \arguments{
 \item{dists}{distance matrix}
 
-\item{k}{numeric. Number of nearest neighbours.}
+\item{k}{integer. Number of nearest neighbours.}
 
 \item{decr}{boolean. Whether the the values in `dists` should be sorted into
 decreasing (TRUE) or increasing (FALSE) order.}
@@ -20,6 +20,6 @@ decreasing (TRUE) or increasing (FALSE) order.}
 adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".
 }
 \description{
-Given a distance matrix `make_knn()` outputs the adjacency
-matrix of the k-nearest-neighbours graph.
+Given a distance matrix, `make_knn()` builds up a  k-nearest-neighbours graph
+and outputs the adjacency matrix.
 }

@@ -1,33 +1,24 @@
 #' @include classes.R
 NULL
 
-#' Plots UMAP depicting both cells and genes.
+#' Run UMAP embedding for cell-gene graph built up by caclust.
 #' 
 #' @description 
-#' Calcultes coordinates for the first 2 dimensions via UMAP for both cells and
-#' genes.
-#' 
+#' This function takes cacomp and caclust object as input to calculate UMAP embedding 
+#' of cell-gene graph in several different ways:
+#' * 'SNNgraph': run UMAP on the cell-gene SNN graph built up by caclust
+#' * 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph built up by caclust, which is '1-adj(SNN)'.
+#' * 'ca': run UMAP on the singular vectors from Correspondence Analysis.
+#' * 'spectral': run UMAP on the selected eigenvectors of cell-gene graph laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust' function)
 #' @rdname run_biMAP
-#' @param caclust_obj results from biclustering of class "caclust"
 #' @param caobj A cacomp object with principal and standard coordinates 
-#' calculated. Nedded when using method "ca" or "ca_assR"
-#' @param k_umap Number of nearest neighbours to use from the SNN graph for
+#' calculated.
+#' @param caclust_obj results from biclustering of class "caclust"
+#' @param k_umap integer. Number of nearest neighbours to use from the SNN graph for
 #' UMAP
-#' @param rand_seed Random seed for UMAP.
+#' @param rand_seed integer. Random seed for UMAP.
 #' @param method Can be either "SNNgraph", "SNNdist", "spectral", "ca" or "ca_assR".
-#' 
-#' @details 
-#' TODO
-#' The different methods change how the input to UMAP is calculated:
-#' * "SNNgraph": Uses the the Jaccard distances and the standard coordinates of
-#' columns and principal coordinates of rows as input to UMAP.
-#' * "SNNdist": Faster than "SNNgraph". Uses the Jaccard distances of the SNN
-#' graph to compute the kNN graph in UMAP.
-#' * "spectral": The eigenvectors obtained during spectral clustering are used 
-#' as input.
-#' * "ca": The eigenvectors of CA are used as input.
-#' * "ca_assR": The association ratio is used as distance matrix for UMAP.
-#' 
+#'
 #' @return 
 #' caclust object with biMAP coordinates stored in the `bimap` slot.
 #' 
@@ -289,14 +280,15 @@ setMethod(f = "biMAP",
             
             caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
-            umap_coords <- run_biMAP(caobj = caobj,
+            caclust_obj <- run_biMAP(caobj = caobj,
                                      caclust_obj = caclust_obj,
                                      k_umap,
                                      ...)
             
-            obj <- add_biMAP_sce(sce = obj, 
-                                 umap_coords = umap_coords,
-                                 biMAP_meta_name = biMAP_meta_name)
+            S4Vectors::metadata(obj)[[caclust_meta_name]] <- caclust_obj
+            #TODO
+            #allow adding multi-bimap coordinate slots to caclust with slot names 'biMAP_'+algorithm, eg. 'biMAP_SNNdist'
+            
             
             if(isTRUE(message)){
               message('bimap coordinates data.frame is added to metadata(sce obj) with name ', biMAP_meta_name, '.\n')

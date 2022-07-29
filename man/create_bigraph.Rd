@@ -22,21 +22,21 @@ create_bigraph(
 )
 }
 \arguments{
-\item{cell_dists}{cell-cell euclidean distances}
+\item{cell_dists}{cell-cell euclidean distances matrix}
 
-\item{gene_dists}{gene-gene euclidean distances}
+\item{gene_dists}{gene-gene euclidean distances matrix}
 
-\item{cell_gene_assr}{cell-gene association ratios}
+\item{cell_gene_assr}{cell-gene association ratios matrix}
 
-\item{gene_cell_assr}{gene-cell association ratios}
+\item{gene_cell_assr}{gene-cell association ratios matrix}
 
-\item{k_c}{k for cell-cell kNN}
+\item{k_c}{k for cell-cell kNN, integer.}
 
-\item{k_g}{k for gene-gene kNN}
+\item{k_g}{k for gene-gene kNN, integer.}
 
-\item{k_cg}{k for cell-gene kNN}
+\item{k_cg}{k for cell-gene kNN, integer.}
 
-\item{k_gc}{k for gene-cell kNN}
+\item{k_gc}{k for gene-cell kNN, interger.}
 
 \item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
 

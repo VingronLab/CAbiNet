@@ -4,11 +4,11 @@
 
 #' Make a kNN graph
 #' 
-#' @description Given a distance matrix `make_knn()` outputs the adjacency
-#' matrix of the k-nearest-neighbours graph.
+#' @description Given a distance matrix, `make_knn()` builds up a  k-nearest-neighbours graph
+#' and outputs the adjacency matrix.
 #'
 #' @param dists distance matrix
-#' @param k numeric. Number of nearest neighbours.
+#' @param k integer. Number of nearest neighbours.
 #' @param decr boolean. Whether the the values in `dists` should be sorted into
 #' decreasing (TRUE) or increasing (FALSE) order.
 #' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
@@ -74,14 +74,14 @@ make_knn <- function(dists,
 #' Builds a single adjacency matrix consisting of cells and genes from 4 
 #' seperate sub kNN-graphs.
 #' 
-#' @param cell_dists cell-cell euclidean distances
-#' @param gene_dists gene-gene euclidean distances
-#' @param cell_gene_assr cell-gene association ratios
-#' @param gene_cell_assr gene-cell association ratios
-#' @param k_c k for cell-cell kNN
-#' @param k_g k for gene-gene kNN
-#' @param k_cg k for cell-gene kNN
-#' @param k_gc k for gene-cell kNN
+#' @param cell_dists cell-cell euclidean distances matrix
+#' @param gene_dists gene-gene euclidean distances matrix
+#' @param cell_gene_assr cell-gene association ratios matrix
+#' @param gene_cell_assr gene-cell association ratios matrix
+#' @param k_c k for cell-cell kNN, integer.
+#' @param k_g k for gene-gene kNN, integer.
+#' @param k_cg k for cell-gene kNN, integer.
+#' @param k_gc k for gene-cell kNN, interger.
 #' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
 #' @param select_genes TRUE/FALSE. Should genes be selected by whether they have
 #' an edge in the cell-gene kNN graph?

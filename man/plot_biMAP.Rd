@@ -2,13 +2,13 @@
 % Please edit documentation in R/plot.R
 \name{plot_biMAP}
 \alias{plot_biMAP}
-\alias{plot_biMAP,data.frame-method}
+\alias{plot_biMAP,caclust-method}
 \alias{plot_biMAP,SingleCellExperiment-method}
 \title{Plotting biMAP embedding}
 \usage{
 plot_biMAP(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -28,9 +28,9 @@ plot_biMAP(
   ...
 )
 
-\S4method{plot_biMAP}{data.frame}(
+\S4method{plot_biMAP}{caclust}(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -52,7 +52,7 @@ plot_biMAP(
 
 \S4method{plot_biMAP}{SingleCellExperiment}(
   obj,
-  biMAP_meta_name = NULL,
+  caclust_meta_name = NULL,
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -75,14 +75,14 @@ plot_biMAP(
 \arguments{
 \item{obj}{SingleCellExperiment object}
 
-\item{biMAP_meta_name}{character. The name of cacomp object stored in metadata(SingleCellExperiment object)}
+\item{caclust_meta_name}{character. Slot name of caclust object stored in meatadata(obj)}
 
 \item{meta_df}{data.frame.}
 
 \item{color_by}{character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)}
 }
 \value{
-an caclust object or SingleCellExperiment objects
+A caclust object or SingleCellExperiment object.
 }
 \description{
 TODO

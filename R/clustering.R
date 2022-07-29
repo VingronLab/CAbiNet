@@ -7,7 +7,7 @@ NULL
 #' @description 
 #' Calculate Normalized graph laplacian of the input adjacency matrix, the graph laplacian
 #' L = I-D^(-1/2)AD^(-1/2), where D is a diagonal matrix with row sums of A as entries.
-#' @param adj The adjacency matix of type 'matrix/array'
+#' @param adj The adjacency matix of type 'matrix/array'.
 #' @return 
 #' A sparsed normalized graph laplacian matrix of type "dgCmatrix".
 #' 
@@ -141,16 +141,16 @@ optimal_km <- function (x,
 #' Run spectral clustering
 #'
 #' @description 
-#' This function is designed for detecting clusters from input graph adjacency 
-#' matrix by using spectral clustering with normalized graph laplacian.
+#' Spectral clustering algorithm with normalized graph laplacian.
 #' 
-#' @param caclust caclust object.
-#' @param dims integer. Number of dimensions to compute during SVD for spectral clustering.
-#' @param use_gap TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+#' @param caclust Caclust-class object.
+#' @param dims Integer. Number of dimensions to choose from SVD of graph laplacian.
+#' @param use_gap Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 #' most important eigenvector automatically, and the number of output clusters 
-#' equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given. 
+#' equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified. 
 #' The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
-#' selcted and 'nclust' clusters will be detected by skmeans.
+#' selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.
+#' @param nclust Integer. Number of clusters.
 #' @param spectral_method character. Name of the method to cluster the eigenvectors.
 #' Can be on of the following 3:
 #' * "kmeans": k-means clustering
@@ -158,10 +158,10 @@ optimal_km <- function (x,
 #' * "GMM": Gaussian-Mixture-Model fuzzy clustering.
 #' @param iter_max Number of iterations for k-means clustering and GMM.
 #' @param num_seeds Number of times k-means clustering is repeated.
-#' @param return_eig Whether or not to return eigenvectors.
+#' @param return_eig Logical. Whether or not to return eigenvectors.
 #' 
 #' @return 
-#' The clustering results
+#' The clustering results of type 'caclust'.
 #' @md 
 #' @export
 run_spectral <- function(caclust, 
@@ -320,9 +320,9 @@ run_spectral <- function(caclust,
 #' clusters cells and genes simultaneously.
 #' 
 #' @param caclust caclust object with SNN calculated.
-#' @param resolution integer. Resolution for leiden algorithm.
-#' @param n.int integer. Number of iterations for leiden algorithm.
-#' @param rand_seed Random seed.
+#' @param resolution float number. Resolution for leiden algorithm.
+#' @param n.int Integer. Number of iterations for leiden algorithm.
+#' @param rand_seed integer. Random seed.
 #' @param cast_to_dense logical. Should the SNN-graph be converted to a dense 
 #' matrix before running leiden clustering?
 #' Casting to dense speeds up the leiden algorithm.
@@ -401,7 +401,7 @@ run_leiden <- function(caclust,
 #' exactly four integers specifying in this order: the k_c for the cell-cell 
 #' kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene 
 #' kNN-graph, k_gc for the gene-cell kNN-graph.
-#' @param algorithm Algorithm for clustering. Options are "leiden" or "spectral".
+#' @param algorithm Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.
 #' @inheritParams create_bigraph
 #' @inheritParams make_SNN
 #' @inheritParams run_leiden
@@ -485,9 +485,11 @@ run_caclust <- function(caobj,
 }
 
 
+#' Add caclust object to SingleCellExperiment object
+#' @description
 #' Add caclust clustering results to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
-#' @param caclust caclust::caclust object
+#' @param caclust CAclust::caclust object
 #' @param caclust_meta_name column name not listed in colData(sce), rowData(sce), or metadata(sce)
 #' @export
 #' 
@@ -507,9 +509,12 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
 }
 
 
-#' check if cacomp object is already added to SingleCellExperiment object
+#' check_caobj_sce
+#' @description 
+#' Check if cacomp object is already added to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
 #' @param cacomp_meta_name Character. Name of cacomp slpt in sce object.
+#' @export
 #' 
 check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
   
@@ -527,17 +532,17 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 
 #' caclust
 #' @description
-#' A biclustering algorithm which is compatible for both matrix and sce inputs
+#' A biclustering algorithm which is compatible with both matrix and SingleCellExperiment object inputs
 #' @name caclust
 #' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
-#' @param cacomp_meta_name the name of cacomp object stored in metadata(SingleCellExperiment object)
-#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object)
+#' @param cacomp_meta_name Character. The name of cacomp object stored in metadata(SingleCellExperiment object). Default: 'caobj'.
+#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object). Default: 'caclust.'
 #' @inheritParams run_caclust
 #' @details
 #' TODO
 #' @return
-#' an caclust object or SingleCellExperiment objects
+#' A caclust object or SingleCellExperiment object
 #' @export
 setGeneric("caclust", function(obj,
                                k,
@@ -624,14 +629,15 @@ setMethod(f = "caclust",
             
 })
 
-#
+
+#' 
 #' @rdname caclust
 #' @export
 setMethod(f = "caclust",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
                    k,
-                   cacomp_meta_name = 'CA',
+                   cacomp_meta_name = 'caobj',
                    caclust_meta_name = 'caclust',
                    algorithm = "leiden",
                    SNN_prune = 1/15,
@@ -657,11 +663,11 @@ setMethod(f = "caclust",
           
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
             
-            if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(sce)))){
+            if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
             }
             
-            caobj <- as.cacomp(obj)
+            caobj <- APL::as.cacomp(obj)
             
             caclust_res <- run_caclust(caobj = caobj,
                                        k = k,

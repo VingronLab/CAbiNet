@@ -2,14 +2,14 @@
 % Please edit documentation in R/clustering.R
 \name{add_caclust_sce}
 \alias{add_caclust_sce}
-\title{Add caclust clustering results to SingleCellExperiment object}
+\title{Add caclust object to SingleCellExperiment object}
 \usage{
 add_caclust_sce(sce, caclust, caclust_meta_name = "caclust")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
-\item{caclust}{caclust::caclust object}
+\item{caclust}{CAclust::caclust object}
 
 \item{caclust_meta_name}{column name not listed in colData(sce), rowData(sce), or metadata(sce)}
 }

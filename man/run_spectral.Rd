@@ -16,15 +16,17 @@ run_spectral(
 )
 }
 \arguments{
-\item{caclust}{caclust object.}
+\item{caclust}{Caclust-class object.}
 
-\item{dims}{integer. Number of dimensions to compute during SVD for spectral clustering.}
+\item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
 
-\item{use_gap}{TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+\item{use_gap}{Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
 most important eigenvector automatically, and the number of output clusters
-equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be given.
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified.
 The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
-selcted and 'nclust' clusters will be detected by skmeans.}
+selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.}
+
+\item{nclust}{Integer. Number of clusters.}
 
 \item{spectral_method}{character. Name of the method to cluster the eigenvectors.
 Can be on of the following 3:
@@ -38,12 +40,11 @@ Can be on of the following 3:
 
 \item{num_seeds}{Number of times k-means clustering is repeated.}
 
-\item{return_eig}{Whether or not to return eigenvectors.}
+\item{return_eig}{Logical. Whether or not to return eigenvectors.}
 }
 \value{
-The clustering results
+The clustering results of type 'caclust'.
 }
 \description{
-This function is designed for detecting clusters from input graph adjacency
-matrix by using spectral clustering with normalized graph laplacian.
+Spectral clustering algorithm with normalized graph laplacian.
 }

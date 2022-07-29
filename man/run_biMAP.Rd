@@ -2,7 +2,7 @@
 % Please edit documentation in R/biMAP.R
 \name{run_biMAP}
 \alias{run_biMAP}
-\title{Plots UMAP depicting both cells and genes.}
+\title{Run UMAP embedding for cell-gene graph built up by caclust.}
 \usage{
 run_biMAP(caobj, caclust_obj, k_umap, rand_seed = 2358, algorithm = "SNNdist")
 }
@@ -12,14 +12,19 @@ calculated.}
 
 \item{caclust_obj}{results from biclustering of class "caclust"}
 
-\item{k_umap}{Number of nearest neighbours to use from the SNN graph for
+\item{k_umap}{integer. Number of nearest neighbours to use from the SNN graph for
 UMAP}
 
-\item{rand_seed}{Random seed for UMAP.}
+\item{rand_seed}{integer. Random seed for UMAP.}
 }
 \value{
 caclust object with biMAP coordinates stored in the `bimap` slot.
 }
 \description{
-TODO
+This function takes cacomp and caclust object as input to calculate UMAP embedding 
+of cell-gene graph in several different ways:
+* 'SNNgraph': run UMAP on the cell-gene SNN graph built up by caclust
+* 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph built up by caclust, which is '1-adj(SNN)'.
+* 'ca': run UMAP on the singular vectors from Correspondence Analysis.
+* 'spectral': run UMAP on the selected eigenvectors of cell-gene graph laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust' function)
 }
