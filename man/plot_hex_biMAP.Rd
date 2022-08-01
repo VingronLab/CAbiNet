@@ -81,3 +81,9 @@ hex-plot biMAP as a ggplot.
 \description{
 Bins cells into hexagons and colors them proportionally to their group label.
 }
+\seealso{
+Other plot_*_biMAP: 
+\code{\link{plot_contour_biMAP}()},
+\code{\link{plot_scatter_biMAP}()}
+}
+\concept{plot_*_biMAP}

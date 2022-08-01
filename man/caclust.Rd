@@ -2,15 +2,13 @@
 % Please edit documentation in R/clustering.R
 \name{caclust}
 \alias{caclust}
-\alias{caclust,caclust-method}
+\alias{caclust,cacomp-method}
 \alias{caclust,SingleCellExperiment-method}
 \title{caclust}
 \usage{
 caclust(
   obj,
   k,
-  cacomp_meta_name = "caobj",
-  caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -34,11 +32,9 @@ caclust(
   ...
 )
 
-\S4method{caclust}{caclust}(
+\S4method{caclust}{cacomp}(
   obj,
   k,
-  cacomp_meta_name = "caobj",
-  caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -97,10 +93,6 @@ caclust(
 exactly four integers specifying in this order: the k_c for the cell-cell
 kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
 kNN-graph, k_gc for the gene-cell kNN-graph.}
-
-\item{cacomp_meta_name}{Character. The name of cacomp object stored in metadata(SingleCellExperiment object). Default: 'caobj'.}
-
-\item{caclust_meta_name}{the name of caclust object stored in metadata(SingleCellExperiment object). Default: 'caclust.'}
 
 \item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.}
 
@@ -168,13 +160,30 @@ Can be on of the following 3:
 \item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
 matrix before running leiden clustering?
 Casting to dense speeds up the leiden algorithm.}
+
+\item{...}{further arguments}
+
+\item{cacomp_meta_name}{Character. The name of cacomp object stored in 
+metadata(SingleCellExperiment object). Default: 'caobj'.}
+
+\item{caclust_meta_name}{the name of caclust object stored in 
+metadata(SingleCellExperiment object). Default: 'caclust.'}
 }
 \value{
 A caclust object or SingleCellExperiment object
 }
 \description{
-A biclustering algorithm which is compatible with both matrix and SingleCellExperiment object inputs
+`caclust()` performs biclustering on either a "cacomp" or 
+"SingleCellExperiment" object.
 }
 \details{
-TODO
+Convenient wrapper around `make_SNN` and `run_leiden`/`run_spectral`.
+`run_caclust` takes a cacomp object and biclusters cells and genes.
 }
+\seealso{
+Other biclustering: 
+\code{\link{make_SNN}()},
+\code{\link{run_leiden}()},
+\code{\link{run_spectral}()}
+}
+\concept{biclustering}

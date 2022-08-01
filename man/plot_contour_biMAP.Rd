@@ -69,3 +69,9 @@ contour biMAP plot as ggplot object.
 Cell density is plotted as contour lines and genes are plotted as points
 over the contours.
 }
+\seealso{
+Other plot_*_biMAP: 
+\code{\link{plot_hex_biMAP}()},
+\code{\link{plot_scatter_biMAP}()}
+}
+\concept{plot_*_biMAP}

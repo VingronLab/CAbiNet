@@ -70,3 +70,10 @@ all edges are shared between nodes.
 \description{
 Builds a shared nearest neighbour graph (SNN) from a "cacomp" object.
 }
+\seealso{
+Other biclustering: 
+\code{\link{caclust}},
+\code{\link{run_leiden}()},
+\code{\link{run_spectral}()}
+}
+\concept{biclustering}

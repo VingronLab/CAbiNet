@@ -2,74 +2,54 @@
 % Please edit documentation in R/biMAP.R
 \name{biMAP}
 \alias{biMAP}
-\alias{biMAP,cacomp,caclust-method}
-\alias{biMAP,SingleCellExperiment,ANY-method}
-\title{biMAP}
+\alias{biMAP,caclust-method}
+\alias{biMAP,SingleCellExperiment-method}
+\title{Compute biMAP}
 \usage{
-biMAP(
-  obj,
-  caclust_obj,
-  k_umap,
-  cacomp_meta_name = "caobj",
-  caclust_meta_name = "caclust",
-  biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
-  message = TRUE,
-  ...
-)
+biMAP(obj, k = 30, rand_seed = 2358, method = "SNNdist", ...)
 
-\S4method{biMAP}{cacomp,caclust}(
-  obj,
-  caclust_obj,
-  k_umap,
-  cacomp_meta_name = "caobj",
-  caclust_meta_name = "caclust",
-  biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
-  message = TRUE,
-  ...
-)
+\S4method{biMAP}{caclust}(obj, k = 30, rand_seed = 2358, method = "SNNdist", ...)
 
-\S4method{biMAP}{SingleCellExperiment,ANY}(
+\S4method{biMAP}{SingleCellExperiment}(
   obj,
-  caclust_obj = NULL,
-  k_umap,
-  cacomp_meta_name = "caobj",
+  k = 30,
+  rand_seed = 2358,
+  method = "SNNdist",
   caclust_meta_name = "caclust",
-  biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
-  message = TRUE,
   ...
 )
 }
 \arguments{
-\item{obj}{A cacomp object or SingleCellExperiment object}
+\item{obj}{A caclust object or SingleCellExperiment object}
 
-\item{caclust_obj}{the name of caclust object stored in metadata(SingleCellExperiment object)}
+\item{k}{integer. Number of nearest neighbours to use to compute UMAP.}
 
-\item{k_umap}{integer. Number of nearest neighbours to use from the SNN graph for
-UMAP}
+\item{rand_seed}{integer. Random seed for UMAP.}
 
-\item{cacomp_meta_name}{the name of cacomp object stored in metadata(SingleCellExperiment object)}
+\item{method}{Can be either "SNNdist" or "spectral".}
 
-\item{caclust_meta_name}{the name of caclust object stored in metadata(SingleCellExperiment object)}
+\item{...}{Further arguments}
 
-\item{biMAP_meta_name}{character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$algorithm.}
+\item{caclust_meta_name}{The name of caclust object stored in metadata
+(SingleCellExperiment object).}
 }
 \value{
-an caclust object or SingleCellExperiment objects
-
-
-
-
+A caclust object or SingleCellExperiment object.
 }
 \description{
-TODO
-
-TODO
-
-TODO
+The function takes either a \code{caclust} or \code{SingleCellExperiment}as input and
+stores the biMAP in the "bimap" slot in the caclust object. If a
+SingleCellExperiment was provided the caclust object is stored in its
+metadata.
 }
 \details{
-TODO
+The biMAP cell and gene embeddings can be calculated via different methods
+as controlled by the parameter \code{method}:
+\itemize{
+\item 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph
+built up by caclust, which is '1-adj(SNN)'.
+\item 'spectral': run UMAP on the selected eigenvectors of cell-gene graph
+laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust'
+function)
+}
 }

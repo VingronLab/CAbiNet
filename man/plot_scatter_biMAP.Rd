@@ -73,3 +73,9 @@ biMAP scatter plot as ggplot object.
 Plots cells and genes as points. Genes are plotted on top of the cells in
 a larger size to make visual differentiation easier.
 }
+\seealso{
+Other plot_*_biMAP: 
+\code{\link{plot_contour_biMAP}()},
+\code{\link{plot_hex_biMAP}()}
+}
+\concept{plot_*_biMAP}

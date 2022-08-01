@@ -139,7 +139,8 @@ optimal_km <- function (x,
 }
 
 #' Run spectral clustering
-#'
+#' 
+#' @family biclustering
 #' @description 
 #' Spectral clustering algorithm with normalized graph laplacian.
 #' 
@@ -315,6 +316,7 @@ run_spectral <- function(caclust,
 
 #' Leiden clustering on bigraph
 #' 
+#' @family biclustering
 #' @description 
 #' This function takes a caclust object with precomputed SNN-graph and 
 #' clusters cells and genes simultaneously.
@@ -365,10 +367,6 @@ run_leiden <- function(caclust,
   clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
   
-  # 
-  # cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
-  # gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
-  
   cell_clusters <- clusters[caclust@cell_idxs]
   gene_clusters <- clusters[caclust@gene_idxs]
   
@@ -376,13 +374,7 @@ run_leiden <- function(caclust,
   caclust@gene_clusters <- gene_clusters
   caclust@parameters <- append(caclust@parameters, call_params)
   
-  # caclust_res <- do.call(new_caclust, list("cell_clusters" = cell_clusters,
-  #                                          "gene_clusters" = gene_clusters,
-  #                                          "SNN" = SNN,
-  #                                          "eigen" = matrix(),
-  #                                          "parameters" = call_params))
-  # 
-  
+
   stopifnot(validObject(caclust))
   return(caclust)
 }
@@ -531,23 +523,23 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
 
 
 #' caclust
+#' @family biclustering
 #' @description
-#' A biclustering algorithm which is compatible with both matrix and SingleCellExperiment object inputs
+#' `caclust()` performs biclustering on either a "cacomp" or 
+#' "SingleCellExperiment" object.
 #' @name caclust
 #' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
-#' @param cacomp_meta_name Character. The name of cacomp object stored in metadata(SingleCellExperiment object). Default: 'caobj'.
-#' @param caclust_meta_name the name of caclust object stored in metadata(SingleCellExperiment object). Default: 'caclust.'
 #' @inheritParams run_caclust
+#' @param ... further arguments
 #' @details
-#' TODO
+#' Convenient wrapper around `make_SNN` and `run_leiden`/`run_spectral`.
+#' `run_caclust` takes a cacomp object and biclusters cells and genes.
 #' @return
 #' A caclust object or SingleCellExperiment object
 #' @export
 setGeneric("caclust", function(obj,
                                k,
-                               cacomp_meta_name = 'caobj',
-                               caclust_meta_name = 'caclust',
                                algorithm = "leiden",
                                SNN_prune = 1/15,
                                loops = FALSE,
@@ -577,7 +569,7 @@ setGeneric("caclust", function(obj,
 #' @rdname caclust
 #' @export
 setMethod(f = "caclust",
-          signature(obj = "caclust"),
+          signature(obj = "cacomp"),
           function(obj, 
                    k,
                    algorithm = "leiden",
@@ -603,27 +595,27 @@ setMethod(f = "caclust",
                    ...){
           
           caclust_res <- run_caclust(caobj = obj,
-                                 k,
-                                 algorithm = algorithm,
-                                 SNN_prune = SNN_prune,
-                                 loops = loops,
-                                 mode = mode,
-                                 select_genes = select_genes,
-                                 prune_overlap = prune_overlap,
-                                 overlap =overlap,
-                                 calc_gene_cell_kNN = calc_gene_cell_kNN,
-                                 resolution = resolution ,
-                                 marker_genes =marker_genes,
-                                 n.int = n.int,
-                                 rand_seed = rand_seed,
-                                 use_gap = use_gap,
-                                 nclust = nclust,
-                                 spectral_method = spectral_method ,
-                                 iter_max = iter_max, 
-                                 num_seeds = num_seeds,
-                                 return_eig =return_eig,
-                                 dims = dims,
-                                 cast_to_dense = cast_to_dense,
+                                     k = k,
+                                     algorithm = algorithm,
+                                     SNN_prune = SNN_prune,
+                                     loops = loops,
+                                     mode = mode,
+                                     select_genes = select_genes,
+                                     prune_overlap = prune_overlap,
+                                     overlap =overlap,
+                                     calc_gene_cell_kNN = calc_gene_cell_kNN,
+                                     resolution = resolution ,
+                                     marker_genes =marker_genes,
+                                     n.int = n.int,
+                                     rand_seed = rand_seed,
+                                     use_gap = use_gap,
+                                     nclust = nclust,
+                                     spectral_method = spectral_method ,
+                                     iter_max = iter_max, 
+                                     num_seeds = num_seeds,
+                                     return_eig =return_eig,
+                                     dims = dims,
+                                     cast_to_dense = cast_to_dense,
                                  ...)
           return(caclust_res)
             
@@ -632,6 +624,10 @@ setMethod(f = "caclust",
 
 #' 
 #' @rdname caclust
+#' @param cacomp_meta_name Character. The name of cacomp object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caobj'.
+#' @param caclust_meta_name the name of caclust object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caclust.'
 #' @export
 setMethod(f = "caclust",
           signature(obj = "SingleCellExperiment"),
