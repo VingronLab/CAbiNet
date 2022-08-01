@@ -10,10 +10,10 @@ biMAP(
   obj,
   caclust_obj,
   k_umap,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
+  method = "SNNdist",
   message = TRUE,
   ...
 )
@@ -22,10 +22,10 @@ biMAP(
   obj,
   caclust_obj,
   k_umap,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
+  method = "SNNdist",
   message = TRUE,
   ...
 )
@@ -34,10 +34,10 @@ biMAP(
   obj,
   caclust_obj = NULL,
   k_umap,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   biMAP_meta_name = NULL,
-  algorithm = "SNNdist",
+  method = "SNNdist",
   message = TRUE,
   ...
 )
@@ -54,7 +54,9 @@ UMAP}
 
 \item{caclust_meta_name}{the name of caclust object stored in metadata(SingleCellExperiment object)}
 
-\item{biMAP_meta_name}{character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$algorithm.}
+\item{biMAP_meta_name}{character. Slot name of biMAP coordinates in metadata of sce object. Default: biMAP_$method.}
+
+\item{method}{Can be either "SNNgraph", "SNNdist", "spectral", "ca" or "ca_assR".}
 }
 \value{
 an caclust object or SingleCellExperiment objects

@@ -215,7 +215,7 @@ add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
 setGeneric("biMAP", function(obj,
                              caclust_obj,
                              k_umap,
-                             cacomp_meta_name = 'caobj',
+                             cacomp_meta_name = 'CA',
                              caclust_meta_name = 'caclust',
                              biMAP_meta_name = NULL,
                              method = 'SNNdist',
@@ -256,7 +256,7 @@ setMethod(f = "biMAP",
           function(obj, 
                    caclust_obj = NULL,
                    k_umap,
-                   cacomp_meta_name = 'caobj',
+                   cacomp_meta_name = 'CA',
                    caclust_meta_name = 'caclust',
                    biMAP_meta_name = NULL,
                    method = 'SNNdist',
@@ -265,7 +265,6 @@ setMethod(f = "biMAP",
             
             if(is.null(biMAP_meta_name )){
               biMAP_meta_name = paste0('biMAP_', method)
-              print(biMAP_meta_name)
             }
             
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)

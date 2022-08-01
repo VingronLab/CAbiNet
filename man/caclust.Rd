@@ -9,7 +9,7 @@
 caclust(
   obj,
   k,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
@@ -37,7 +37,7 @@ caclust(
 \S4method{caclust}{caclust}(
   obj,
   k,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
@@ -65,7 +65,7 @@ caclust(
 \S4method{caclust}{SingleCellExperiment}(
   obj,
   k,
-  cacomp_meta_name = "caobj",
+  cacomp_meta_name = "CA",
   caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,

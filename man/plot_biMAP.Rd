@@ -8,7 +8,7 @@
 \usage{
 plot_biMAP(
   obj,
-  caclust_meta_name = NULL,
+  caclust_meta_name = "caclust",
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -30,7 +30,7 @@ plot_biMAP(
 
 \S4method{plot_biMAP}{caclust}(
   obj,
-  caclust_meta_name = NULL,
+  caclust_meta_name = "caclust",
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",
@@ -52,7 +52,7 @@ plot_biMAP(
 
 \S4method{plot_biMAP}{SingleCellExperiment}(
   obj,
-  caclust_meta_name = NULL,
+  caclust_meta_name = "caclust",
   meta_df = NULL,
   color_by = "cluster",
   type = "scatter",

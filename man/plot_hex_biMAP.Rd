@@ -3,6 +3,7 @@
 \name{plot_hex_biMAP}
 \alias{plot_hex_biMAP}
 \alias{plot_hex_biMAP,caclust-method}
+\alias{plot_hex_biMAP,SingleCellExperiment-method}
 \title{Plot biMAP with hexagonal bins}
 \usage{
 plot_hex_biMAP(
@@ -23,6 +24,23 @@ plot_hex_biMAP(
 )
 
 \S4method{plot_hex_biMAP}{caclust}(
+  obj,
+  meta_df = NULL,
+  color_by = "cluster",
+  gene_size = 2,
+  cell_alpha = 0.8,
+  gene_alpha = 0.8,
+  hex_n = 40,
+  min_bin = 2,
+  show_density = FALSE,
+  color_genes = FALSE,
+  label_groups = TRUE,
+  group_label_size = 4,
+  label_marker_genes = FALSE,
+  ...
+)
+
+\S4method{plot_hex_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
   color_by = "cluster",

@@ -4,7 +4,7 @@
 \alias{check_caobj_sce}
 \title{check_caobj_sce}
 \usage{
-check_caobj_sce(sce, cacomp_meta_name = "caobj")
+check_caobj_sce(sce, cacomp_meta_name = "CA")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
