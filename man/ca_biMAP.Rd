@@ -61,6 +61,10 @@ metadata(obj)}
 If TRUE, it will calculate bimap embedding of genes and cells contained in the SNN graph together with the given 'fearures' if any.
 If FALSE, only calculate bimap embedding of cells contained in the SNN graph together with the given 'fearures' if any.}
 
+\item{features}{character/vector of gene names. This parameter only works when method == 'ca'.
+'ca' method allows visualization of genes which are absent from SNN graph, so the 'features' could be genes detected by our biclustering algorithm,
+and genes which goes through CA analysis. Setting use_SNN = FALSE allows users to have a visualization of the feature genes user defined/interested.}
+
 \item{...}{Further arguments}
 }
 \value{
