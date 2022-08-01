@@ -32,3 +32,10 @@ Object of type "caclust" with cell and gene clusters saved.
 This function takes a caclust object with precomputed SNN-graph and 
 clusters cells and genes simultaneously.
 }
+\seealso{
+Other biclustering: 
+\code{\link{caclust}},
+\code{\link{make_SNN}()},
+\code{\link{run_spectral}()}
+}
+\concept{biclustering}

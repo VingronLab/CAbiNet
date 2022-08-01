@@ -622,6 +622,7 @@ setMethod(f = "plot_biMAP",
 
 
 #' Plot biMAP with hexagonal bins
+#' @family plot_*_biMAP
 #' 
 #' @description 
 #' Bins cells into hexagons and colors them proportionally to their group label.
@@ -735,7 +736,9 @@ setMethod(f = "plot_hex_biMAP",
 
 
 #' Plots a biMAP scatter plot
-#' @description
+#' @family plot_*_biMAP
+#'
+#' @description 
 #' Plots cells and genes as points. Genes are plotted on top of the cells in
 #' a larger size to make visual differentiation easier.
 #' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
@@ -837,6 +840,8 @@ setMethod(f = "plot_scatter_biMAP",
 
 
 #' Plot contour biMAP
+#' @family plot_*_biMAP
+#'
 #' @description 
 #' Cell density is plotted as contour lines and genes are plotted as points
 #' over the contours.

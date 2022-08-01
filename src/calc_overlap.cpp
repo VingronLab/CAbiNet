@@ -5,8 +5,12 @@
 using namespace Rcpp;
 // [[Rcpp::depends(RcppEigen)]]
 
-
-//' @export
+//' WIP replacement for `determine_overlap` function
+//' @description
+//' DO NOT USE! Slower than R implementation
+//' 
+//' @param cc_adj cell-cell adjacency matrix
+//' @param cg_adj cell-gene adjacency matrix
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, 
                                          Eigen::SparseMatrix<int> cg_adj) {

@@ -4,26 +4,20 @@
 \alias{run_biMAP}
 \title{Run UMAP embedding for cell-gene graph built up by caclust.}
 \usage{
-run_biMAP(
-  caclust_obj,
-  caobj = NULL,
-  k_umap = 30,
-  rand_seed = 2358,
-  method = "SNNdist"
-)
+run_biMAP(obj, caobj = NULL, k = 30, rand_seed = 2358, method = "SNNdist")
 }
 \arguments{
-\item{caclust_obj}{results from biclustering of class "caclust"}
+\item{obj}{results from biclustering of class "caclust"}
 
 \item{caobj}{A cacomp object with principal and standard coordinates
-calculated.}
+calculated. Only needs to be supplied when using method "ca".}
 
-\item{k_umap}{integer. Number of nearest neighbours to use from the SNN graph for
-UMAP}
+\item{k}{integer. Number of nearest neighbours to use to compute UMAP.}
 
 \item{rand_seed}{integer. Random seed for UMAP.}
 
-\item{method}{Can be either "SNNgraph", "SNNdist", "spectral", "ca" or "ca_assR".}
+\item{method}{Can be either "SNNdist", "spectral" or "ca". When using "ca",
+a "cacomp" object has to be provided for \code{caobj}.}
 }
 \value{
 caclust object with biMAP coordinates stored in the \code{bimap} slot.
@@ -32,9 +26,11 @@ caclust object with biMAP coordinates stored in the \code{bimap} slot.
 This function takes cacomp and caclust object as input to calculate UMAP embedding
 of cell-gene graph in several different ways:
 \itemize{
-\item 'SNNgraph': run UMAP on the cell-gene SNN graph built up by caclust
-\item 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph built up by caclust, which is '1-adj(SNN)'.
+\item 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph
+built up by caclust, which is '1-adj(SNN)'.
+\item 'spectral': run UMAP on the selected eigenvectors of cell-gene graph
+laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust'
+function)
 \item 'ca': run UMAP on the singular vectors from Correspondence Analysis.
-\item 'spectral': run UMAP on the selected eigenvectors of cell-gene graph laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust' function)
 }
 }

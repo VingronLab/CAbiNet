@@ -48,3 +48,10 @@ The clustering results of type 'caclust'.
 \description{
 Spectral clustering algorithm with normalized graph laplacian.
 }
+\seealso{
+Other biclustering: 
+\code{\link{caclust}},
+\code{\link{make_SNN}()},
+\code{\link{run_leiden}()}
+}
+\concept{biclustering}

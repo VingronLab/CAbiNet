@@ -207,7 +207,8 @@ create_bigraph <- function(cell_dists,
 
 
 #' Create SNN-graph from caobj
-#'
+#' 
+#' @family biclustering
 #' @description 
 #' Builds a shared nearest neighbour graph (SNN) from a "cacomp" object.
 #' 

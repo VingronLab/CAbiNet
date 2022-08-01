@@ -227,7 +227,7 @@ get_bimap <- function(object){
 
 #' Print caclust object in console
 #' @param object a caclust object
-show.caclust <- function(object, n_rows = 10){
+show.caclust <- function(object){
   
   stopifnot(is(object, "caclust"))
   
