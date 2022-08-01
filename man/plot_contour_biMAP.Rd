@@ -3,6 +3,7 @@
 \name{plot_contour_biMAP}
 \alias{plot_contour_biMAP}
 \alias{plot_contour_biMAP,caclust-method}
+\alias{plot_contour_biMAP,SingleCellExperiment-method}
 \title{Plot contour biMAP}
 \usage{
 plot_contour_biMAP(
@@ -20,6 +21,20 @@ plot_contour_biMAP(
 )
 
 \S4method{plot_contour_biMAP}{caclust}(
+  obj,
+  meta_df = NULL,
+  color_by = "cluster",
+  gene_size = 2,
+  gene_alpha = 0.8,
+  contour_n = 5,
+  color_genes = FALSE,
+  label_groups = TRUE,
+  group_label_size = 4,
+  label_marker_genes = FALSE,
+  ...
+)
+
+\S4method{plot_contour_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
   color_by = "cluster",

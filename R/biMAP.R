@@ -200,6 +200,10 @@ setMethod(f = "biMAP",
             
             stopifnot(method %in% c("SNNdist", "spectral"))
             
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop('The caclust_meta_name in not found in metadata(sce obj), change meta_name')
+            }
+
             caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
             caclust_obj <- run_biMAP(obj = caclust_obj,
@@ -286,11 +290,12 @@ setMethod(f = "ca_biMAP",
                    k = 30,
                    rand_seed = 2358,
                    caclust_meta_name = "caclust",
-                   cacomp_meta_name = "cacomp",
+                   cacomp_meta_name = "CA",
                    ...){
             
             
-            caobj <- S4Vectors::metadata(obj)[[cacomp_meta_name]]
+            check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            caobj <- APL::as.cacomp(obj)
             
             caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             

@@ -3,6 +3,7 @@
 \name{plot_scatter_biMAP}
 \alias{plot_scatter_biMAP}
 \alias{plot_scatter_biMAP,caclust-method}
+\alias{plot_scatter_biMAP,SingleCellExperiment-method}
 \title{Plots a biMAP scatter plot}
 \usage{
 plot_scatter_biMAP(
@@ -21,6 +22,21 @@ plot_scatter_biMAP(
 )
 
 \S4method{plot_scatter_biMAP}{caclust}(
+  obj,
+  meta_df = NULL,
+  color_by = "cluster",
+  cell_size = 1,
+  gene_size = 2,
+  cell_alpha = 0.7,
+  gene_alpha = 0.8,
+  color_genes = FALSE,
+  label_groups = TRUE,
+  group_label_size = 4,
+  label_marker_genes = FALSE,
+  ...
+)
+
+\S4method{plot_scatter_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
   color_by = "cluster",

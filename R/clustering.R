@@ -508,13 +508,13 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
 #' @param cacomp_meta_name Character. Name of cacomp slpt in sce object.
 #' @export
 #' 
-check_caobj_sce <- function(sce, cacomp_meta_name = 'caobj'){
+check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
   
   ix <- cacomp_meta_name %in% SingleCellExperiment::reducedDimNames(sce)
   
   if(isFALSE(ix)){
     stop("No 'CA' dimension reduction object found. ",
-         "Please run cacomp(seurat_obj, top, coords = FALSE, ",
+         "Please run cacomp(sce_obj, top, coords = FALSE, ",
          "return_input=TRUE) first.")
   }
   
@@ -633,7 +633,7 @@ setMethod(f = "caclust",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
                    k,
-                   cacomp_meta_name = 'caobj',
+                   cacomp_meta_name = 'CA',
                    caclust_meta_name = 'caclust',
                    algorithm = "leiden",
                    SNN_prune = 1/15,
@@ -660,7 +660,7 @@ setMethod(f = "caclust",
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
             
             if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
-              stop('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), change meta_name')
+              warning('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), the slot will be overwritten!')
             }
             
             caobj <- APL::as.cacomp(obj)
