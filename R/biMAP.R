@@ -6,7 +6,6 @@ NULL
 #' @description 
 #' This function takes cacomp and caclust object as input to calculate UMAP embedding 
 #' of cell-gene graph in several different ways:
-#' * 'SNNgraph': run UMAP on the cell-gene SNN graph built up by caclust
 #' * 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph built up by caclust, which is '1-adj(SNN)'.
 #' * 'ca': run UMAP on the singular vectors from Correspondence Analysis.
 #' * 'spectral': run UMAP on the selected eigenvectors of cell-gene graph laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust' function)
@@ -33,46 +32,7 @@ run_biMAP <- function(caclust_obj,
   stopifnot(is(caclust_obj, "caclust"))
   stopifnot(method %in% c("SNNgraph", "SNNdist", "spectral", "ca", "ca_assR"))
   
-  if (method == 'SNNgraph'){
-    
-    stopifnot(!is.null(caobj))
-    stopifnot(is(caobj, "cacomp"))
-    
-    SNN <- get_snn(caclust_obj)
-    
-    k_snn = ncol(SNN)
-    SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
-    
-    for (i in seq_len(nrow(SNN))){
-      SNN_idx[i,] <- order(SNN[i,], decreasing = TRUE)
-    }
-    
-    SNN_jacc <- matrix(as.matrix(SNN)[SNN_idx],
-                       nrow = nrow(SNN_idx),
-                       ncol = ncol(SNN_idx))
-    
-    
-    rownames(SNN_idx) <- rownames(SNN)
-    rownames(SNN_jacc) <- rownames(SNN)
-    
-    custom.config = umap::umap.defaults
-    custom.config$random_state = rand_seed
-    
-    snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
-                                    distances = SNN_jacc)
-    
-    assym <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
-    assym <- assym[rownames(assym) %in% rownames(SNN),]
-    
-    caclust_umap = umap::umap(assym,
-                              config = custom.config,
-                              n_neighbors = k_umap,
-                              knn = snn_umap_graph)
-    
-    umap_coords <- as.data.frame(caclust_umap$layout)
-    
-    
-  }else if (method == "SNNdist"){
+   if (method == "SNNdist"){
     
     SNNdist <- as.matrix(1-get_snn(caclust_obj))
     
@@ -198,7 +158,11 @@ add_biMAP_sce <- function(sce, umap_coords, biMAP_meta_name = 'biMAP'){
 
 #' biMAP
 #' @description
-#' TODO
+#' This function takes cacomp and caclust objects or SingleCellExperiment object as input to calculate UMAP embedding 
+#' of cell-gene graph in several different ways:
+#' * 'SNNdist'(Default): run UMAP on the distance matrix of cell-gene SNN graph built up by caclust, which is '1-adj(SNN)'.
+#' * 'ca': run UMAP on the singular vectors from Correspondence Analysis.
+#' * 'spectral': run UMAP on the selected eigenvectors of cell-gene graph laplacian (only eligiable when algorithm is set as 'spectral' in 'caclust' function)
 #' @name biMAP
 #' @rdname biMAP
 #' @param obj A cacomp object or SingleCellExperiment object  
