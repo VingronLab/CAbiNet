@@ -4,7 +4,15 @@
 \alias{run_biMAP}
 \title{Run UMAP embedding for cell-gene graph built up by caclust.}
 \usage{
-run_biMAP(obj, caobj = NULL, k = 30, rand_seed = 2358, method = "SNNdist")
+run_biMAP(
+  obj,
+  caobj = NULL,
+  k = 30,
+  rand_seed = 2358,
+  method = "SNNdist",
+  use_SNN = TRUE,
+  features = NULL
+)
 }
 \arguments{
 \item{obj}{results from biclustering of class "caclust"}
@@ -18,6 +26,10 @@ calculated. Only needs to be supplied when using method "ca".}
 
 \item{method}{Can be either "SNNdist", "spectral" or "ca". When using "ca",
 a "cacomp" object has to be provided for \code{caobj}.}
+
+\item{use_SNN}{TRUE/FALSE. This parameter only works when method == 'ca'.
+If TRUE, it will calculate bimap embedding of genes and cells contained in the SNN graph together with the given 'fearures' if any.
+If FALSE, only calculate bimap embedding of cells contained in the SNN graph together with the given 'fearures' if any.}
 }
 \value{
 caclust object with biMAP coordinates stored in the \code{bimap} slot.

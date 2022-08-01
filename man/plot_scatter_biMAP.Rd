@@ -9,6 +9,7 @@
 plot_scatter_biMAP(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,
@@ -24,6 +25,7 @@ plot_scatter_biMAP(
 \S4method{plot_scatter_biMAP}{caclust}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,
@@ -39,6 +41,7 @@ plot_scatter_biMAP(
 \S4method{plot_scatter_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,

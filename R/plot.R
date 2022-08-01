@@ -636,6 +636,7 @@ setMethod(f = "plot_biMAP",
 #' @export
 setGeneric("plot_hex_biMAP", function(obj,
                                       meta_df = NULL,
+                                      caclust_meta_name = 'caclust',
                                       color_by = "cluster",
                                       gene_size = 2,
                                       cell_alpha = 0.8,
@@ -698,6 +699,7 @@ setMethod(f = "plot_hex_biMAP",
           signature(obj = "SingleCellExperiment"),
           function(obj,
                    meta_df = NULL,
+                   caclust_meta_name = 'caclust',
                    color_by = "cluster",
                    gene_size = 2,
                    cell_alpha = 0.8,
@@ -711,9 +713,20 @@ setMethod(f = "plot_hex_biMAP",
                    label_marker_genes = FALSE,
                    ...){
             
+            if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+            }
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
+            if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
+              meta_df = colData(obj)
+            }
             
-            p <- plot_biMAP( obj = obj,
+            if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
+              stop('color_by not found in either meta_df or obj')
+            }
+            
+            p <- biMAP_plotter(caclust = obj,
                                meta_df = meta_df,
                                color_by = color_by,
                                type = "hex",
@@ -751,6 +764,7 @@ setMethod(f = "plot_hex_biMAP",
 #' @export
 setGeneric("plot_scatter_biMAP", function(obj,
                                           meta_df = NULL,
+                                          caclust_meta_name = 'caclust',
                                           color_by = "cluster",
                                           cell_size = 1,
                                           gene_size = 2,
@@ -807,6 +821,7 @@ setMethod(f = "plot_scatter_biMAP",
           signature = (obj = "SingleCellExperiment"),
           function(obj,
                    meta_df = NULL,
+                   caclust_meta_name = 'caclust',
                    color_by = "cluster",
                    cell_size = 1,
                    gene_size = 2,
@@ -818,7 +833,20 @@ setMethod(f = "plot_scatter_biMAP",
                    label_marker_genes = FALSE,
                    ...){
 
-            p <- plot_biMAP(obj = obj,
+            if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+            }
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
+              meta_df = colData(obj)
+            }
+            
+            if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
+              stop('color_by not found in either meta_df or obj')
+            }
+            
+            p <- biMAP_plotter(caclust = obj,
                                meta_df = meta_df,
                                color_by = color_by,
                                type = "scatter",
@@ -854,6 +882,7 @@ setMethod(f = "plot_scatter_biMAP",
 #' @export
 setGeneric("plot_contour_biMAP", function(obj,
                                           meta_df = NULL,
+                                          caclust_meta_name = 'caclust',
                                           color_by = "cluster",
                                           gene_size = 2,
                                           gene_alpha = 0.8,
@@ -910,6 +939,7 @@ setMethod(f = "plot_contour_biMAP",
           signature = (obj = "SingleCellExperiment"),
           function(obj,
                    meta_df = NULL,
+                   caclust_meta_name = 'caclust',
                    color_by = "cluster",
                    gene_size = 2,
                    gene_alpha = 0.8,
@@ -920,7 +950,20 @@ setMethod(f = "plot_contour_biMAP",
                    label_marker_genes = FALSE,
                    ...){
             
-            p <- plot_biMAP(obj = obj,
+            if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+            }
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
+              meta_df = colData(obj)
+            }
+            
+            if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
+              stop('color_by not found in either meta_df or obj')
+            }
+            
+            p <- biMAP_plotter(caclust = obj,
                                meta_df = meta_df,
                                color_by = color_by,
                                type = "contour",

@@ -9,6 +9,7 @@
 plot_contour_biMAP(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   gene_alpha = 0.8,
@@ -23,6 +24,7 @@ plot_contour_biMAP(
 \S4method{plot_contour_biMAP}{caclust}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   gene_alpha = 0.8,
@@ -37,6 +39,7 @@ plot_contour_biMAP(
 \S4method{plot_contour_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   gene_alpha = 0.8,

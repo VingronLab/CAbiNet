@@ -32,6 +32,7 @@ caclust(
   ...
 )
 
+\S4method{caclust}{cacomp}(
   obj,
   k,
   algorithm = "leiden",

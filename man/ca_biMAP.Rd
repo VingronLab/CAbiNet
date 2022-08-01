@@ -6,9 +6,29 @@
 \alias{ca_biMAP,SingleCellExperiment,ANY-method}
 \title{Compute biMAP basedon CA results}
 \usage{
-ca_biMAP(obj, caobj, k = 30, rand_seed = 2358, ...)
+ca_biMAP(
+  obj,
+  caobj,
+  k = 30,
+  rand_seed = 2358,
+  caclust_meta_name = "caclust",
+  cacomp_meta_name = "CA",
+  use_SNN = TRUE,
+  features = NULL,
+  ...
+)
 
-\S4method{ca_biMAP}{caclust,cacomp}(obj, caobj, k = 30, rand_seed = 2358, ...)
+\S4method{ca_biMAP}{caclust,cacomp}(
+  obj,
+  caobj,
+  k = 30,
+  rand_seed = 2358,
+  caclust_meta_name = "caclust",
+  cacomp_meta_name = "CA",
+  use_SNN = TRUE,
+  features = NULL,
+  ...
+)
 
 \S4method{ca_biMAP}{SingleCellExperiment,ANY}(
   obj,
@@ -16,7 +36,9 @@ ca_biMAP(obj, caobj, k = 30, rand_seed = 2358, ...)
   k = 30,
   rand_seed = 2358,
   caclust_meta_name = "caclust",
-  cacomp_meta_name = "cacomp",
+  cacomp_meta_name = "CA",
+  use_SNN = TRUE,
+  features = NULL,
   ...
 )
 }
@@ -30,12 +52,16 @@ and `cacomp` objects stored in the metadata.}
 
 \item{rand_seed}{integer. Random seed for UMAP.}
 
-\item{...}{Further arguments}
-
 \item{caclust_meta_name}{the name of caclust object stored in metadata(obj)}
 
 \item{cacomp_meta_name}{the name of cacomp object stored in 
 metadata(obj)}
+
+\item{use_SNN}{TRUE/FALSE. This parameter only works when method == 'ca'.
+If TRUE, it will calculate bimap embedding of genes and cells contained in the SNN graph together with the given 'fearures' if any.
+If FALSE, only calculate bimap embedding of cells contained in the SNN graph together with the given 'fearures' if any.}
+
+\item{...}{Further arguments}
 }
 \value{
 an caclust object or SingleCellExperiment objects

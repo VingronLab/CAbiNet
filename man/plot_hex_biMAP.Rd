@@ -9,6 +9,7 @@
 plot_hex_biMAP(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
@@ -26,6 +27,7 @@ plot_hex_biMAP(
 \S4method{plot_hex_biMAP}{caclust}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
@@ -43,6 +45,7 @@ plot_hex_biMAP(
 \S4method{plot_hex_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
+  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
