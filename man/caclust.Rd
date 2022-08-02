@@ -65,8 +65,6 @@ caclust(
 \S4method{caclust}{SingleCellExperiment}(
   obj,
   k,
-  cacomp_meta_name = "CA",
-  caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -87,7 +85,9 @@ caclust(
   return_eig = TRUE,
   dims = NULL,
   cast_to_dense = TRUE,
-  ...
+  ...,
+  caclust_meta_name = "caclust",
+  cacomp_meta_name = "CA"
 )
 }
 \arguments{
@@ -172,6 +172,12 @@ matrix before running leiden clustering?
 Casting to dense speeds up the leiden algorithm.}
 
 \item{...}{further arguments}
+
+\item{caclust_meta_name}{the name of caclust object stored in 
+metadata(SingleCellExperiment object). Default: 'caclust.'}
+
+\item{cacomp_meta_name}{Character. The name of cacomp object stored in 
+metadata(SingleCellExperiment object). Default: 'caobj'.}
 }
 \value{
 A caclust object or SingleCellExperiment object

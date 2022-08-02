@@ -68,11 +68,11 @@ optimal_skm <- function (x,
   
   for (i in 1:num_seeds) {
     newres <- skmeans::skmeans(x = x, 
-                              k = k, 
-                              method = method,
-                              m = m,
-                              weights = weights,
-                              control = control)
+                               k = k, 
+                               method = method,
+                               m = m,
+                               weights = weights,
+                               control = control)
     
     newwcs <- do.call(sum, 
                       lapply(list(1:length(newres$cluster)), 
@@ -105,9 +105,9 @@ optimal_skm <- function (x,
 #' #num_seeds trials.
 
 optimal_km <- function (x,
-                         k, 
-                         num_seeds = 10,
-                        iter.max = 10,
+                        k, 
+                        num_seeds = 10,
+                        iter_max = 10,
                         ...){
   
   if(!is(x, 'matrix')){
@@ -119,12 +119,12 @@ optimal_km <- function (x,
   }
   
   wcs <- Inf
-  res<-NULL
+  res <- NULL
   
   for (i in 1:num_seeds) {
     newres <- stats::kmeans(x = x, 
                             centers = k, 
-                            iter.max = iter.max,
+                            iter.max = iter_max,
                             ...)
 
     newwcs <- sum(newres$withinss)
@@ -235,9 +235,9 @@ run_spectral <- function(caclust,
   }else if (spectral_method == 'kmeans'){
     
     clusters = optimal_km(eig,
-                         centers = nclust,
-                         iter.max = iter_max,
-                         num.seeds = num_seeds)$cluster
+                         k = nclust,
+                         iter_max = iter_max,
+                         num_seeds = num_seeds)$cluster
 
   }else if (spectral_method == 'GMM'){
     
@@ -435,7 +435,6 @@ run_caclust <- function(caobj,
   stopifnot("Invalid k! Should be either a single integer or of lenght 4!" =
               (length(k) == 1 | length(k) == 4))
   
-  
   caclust <- make_SNN(caobj = caobj, 
                       k = k,
                       loops = loops,
@@ -482,7 +481,10 @@ run_caclust <- function(caobj,
 #' Add caclust clustering results to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
 #' @param caclust CAclust::caclust object
-#' @param caclust_meta_name column name not listed in colData(sce), rowData(sce), or metadata(sce)
+#' @param caclust_meta_name column name not listed in colData(sce), 
+#' rowData(sce), or metadata(sce)
+#' @returns 
+#' SingleCellExperiment with caclust object stored.
 #' @export
 #' 
 add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
@@ -491,9 +493,9 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
   idx <- rownames(sce) %in% gene.clust
   matched_genes <- match(rownames(sce)[idx], names(gene.clust))
   
-  colData(sce)[[caclust_meta_name]] <- cell.clust
-  rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
-  rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
+  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell.clust
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
   
   S4Vectors::metadata(sce)[[caclust_meta_name]] <- caclust
   
@@ -506,17 +508,14 @@ add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
 #' Check if cacomp object is already added to SingleCellExperiment object
 #' @param sce SingleCellExperiment object
 #' @param cacomp_meta_name Character. Name of cacomp slpt in sce object.
-#' @export
+#' @returns 
+#' TRUE if cacomp object is stored, FALSE otherwise.
 #' 
 check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
   
   ix <- cacomp_meta_name %in% SingleCellExperiment::reducedDimNames(sce)
   
-  if(isFALSE(ix)){
-    stop("No 'CA' dimension reduction object found. ",
-         "Please run cacomp(sce_obj, top, coords = FALSE, ",
-         "return_input=TRUE) first.")
-  }
+  return(ix)
   
 }
 
@@ -618,7 +617,7 @@ setMethod(f = "caclust",
                                      return_eig =return_eig,
                                      dims = dims,
                                      cast_to_dense = cast_to_dense,
-                                 ...)
+                                     ...)
           return(caclust_res)
             
 })
@@ -635,8 +634,6 @@ setMethod(f = "caclust",
           signature(obj = "SingleCellExperiment"),
           function(obj, 
                    k,
-                   cacomp_meta_name = 'CA',
-                   caclust_meta_name = 'caclust',
                    algorithm = "leiden",
                    SNN_prune = 1/15,
                    loops = FALSE,
@@ -657,9 +654,17 @@ setMethod(f = "caclust",
                    return_eig = TRUE,
                    dims = NULL,
                    cast_to_dense = TRUE,
-                   ...){
-          
-            check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+                   ...,
+                   caclust_meta_name = 'caclust',
+                   cacomp_meta_name = 'CA'){
+            
+            correct <- check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
+            if(isFALSE(correct)){
+              stop("No 'CA' dimension reduction object found. ",
+                   "Please run cacomp(sce_obj, top, coords = FALSE, ",
+                   "return_input=TRUE) first.")
+            }
             
             
             if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){

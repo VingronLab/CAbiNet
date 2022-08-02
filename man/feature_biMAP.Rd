@@ -2,46 +2,20 @@
 % Please edit documentation in R/plot.R
 \name{feature_biMAP}
 \alias{feature_biMAP}
-\alias{feature_biMAP,SingleCellExperiment,caclust-method}
-\alias{feature_biMAP,SingleCellExperiment,ANY-method}
-\title{BiMAP visualzation of expression of features}
+\title{plot biMAP with gene expression}
 \usage{
 feature_biMAP(
-  obj,
-  caclust = NULL,
-  biMAP_meta_name = "biMAP_SNNdist",
-  feature = NULL,
-  color_cells_by = "expression",
-  assay = "logcounts",
-  ...
-)
-
-\S4method{feature_biMAP}{SingleCellExperiment,caclust}(
-  obj,
-  caclust = NULL,
-  biMAP_meta_name = "biMAP_SNNdist",
-  feature = NULL,
-  color_cells_by = "expression",
-  assay = "logcounts",
-  ...
-)
-
-\S4method{feature_biMAP}{SingleCellExperiment,ANY}(
-  obj,
+  sce,
   caclust,
-  caclust_meta_name = "caclust",
-  feature = NULL,
+  feature,
   color_cells_by = "expression",
-  assay = "logcounts",
-  ...
+  assay = "logcounts"
 )
 }
 \arguments{
-\item{obj}{SinleCellExperiment object}
+\item{sce}{SinleCellExperiment object}
 
-\item{caclust}{caclust object with bimap slot}
-
-\item{biMAP_meta_name}{character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)}
+\item{caclust}{caclust object}
 
 \item{feature}{character. Name of gene to visualize}
 
@@ -50,5 +24,5 @@ feature_biMAP(
 \item{assay}{character. Name of assay in SingleCellExperiment used for visualization.}
 }
 \description{
-BiMAP visualzation of expression of features
+plot biMAP with gene expression
 }

@@ -15,8 +15,8 @@ biMAP(obj, k = 30, rand_seed = 2358, method = "SNNdist", ...)
   k = 30,
   rand_seed = 2358,
   method = "SNNdist",
-  caclust_meta_name = "caclust",
-  ...
+  ...,
+  caclust_meta_name = "caclust"
 )
 }
 \arguments{

@@ -111,23 +111,25 @@ run_biMAP <- function(obj,
   }
   
   
-  cellc <- cell_clusters(obj)
-  genec <- gene_clusters(obj)
-  
-  allcells <- rownames(caobj@V)
-  allgenes <- rownames(caobj@U)
-  
+
+  if (method == "ca"){
+    cellc <- rownames(caobj@V)
+    genec <- rownames(caobj@U)
+  } else {
+    cellc <- names(cell_clusters(obj))
+    genec <- names(gene_clusters(obj))
+  }
   
   colnames(umap_coords) <- c("x", "y")
   umap_coords$name <- rownames(umap_coords)
   
   umap_coords$type <- NA
-  umap_coords$type[umap_coords$name %in% allcells] <- "cell" 
-  umap_coords$type[umap_coords$name %in% allgenes] <- "gene" 
+  umap_coords$type[umap_coords$name %in% cellc] <- "cell" 
+  umap_coords$type[umap_coords$name %in% genec] <- "gene" 
   
   umap_coords$cluster <- NA
-  cell_idx <- na.omit(match(names(cellc), umap_coords$name))
-  gene_idx <- na.omit(match(names(genec), umap_coords$name))
+  cell_idx <- na.omit(match(cellc, umap_coords$name))
+  gene_idx <- na.omit(match(genec, umap_coords$name))
   
   umap_coords$cluster[cell_idx] <- cell_clusters(obj)
   umap_coords$cluster[gene_idx] <- gene_clusters(obj)
@@ -224,8 +226,8 @@ setMethod(f = "biMAP",
                    k = 30,
                    rand_seed = 2358,
                    method = 'SNNdist',
-                   caclust_meta_name = 'caclust',
-                   ...){
+                   ...,
+                   caclust_meta_name = 'caclust'){
             
             stopifnot(method %in% c("SNNdist", "spectral"))
             
@@ -280,11 +282,8 @@ setGeneric("ca_biMAP", function(obj,
                                 caobj,
                                 k = 30,
                                 rand_seed = 2358,
-                                caclust_meta_name = "caclust",
-                                cacomp_meta_name = "CA",
                                 use_SNN = TRUE,
                                 features = NULL,
-                                
                                 ...){
   standardGeneric("ca_biMAP")
 })
@@ -327,19 +326,25 @@ setMethod(f = "ca_biMAP",
                    caobj = NULL,
                    k = 30,
                    rand_seed = 2358,
-                   caclust_meta_name = "caclust",
-                   cacomp_meta_name = "CA",
                    use_SNN = TRUE,
                    features = NULL,
-                   ...){
+                   ...,
+                   caclust_meta_name = "caclust",
+                   cacomp_meta_name = "CA"){
             
             
-            check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            correct <- check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
+            if(isFALSE(correct)){
+              stop("No 'CA' dimension reduction object found. ",
+                   "Please run cacomp(sce_obj, top, coords = FALSE, ",
+                   "return_input=TRUE) first.")
+            }
+            
             caobj <- APL::as.cacomp(obj)
             
             caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
-            print(caclust_obj)
-            
+
             caclust_obj <- run_biMAP(obj = caclust_obj,
                                      caobj = caobj,
                                      k = k,

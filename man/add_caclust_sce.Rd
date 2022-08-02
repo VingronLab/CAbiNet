@@ -11,7 +11,11 @@ add_caclust_sce(sce, caclust, caclust_meta_name = "caclust")
 
 \item{caclust}{CAclust::caclust object}
 
-\item{caclust_meta_name}{column name not listed in colData(sce), rowData(sce), or metadata(sce)}
+\item{caclust_meta_name}{column name not listed in colData(sce), 
+rowData(sce), or metadata(sce)}
+}
+\value{
+SingleCellExperiment with caclust object stored.
 }
 \description{
 Add caclust clustering results to SingleCellExperiment object
