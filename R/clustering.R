@@ -159,7 +159,7 @@ optimal_km <- function (x,
 #' * "GMM": Gaussian-Mixture-Model fuzzy clustering.
 #' @param iter_max Number of iterations for k-means clustering and GMM.
 #' @param num_seeds Number of times k-means clustering is repeated.
-#' @param return_eig Logical. Whether or not to return eigenvectors.
+#' @param return_eig Logical. Whether or not to return eigenvectors and store them in caclust-object.
 #' 
 #' @return 
 #' The clustering results of type 'caclust'.
@@ -540,6 +540,8 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
 #' @export
 setGeneric("caclust", function(obj,
                                k,
+                               cacomp_meta_name = 'CA',
+                               caclust_meta_name = 'caclust',
                                algorithm = "leiden",
                                SNN_prune = 1/15,
                                loops = FALSE,
@@ -657,7 +659,9 @@ setMethod(f = "caclust",
                    cast_to_dense = TRUE,
                    ...){
           
+            print(cacomp_meta_name)
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
             
             if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               warning('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), the slot will be overwritten!')

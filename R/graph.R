@@ -175,7 +175,7 @@ create_bigraph <- function(cell_dists,
     gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
     
   }
-  
+  print(head(gene_dists))
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
                      decr = FALSE,
