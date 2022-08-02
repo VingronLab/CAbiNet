@@ -4,7 +4,7 @@
 \alias{optimal_km}
 \title{An integration of several runs of kmens with different random seeds}
 \usage{
-optimal_km(x, k, num_seeds = 10, iter.max = 10, ...)
+optimal_km(x, k, num_seeds = 10, iter_max = 10, ...)
 }
 \arguments{
 \item{x}{Matrix. This function will cluster the rows of the input matrix.}
@@ -12,8 +12,6 @@ optimal_km(x, k, num_seeds = 10, iter.max = 10, ...)
 \item{k}{Integer. Number of cluters to detect for kmeans.}
 
 \item{num_seeds}{Integer. Number of trials with random seeds}
-
-\item{iter.max}{the maximum number of iterations allowed.}
 
 \item{...}{not used.}
 }

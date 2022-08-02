@@ -11,8 +11,6 @@ ca_biMAP(
   caobj,
   k = 30,
   rand_seed = 2358,
-  caclust_meta_name = "caclust",
-  cacomp_meta_name = "CA",
   use_SNN = TRUE,
   features = NULL,
   ...
@@ -23,8 +21,6 @@ ca_biMAP(
   caobj,
   k = 30,
   rand_seed = 2358,
-  caclust_meta_name = "caclust",
-  cacomp_meta_name = "CA",
   use_SNN = TRUE,
   features = NULL,
   ...
@@ -35,11 +31,11 @@ ca_biMAP(
   caobj = NULL,
   k = 30,
   rand_seed = 2358,
-  caclust_meta_name = "caclust",
-  cacomp_meta_name = "CA",
   use_SNN = TRUE,
   features = NULL,
-  ...
+  ...,
+  caclust_meta_name = "caclust",
+  cacomp_meta_name = "CA"
 )
 }
 \arguments{
@@ -52,11 +48,6 @@ and `cacomp` objects stored in the metadata.}
 
 \item{rand_seed}{integer. Random seed for UMAP.}
 
-\item{caclust_meta_name}{the name of caclust object stored in metadata(obj)}
-
-\item{cacomp_meta_name}{the name of cacomp object stored in 
-metadata(obj)}
-
 \item{use_SNN}{TRUE/FALSE. This parameter only works when method == 'ca'.
 If TRUE, it will calculate bimap embedding of genes and cells contained in the SNN graph together with the given 'fearures' if any.
 If FALSE, only calculate bimap embedding of cells contained in the SNN graph together with the given 'fearures' if any.}
@@ -66,6 +57,11 @@ If FALSE, only calculate bimap embedding of cells contained in the SNN graph tog
 and genes which goes through CA analysis. Setting use_SNN = FALSE allows users to have a visualization of the feature genes user defined/interested.}
 
 \item{...}{Further arguments}
+
+\item{caclust_meta_name}{the name of caclust object stored in metadata(obj)}
+
+\item{cacomp_meta_name}{the name of cacomp object stored in 
+metadata(obj)}
 }
 \value{
 an caclust object or SingleCellExperiment objects

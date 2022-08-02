@@ -9,7 +9,6 @@
 plot_hex_biMAP(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
@@ -27,7 +26,6 @@ plot_hex_biMAP(
 \S4method{plot_hex_biMAP}{caclust}(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
@@ -45,7 +43,6 @@ plot_hex_biMAP(
 \S4method{plot_hex_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
   color_by = "cluster",
   gene_size = 2,
   cell_alpha = 0.8,
@@ -57,7 +54,8 @@ plot_hex_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
-  ...
+  ...,
+  caclust_meta_name = "caclust"
 )
 }
 \arguments{
@@ -95,6 +93,9 @@ coordinates of the point.}
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
 
 \item{...}{Further arguments}
+
+\item{caclust_meta_name}{Name under which the caclust object is stored in 
+the metadata of the SingleCellExperiment object.}
 }
 \value{
 hex-plot biMAP as a ggplot.

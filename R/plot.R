@@ -524,85 +524,196 @@ contour_plot <- function(umap_cells,
   
 }
 
-#' Plotting biMAP embedding
-#' @description
-#' TODO
-#' @param obj A caclust object or SingleCellExperiment object  
-#' @param caclust_meta_name character. The name of caclust object stored in metadata(SingleCellExperiment object)
-#' @inheritParams plot_biMAP
-#' @details
-#' TODO
-#' @return
-#' A caclust object or SingleCellExperiment object.
+# #' Plotting biMAP embedding
+# #' @description
+# #' TODO
+# #' @param obj A caclust object or SingleCellExperiment object  
+# #' @param caclust_meta_name character. The name of caclust object stored in metadata(SingleCellExperiment object)
+# #' @inheritParams plot_biMAP
+# #' @details
+# #' TODO
+# #' @return
+# #' A caclust object or SingleCellExperiment object.
+# #' @export
+# setGeneric("plot_biMAP", function(obj,
+#                                   caclust_meta_name = 'caclust',
+#                                   meta_df = NULL,
+#                                   color_by = "cluster",
+#                                   type = "scatter",
+#                                   cell_size = 1,
+#                                   gene_size = 3,
+#                                   hex_n = 40,
+#                                   min_bin = 2,
+#                                   contour_n = 5,
+#                                   cell_alpha = 0.5,
+#                                   gene_alpha = 1,
+#                                   show_density = FALSE,
+#                                   color_genes = FALSE,
+#                                   label_groups = TRUE,
+#                                   group_label_size=4,
+#                                   labels_per_group=1,
+#                                   label_marker_genes = FALSE,
+#                                   ...){
+#   standardGeneric("plot_biMAP")
+# })
+#
+# #
+# #' @rdname plot_biMAP
+# #' @param color_by character which can be chosen from 'type', 'cluster' and column in the input meta_df
+# #' @param meta_df data.frame.
+# #' @inheritParams plot_biMAP
+# #' @export
+# setMethod(f = "plot_biMAP",
+#           signature(obj = "caclust"),
+#           function(obj, 
+#                    meta_df = NULL,
+#                    color_by = "cluster",
+#                    ...){
+#             
+#             p <- biMAP_plotter(caclust = obj,
+#                                color_by = color_by,
+#                                meta_df = meta_df,
+#                                ...)
+#             return(p)
+#             
+#           })
+# 
+# #
+# #' @rdname plot_biMAP
+# #' @param obj SingleCellExperiment object
+# #' @param caclust_meta_name character. Slot name of caclust object stored in meatadata(obj)
+# #' @param color_by character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)
+# #' @param meta_df data.frame.
+# #' @inheritParams plot_biMAP
+# #' @export
+# setMethod(f = "plot_biMAP",
+#           signature(obj = "SingleCellExperiment"),
+#           function(obj, 
+#                    caclust_meta_name = 'caclust',
+#                    meta_df = NULL,
+#                    color_by = "cluster",
+#                    type = 'scatter',
+#                    ...){
+#             
+#             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+#               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+#             }
+#             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+#             
+#             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
+#               meta_df = colData(obj)
+#             }
+#             
+#             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
+#               stop('color_by not found in either meta_df or obj')
+#             }
+#             
+#             p <- biMAP_plotter(caclust = caclust,
+#                                color_by = color_by,
+#                                meta_df = meta_df,
+#                                type = type,
+#                                ...)
+#             return(p)
+#             
+#           })
 
+
+#' Plots a biMAP scatter plot
+#' @family plot_*_biMAP
+#'
+#' @description 
+#' Plots cells and genes as points. Genes are plotted on top of the cells in
+#' a larger size to make visual differentiation easier.
+#' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
+#' object or of class "SingleCellExperiment".
+#' @inheritParams biMAP_plotter
+#' @param ... Further arguments.
+#' @returns
+#' biMAP scatter plot as ggplot object.
+#'
 #' @export
-setGeneric("plot_biMAP", function(obj,
-                                  caclust_meta_name = 'caclust',
-                                  meta_df = NULL,
-                                  color_by = "cluster",
-                                  type = "scatter",
-                                  cell_size = 1,
-                                  gene_size = 3,
-                                  hex_n = 40,
-                                  min_bin = 2,
-                                  contour_n = 5,
-                                  cell_alpha = 0.5,
-                                  gene_alpha = 1,
-                                  show_density = FALSE,
-                                  color_genes = FALSE,
-                                  label_groups = TRUE,
-                                  group_label_size=4,
-                                  labels_per_group=1,
-                                  label_marker_genes = FALSE,
-                                  ...){
-  standardGeneric("plot_biMAP")
+setGeneric("plot_scatter_biMAP", function(obj,
+                                          meta_df = NULL,
+                                          color_by = "cluster",
+                                          cell_size = 1,
+                                          gene_size = 2,
+                                          cell_alpha = 0.7,
+                                          gene_alpha = 0.8,
+                                          color_genes = FALSE,
+                                          label_groups = TRUE,
+                                          group_label_size = 4,
+                                          label_marker_genes = FALSE,
+                                          ...) {
+  standardGeneric("plot_scatter_biMAP")
 })
 
-#
-#' @rdname plot_biMAP
-#' @param color_by character which can be chosen from 'type', 'cluster' and column in the input meta_df
-#' @param meta_df data.frame.
-#' @inheritParams plot_biMAP
+#' @rdname plot_scatter_biMAP
 #' @export
-setMethod(f = "plot_biMAP",
-          signature(obj = "caclust"),
-          function(obj, 
+setMethod(f = "plot_scatter_biMAP",
+          signature = (obj = "caclust"),
+          function(obj,
                    meta_df = NULL,
                    color_by = "cluster",
+                   cell_size = 1,
+                   gene_size = 2,
+                   cell_alpha = 0.7,
+                   gene_alpha = 0.8,
+                   color_genes = FALSE,
+                   label_groups = TRUE,
+                   group_label_size = 4,
+                   label_marker_genes = FALSE,
                    ...){
             
             p <- biMAP_plotter(caclust = obj,
-                               color_by = color_by,
                                meta_df = meta_df,
-                               ...)
-            return(p)
+                               color_by = color_by,
+                               type = "scatter",
+                               cell_size = cell_size,
+                               gene_size = gene_size,
+                               hex_n = NA,
+                               min_bin = NA,
+                               contour_n = NA,
+                               cell_alpha = cell_alpha,
+                               gene_alpha = gene_alpha,
+                               show_density = NA,
+                               color_genes = color_genes,
+                               label_groups = label_groups,
+                               group_label_size = group_label_size,
+                               label_marker_genes = label_marker_genes)
             
+            return(p)
           })
 
-#
-#' @rdname plot_biMAP
-#' @param obj SingleCellExperiment object
-#' @param caclust_meta_name character. Slot name of caclust object stored in meatadata(obj)
-#' @param color_by character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)
-#' @param meta_df data.frame.
-#' @inheritParams plot_biMAP
+#' @rdname plot_scatter_biMAP
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
 #' @export
-setMethod(f = "plot_biMAP",
-          signature(obj = "SingleCellExperiment"),
-          function(obj, 
-                   caclust_meta_name = 'caclust',
+setMethod(f = "plot_scatter_biMAP",
+          signature = (obj = "SingleCellExperiment"),
+          function(obj,
                    meta_df = NULL,
                    color_by = "cluster",
-                   type = 'scatter',
-                   ...){
+                   cell_size = 1,
+                   gene_size = 2,
+                   cell_alpha = 0.7,
+                   gene_alpha = 0.8,
+                   color_genes = FALSE,
+                   label_groups = TRUE,
+                   group_label_size = 4,
+                   label_marker_genes = FALSE,
+                   ...,
+                   caclust_meta_name = 'caclust'){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
-              stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+              stop(paste('The aclust object with name', 
+                         caclust_meta_name, 
+                         'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
+            
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
-              meta_df = colData(obj)
+              meta_df = SummarizedExperiment::colData(obj)
             }
             
             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
@@ -610,15 +721,29 @@ setMethod(f = "plot_biMAP",
             }
             
             p <- biMAP_plotter(caclust = caclust,
-                               color_by = color_by,
                                meta_df = meta_df,
-                               type = type,
-                               ...)
-            return(p)
+                               color_by = color_by,
+                               type = "scatter",
+                               cell_size = cell_size,
+                               gene_size = gene_size,
+                               hex_n = NA,
+                               min_bin = NA,
+                               contour_n = NA,
+                               cell_alpha = cell_alpha,
+                               gene_alpha = gene_alpha,
+                               show_density = NA,
+                               color_genes = color_genes,
+                               label_groups = label_groups,
+                               group_label_size = group_label_size,
+                               label_marker_genes = label_marker_genes)
             
+            return(p)
           })
 
 
+#' @rdname plot_scatter_biMAP
+#' @export
+plot_biMAP <- plot_scatter_biMAP
 
 
 #' Plot biMAP with hexagonal bins
@@ -636,7 +761,6 @@ setMethod(f = "plot_biMAP",
 #' @export
 setGeneric("plot_hex_biMAP", function(obj,
                                       meta_df = NULL,
-                                      caclust_meta_name = 'caclust',
                                       color_by = "cluster",
                                       gene_size = 2,
                                       cell_alpha = 0.8,
@@ -694,12 +818,13 @@ setMethod(f = "plot_hex_biMAP",
 })
 
 #' @rdname plot_hex_biMAP
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
 #' @export
 setMethod(f = "plot_hex_biMAP",
           signature(obj = "SingleCellExperiment"),
           function(obj,
                    meta_df = NULL,
-                   caclust_meta_name = 'caclust',
                    color_by = "cluster",
                    gene_size = 2,
                    cell_alpha = 0.8,
@@ -711,7 +836,8 @@ setMethod(f = "plot_hex_biMAP",
                    label_groups = TRUE,
                    group_label_size=4,
                    label_marker_genes = FALSE,
-                   ...){
+                   ...,
+                   caclust_meta_name = 'caclust'){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
@@ -719,14 +845,14 @@ setMethod(f = "plot_hex_biMAP",
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
-              meta_df = colData(obj)
+              meta_df = SummarizedExperiment::colData(obj)
             }
             
             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
               stop('color_by not found in either meta_df or obj')
             }
             
-            p <- biMAP_plotter(caclust = obj,
+            p <- biMAP_plotter(caclust = caclust,
                                meta_df = meta_df,
                                color_by = color_by,
                                type = "hex",
@@ -748,123 +874,6 @@ setMethod(f = "plot_hex_biMAP",
 
 
 
-#' Plots a biMAP scatter plot
-#' @family plot_*_biMAP
-#'
-#' @description 
-#' Plots cells and genes as points. Genes are plotted on top of the cells in
-#' a larger size to make visual differentiation easier.
-#' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
-#' object or of class "SingleCellExperiment".
-#' @inheritParams biMAP_plotter
-#' @param ... Further arguments.
-#' @returns
-#' biMAP scatter plot as ggplot object.
-#'
-#' @export
-setGeneric("plot_scatter_biMAP", function(obj,
-                                          meta_df = NULL,
-                                          caclust_meta_name = 'caclust',
-                                          color_by = "cluster",
-                                          cell_size = 1,
-                                          gene_size = 2,
-                                          cell_alpha = 0.7,
-                                          gene_alpha = 0.8,
-                                          color_genes = FALSE,
-                                          label_groups = TRUE,
-                                          group_label_size = 4,
-                                          label_marker_genes = FALSE,
-                                          ...) {
-  standardGeneric("plot_scatter_biMAP")
-})
-
-#' @rdname plot_scatter_biMAP
-#' @export
-setMethod(f = "plot_scatter_biMAP",
-          signature = (obj = "caclust"),
-          function(obj,
-                  meta_df = NULL,
-                  color_by = "cluster",
-                  cell_size = 1,
-                  gene_size = 2,
-                  cell_alpha = 0.7,
-                  gene_alpha = 0.8,
-                  color_genes = FALSE,
-                  label_groups = TRUE,
-                  group_label_size = 4,
-                  label_marker_genes = FALSE,
-                  ...){
-
-  p <- biMAP_plotter(caclust = obj,
-                      meta_df = meta_df,
-                      color_by = color_by,
-                      type = "scatter",
-                      cell_size = cell_size,
-                      gene_size = gene_size,
-                      hex_n = NA,
-                      min_bin = NA,
-                      contour_n = NA,
-                      cell_alpha = cell_alpha,
-                      gene_alpha = gene_alpha,
-                      show_density = NA,
-                      color_genes = color_genes,
-                      label_groups = label_groups,
-                      group_label_size = group_label_size,
-                      label_marker_genes = label_marker_genes)
-
-  return(p)
-})
-
-#' @rdname plot_scatter_biMAP
-#' @export
-setMethod(f = "plot_scatter_biMAP",
-          signature = (obj = "SingleCellExperiment"),
-          function(obj,
-                   meta_df = NULL,
-                   caclust_meta_name = 'caclust',
-                   color_by = "cluster",
-                   cell_size = 1,
-                   gene_size = 2,
-                   cell_alpha = 0.7,
-                   gene_alpha = 0.8,
-                   color_genes = FALSE,
-                   label_groups = TRUE,
-                   group_label_size = 4,
-                   label_marker_genes = FALSE,
-                   ...){
-
-            if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
-              stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
-            }
-            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
-            
-            if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
-              meta_df = colData(obj)
-            }
-            
-            if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
-              stop('color_by not found in either meta_df or obj')
-            }
-            
-            p <- biMAP_plotter(caclust = obj,
-                               meta_df = meta_df,
-                               color_by = color_by,
-                               type = "scatter",
-                               cell_size = cell_size,
-                               gene_size = gene_size,
-                               hex_n = NA,
-                               min_bin = NA,
-                               contour_n = NA,
-                               cell_alpha = cell_alpha,
-                               gene_alpha = gene_alpha,
-                               show_density = NA,
-                               color_genes = color_genes,
-                               label_groups = label_groups,
-                               group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes)
-
-            return(p)
-            })
 
 
 #' Plot contour biMAP
@@ -882,7 +891,6 @@ setMethod(f = "plot_scatter_biMAP",
 #' @export
 setGeneric("plot_contour_biMAP", function(obj,
                                           meta_df = NULL,
-                                          caclust_meta_name = 'caclust',
                                           color_by = "cluster",
                                           gene_size = 2,
                                           gene_alpha = 0.8,
@@ -934,12 +942,13 @@ setMethod(f = "plot_contour_biMAP",
 
 
 #' @rdname plot_contour_biMAP
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
 #' @export
 setMethod(f = "plot_contour_biMAP", 
           signature = (obj = "SingleCellExperiment"),
           function(obj,
                    meta_df = NULL,
-                   caclust_meta_name = 'caclust',
                    color_by = "cluster",
                    gene_size = 2,
                    gene_alpha = 0.8,
@@ -948,7 +957,8 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   ...){
+                   ...,
+                   caclust_meta_name = 'caclust'){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
@@ -956,14 +966,14 @@ setMethod(f = "plot_contour_biMAP",
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
-              meta_df = colData(obj)
+              meta_df = SummarizedExperiment::colData(obj)
             }
             
             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
               stop('color_by not found in either meta_df or obj')
             }
             
-            p <- biMAP_plotter(caclust = obj,
+            p <- biMAP_plotter(caclust = caclust,
                                meta_df = meta_df,
                                color_by = color_by,
                                type = "contour",
@@ -986,18 +996,16 @@ setMethod(f = "plot_contour_biMAP",
 
 
 #' plot biMAP with gene expression
-#' @rdname plot_feature_biMAP
 #' @param sce SinleCellExperiment object
 #' @param caclust caclust object
 #' @param feature character. Name of gene to visualize
 #' @param color_cells_by character. Default: expression
 #' @param assay character. Name of assay in SingleCellExperiment used for visualization.
-#' @export
-plot_feature_biMAP <- function(sce,
-                               caclust, 
-                              feature = NULL, 
-                              color_cells_by="expression", 
-                              assay = "logcounts"){
+feature_biMAP <- function(sce,
+                         caclust, 
+                         feature, 
+                         color_cells_by="expression", 
+                         assay = "logcounts"){
   
   stopifnot(is(caclust, "caclust"))
   umap_coords <- caclust@bimap
@@ -1006,57 +1014,158 @@ plot_feature_biMAP <- function(sce,
   stopifnot(length(feature)<=1)
   
   if(color_cells_by == "expression") {
-    isExpr <- FALSE
+    discr <- FALSE
     if(!is.null(feature)) lgnd <- feature
   }else{
-    isExpr <- TRUE
+    discr <- TRUE
     lgnd <- color_cells_by
   }
   
   cell_idx <- which(umap_coords$type == "cell")
   
-  if(!is.null(feature)){
+  if(!feature %in% rownames(umap_coords)){
+    if(!feature %in% rownames(sce)){
+      stop("Feature not found!")
+    }
     
-    # stopifnot(isTRUE(feature %in% umap_coords$name))
-    cnts <- SummarizedExperiment::assay(sce, assay)
-    umap_coords$expression <- NA
-    umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
-
-    umap_coords[cell_idx,] <- umap_coords[cell_idx,][order(umap_coords[cell_idx,"expression"], decreasing = FALSE),]
+    warning("No biMAP coordinates for feature available.")
   }
+  # stopifnot(isTRUE(feature %in% umap_coords$name))
+  cnts <- SummarizedExperiment::assay(sce, assay)
+  umap_coords$expression <- NA
+  umap_coords[cell_idx,]$expression <- cnts[feature, umap_coords$name[cell_idx]]
+
+  umap_coords[cell_idx,] <- umap_coords[cell_idx,][order(umap_coords[cell_idx,"expression"], decreasing = FALSE),]
   
-  
-  ggplot()+
-    geom_point(umap_coords[umap_coords$type == "gene",],
-               mapping=aes_(~x, ~y, text = paste0(
+  suppressWarnings({
+  ggplot2::ggplot()+
+    ggplot2::geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping=ggplot2::aes_(~x, ~y, text = paste0(
                                        "Type: ", quote(type), "\n",
                                        "Name: ", quote(name), "\n",
-                                       "Cluster: ", quote(cluster))), color ="#A9A9A9", alpha = 0.5) +  #grey
-    geom_point(umap_coords[umap_coords$type == "cell",],
-               mapping=aes_(~x, ~y, color = as.name(color_cells_by), text = paste0(
-                                                    "Type: ", quote(type), "\n",
-                                                    "Name: ", quote(name), "\n",
-                                                    "Cluster: ", quote(cluster))),
+                                       "Cluster: ", quote(cluster))), 
+               color ="#A9A9A9", 
+               alpha = 0.5) +  #grey
+    ggplot2::geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping=ggplot2::aes_(~x, 
+                                     ~y, 
+                                     color = as.name(color_cells_by), 
+                                     text = paste0(
+                                        "Type: ", quote(type), "\n",
+                                        "Name: ", quote(name), "\n",
+                                        "Cluster: ", quote(cluster))),
                alpha = 0.8) +
-    geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
-               aes_(~x, ~y),
+    ggplot2::geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+                        ggplot2::aes_(~x, ~y),
                color = "red") +
-    geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
-                    aes_(~x, ~y, label= ~name),
-                    color = "red") +
-    viridis::scale_color_viridis(name=lgnd, discrete = isExpr) +
-    labs(x="Dim 1",
-         y="Dim 2")+
-    theme_bw()
+    ggrepel::geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
+                             ggplot2::aes_(~x, ~y, label= ~name),
+                             color = "red") +
+    viridis::scale_color_viridis(name=lgnd, discrete = discr) +
+    ggplot2::labs(x="Dim 1",
+                  y="Dim 2")+
+    ggplot2::theme_bw()
+  })
     
 }
+
+
+
+
+#' BiMAP visualization of feature expression.
+#' @param sce SinleCellExperiment object
+#' @param caclust caclust object or NULL
+#' @inheritParams feature_biMAP
+#' @returns 
+#' ggplot object
+#' @export
+setGeneric("plot_feature_biMAP", function(sce,
+                                          caclust = NULL,
+                                          feature, 
+                                          color_cells_by="expression", 
+                                          assay = "logcounts",
+                                          ...){
+  standardGeneric("plot_feature_biMAP")
+})
+
+
+#' @rdname plot_feature_biMAP
+#' @export
+setMethod(f = "plot_feature_biMAP",
+          signature(sce = "SingleCellExperiment", caclust = "caclust"),
+          function(sce, 
+                   caclust = NULL,
+                   feature, 
+                   color_cells_by="expression", 
+                   assay = "logcounts",
+                   ...){
+            
+            stopifnot("No biMAP calculated yet! Please run biMAP()!" = 
+                        !is.empty(caclust@bimap))
+            
+            p <- feature_biMAP(sce = sce,
+                               caclust = caclust,
+                               feature = feature, 
+                               color_cells_by=color_cells_by, 
+                               assay =assay)
+            return(p)
+            
+})
+
+#
+#' @rdname plot_feature_biMAP
+#' @param obj SinleCellExperiment object
+#' @param caclust caclust object with bimap slot
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
+#' @inheritParams plot_feature_biMAP
+#' @export
+#' 
+setMethod(f = "plot_feature_biMAP",
+          signature(sce = "SingleCellExperiment", caclust = "ANY"),
+          function(sce, 
+                   caclust = NULL,
+                   feature, 
+                   color_cells_by="expression", 
+                   assay = "logcounts",
+                   ...,
+                   caclust_meta_name = 'caclust'){
+            
+            if(is.null(caclust)){
+              
+              if(caclust_meta_name %in% names(S4Vectors::metadata(sce))){
+                
+                caclust <- S4Vectors::metadata(sce)[[caclust_meta_name]]
+                stopifnot("No biMAP calculated yet! Please run biMAP()!" = 
+                            !is.empty(caclust@bimap))
+                
+              }else{
+
+                stop(paste("No caclust object found in sce metadata.",
+                            "Please provide a caclust object."))
+              }
+            }
+            
+            p <- feature_biMAP(sce = sce,
+                               caclust = caclust,
+                               feature = feature, 
+                               color_cells_by=color_cells_by, 
+                               assay =assay)
+            return(p)
+            
+})
+
+
+
+
+
 
 
 metadata_biMAP <- function(umap_coords, 
                            sce, 
                            color_cells_by, 
                            continous = FALSE){
-  meta_df <- colData(sce)
+  meta_df <- SummarizedExperiment::colData(sce)
 
   cell_idx <- which(umap_coords$type == "cell")
 
@@ -1347,83 +1456,4 @@ setMethod(f = "bicplot",
             
           })
 
-#' BiMAP visualzation of expression of features
-#' @rdname feature_biMAP
-#' @param obj SinleCellExperiment object
-#' @param caclust caclust object or NULL
-#' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
-#' @inheritParams plot_feature_biMAP
-#' @export
-setGeneric("feature_biMAP", function(obj,
-                                     caclust = NULL,
-                                     biMAP_meta_name = 'biMAP_SNNdist',
-                                     feature = NULL, 
-                                     color_cells_by="expression", 
-                                     assay = "logcounts",
-                                     ...){
-  standardGeneric("feature_biMAP")
-})
 
-#
-#' @rdname feature_biMAP
-#' @param obj SinleCellExperiment object
-#' @param caclust caclust with bimap slot
-#' @inheritParams plot_feature_biMAP
-#' @export
-#' 
-setMethod(f = "feature_biMAP",
-          signature(obj = "SingleCellExperiment", caclust = "caclust"),
-          function(obj, 
-                   caclust,
-                   feature = NULL, 
-                   color_cells_by="expression", 
-                   assay = "logcounts",
-                   ...){
-            
-            p <- plot_feature_biMAP(sce = obj,
-                                caclust = caclust,
-                                feature = feature, 
-                                color_cells_by=color_cells_by, 
-                                assay =assay)
-            return(p)
-            
-          })
-
-#
-#' @rdname feature_biMAP
-#' @param obj SinleCellExperiment object
-#' @param caclust caclust object with bimap slot
-#' @param biMAP_meta_name character. Name of biMAP coordiantes data.frame stored in metadata(sce obj)
-#' @inheritParams plot_feature_biMAP
-#' @export
-#' 
-setMethod(f = "feature_biMAP",
-          signature(obj = "SingleCellExperiment"),
-          function(obj, 
-                   caclust,
-                   caclust_meta_name = 'caclust',
-                   feature = NULL, 
-                   color_cells_by="expression", 
-                   assay = "logcounts",
-                   ...){
-            
-            if(is.null(caclust)){
-              if(caclust_meta_name %in% names(S4Vectors::metadata(obj))){
-                caclust <- S4Vectors::metadata(obj)[[biMAP_meta_name]]
-                # cat(paste0('Plotting by data.frame ', caclist_meta_name, ' from metadata(sce).\n'))
-              }else{
-              #   stop(paste('The biMAP coordinate data.frame with name', 
-              #              biMAP_meta_name, 'is not found in metadata, please try a different "biMAP_meta_name".'))
-              # }
-                stop()
-                }
-            }
-            
-            p <- plot_feature_biMAP(sce = obj,
-                                    caclust = caclust,
-                                    feature = feature, 
-                                    color_cells_by=color_cells_by, 
-                                    assay =assay)
-            return(p)
-            
-          })

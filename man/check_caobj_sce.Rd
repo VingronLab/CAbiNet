@@ -11,6 +11,9 @@ check_caobj_sce(sce, cacomp_meta_name = "CA")
 
 \item{cacomp_meta_name}{Character. Name of cacomp slpt in sce object.}
 }
+\value{
+TRUE if cacomp object is stored, FALSE otherwise.
+}
 \description{
 Check if cacomp object is already added to SingleCellExperiment object
 }

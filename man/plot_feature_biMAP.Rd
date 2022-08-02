@@ -2,27 +2,57 @@
 % Please edit documentation in R/plot.R
 \name{plot_feature_biMAP}
 \alias{plot_feature_biMAP}
-\title{plot biMAP with gene expression}
+\alias{plot_feature_biMAP,SingleCellExperiment,caclust-method}
+\alias{plot_feature_biMAP,SingleCellExperiment,ANY-method}
+\title{BiMAP visualization of feature expression.}
 \usage{
 plot_feature_biMAP(
   sce,
-  caclust,
-  feature = NULL,
+  caclust = NULL,
+  feature,
   color_cells_by = "expression",
-  assay = "logcounts"
+  assay = "logcounts",
+  ...
+)
+
+\S4method{plot_feature_biMAP}{SingleCellExperiment,caclust}(
+  sce,
+  caclust = NULL,
+  feature,
+  color_cells_by = "expression",
+  assay = "logcounts",
+  ...
+)
+
+\S4method{plot_feature_biMAP}{SingleCellExperiment,ANY}(
+  sce,
+  caclust = NULL,
+  feature,
+  color_cells_by = "expression",
+  assay = "logcounts",
+  ...,
+  caclust_meta_name = "caclust"
 )
 }
 \arguments{
 \item{sce}{SinleCellExperiment object}
 
-\item{caclust}{caclust object}
+\item{caclust}{caclust object with bimap slot}
 
 \item{feature}{character. Name of gene to visualize}
 
 \item{color_cells_by}{character. Default: expression}
 
 \item{assay}{character. Name of assay in SingleCellExperiment used for visualization.}
+
+\item{caclust_meta_name}{Name under which the caclust object is stored in 
+the metadata of the SingleCellExperiment object.}
+
+\item{obj}{SinleCellExperiment object}
+}
+\value{
+ggplot object
 }
 \description{
-plot biMAP with gene expression
+BiMAP visualization of feature expression.
 }

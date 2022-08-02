@@ -4,12 +4,12 @@
 \alias{plot_scatter_biMAP}
 \alias{plot_scatter_biMAP,caclust-method}
 \alias{plot_scatter_biMAP,SingleCellExperiment-method}
+\alias{plot_biMAP}
 \title{Plots a biMAP scatter plot}
 \usage{
 plot_scatter_biMAP(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,
@@ -25,7 +25,6 @@ plot_scatter_biMAP(
 \S4method{plot_scatter_biMAP}{caclust}(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,
@@ -41,7 +40,22 @@ plot_scatter_biMAP(
 \S4method{plot_scatter_biMAP}{SingleCellExperiment}(
   obj,
   meta_df = NULL,
-  caclust_meta_name = "caclust",
+  color_by = "cluster",
+  cell_size = 1,
+  gene_size = 2,
+  cell_alpha = 0.7,
+  gene_alpha = 0.8,
+  color_genes = FALSE,
+  label_groups = TRUE,
+  group_label_size = 4,
+  label_marker_genes = FALSE,
+  ...,
+  caclust_meta_name = "caclust"
+)
+
+plot_biMAP(
+  obj,
+  meta_df = NULL,
   color_by = "cluster",
   cell_size = 1,
   gene_size = 2,
@@ -84,6 +98,9 @@ coordinates of the point.}
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
 
 \item{...}{Further arguments.}
+
+\item{caclust_meta_name}{Name under which the caclust object is stored in 
+the metadata of the SingleCellExperiment object.}
 }
 \value{
 biMAP scatter plot as ggplot object.
