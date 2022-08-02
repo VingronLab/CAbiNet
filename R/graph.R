@@ -126,14 +126,29 @@ create_bigraph <- function(cell_dists,
     stopifnot(is(marker_genes, "character"))
     
     idx <- which(colnames(cgg_nn) %in% marker_genes)
-    marker_knn <- cgg_nn[,idx]
-    cgg_nn <- cgg_nn[,-idx]
     
-    marker_dists <- gene_dists[idx,]
-    marker_assr <- gene_cell_assr[idx,]
+    if (length(idx) == 0){
+      warning("Marker genes not found in the data.")
+      marker_genes <- NULL
+      
+    } else {
+      
+      if(length(idx) < length(marker_genes)){
+        warning("Not all marker genes are in the provided data.")
+        marker_genes <- marker_genes[marker_genes %in% colnames(cgg_nn)]
+      }
+
+      marker_knn <- cgg_nn[,idx]
+      cgg_nn <- cgg_nn[,-idx]
+      
+      marker_dists <- gene_dists[idx,]
+      marker_assr <- gene_cell_assr[idx,]
+      
+      gene_dists <- gene_dists[-idx, -idx]
+      gene_cell_assr <- gene_cell_assr[-idx,]
+      
+    }  
     
-    gene_dists <- gene_dists[-idx, -idx]
-    gene_cell_assr <- gene_cell_assr[-idx,]
   }
   
   if(isTRUE(select_genes)){
@@ -175,7 +190,6 @@ create_bigraph <- function(cell_dists,
     gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
     
   }
-  print(head(gene_dists))
   ggg_nn <- make_knn(gene_dists,
                      k = k_g,
                      decr = FALSE,

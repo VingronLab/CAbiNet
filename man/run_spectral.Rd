@@ -40,7 +40,7 @@ Can be on of the following 3:
 
 \item{num_seeds}{Number of times k-means clustering is repeated.}
 
-\item{return_eig}{Logical. Whether or not to return eigenvectors.}
+\item{return_eig}{Logical. Whether or not to return eigenvectors and store them in caclust-object.}
 }
 \value{
 The clustering results of type 'caclust'.

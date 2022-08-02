@@ -659,7 +659,6 @@ setMethod(f = "caclust",
                    cast_to_dense = TRUE,
                    ...){
           
-            print(cacomp_meta_name)
             check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
             
             
