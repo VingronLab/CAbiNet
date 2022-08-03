@@ -72,7 +72,8 @@ optimal_skm <- function (x,
                                method = method,
                                m = m,
                                weights = weights,
-                               control = control)
+                               control = control,
+                               ...)
     
     newwcs <- do.call(sum, 
                       lapply(list(1:length(newres$cluster)), 
@@ -96,6 +97,7 @@ optimal_skm <- function (x,
 #' within-cluster-sum of squared distances will be selected.
 #' @param k Integer. Number of cluters to detect for kmeans.
 #' @param x Matrix. This function will cluster the rows of the input matrix.
+#' @param iter_max Integer. Number of iterations.
 #' @inheritParams stats::kmeans
 #' @param num_seeds Integer. Number of trials with random seeds
 #' 
@@ -526,8 +528,6 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
 #' @description
 #' `caclust()` performs biclustering on either a "cacomp" or 
 #' "SingleCellExperiment" object.
-#' @name caclust
-#' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
 #' @inheritParams run_caclust
 #' @param ... further arguments
@@ -539,8 +539,6 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
 #' @export
 setGeneric("caclust", function(obj,
                                k,
-                               cacomp_meta_name = 'CA',
-                               caclust_meta_name = 'caclust',
                                algorithm = "leiden",
                                SNN_prune = 1/15,
                                loops = FALSE,

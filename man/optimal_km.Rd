@@ -13,6 +13,8 @@ optimal_km(x, k, num_seeds = 10, iter_max = 10, ...)
 
 \item{num_seeds}{Integer. Number of trials with random seeds}
 
+\item{iter_max}{Integer. Number of iterations.}
+
 \item{...}{not used.}
 }
 \value{
