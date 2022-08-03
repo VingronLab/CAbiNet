@@ -1114,30 +1114,75 @@ mix <- function(df){
 
 
 #' 
-#'   
-#' #' Plot of 2D CA projection of the data.
-setGeneric("ca_biplot", 
-            getGeneric("ca_biplot", package="APL"))
-
+#' bicplot
+#' @description
+#' Plots the first 2 dimensions of the rows and columns in the same plot.
+#'
+#' @details
+#' Choosing type "plotly" will generate an interactive html plot with the 
+#' package plotly.
+#' Type "ggplot" generates a static plot.
+#' Depending on whether `princ_coords` is set to 1 or 2 either
+#' the principal coordinates of either the rows (1) or the columns (2)
+#' are chosen. For the other the standard coordinates are plotted 
+#' (assymetric biplot).
+#' Labels for rows and columns should be stored in the row and column names 
+#' respectively.
+#' @return
+#' Plot of class "plotly" or "ggplot".
+#'
+#' @param obj An object of class "cacomp" with the relevant standardized and 
+#' principal coordinates calculated,
+#'  or alternatively an object of class "Seurat" or "SingleCellExperiment" 
+#'  with a dim. reduction named "CA" saved.
+#' @param xdim Integer. The dimension for the x-axis. Default 1.
+#' @param ydim Integer. The dimension for the y-axis. Default 2.
+#' @param princ_coords Integer. If 1 then principal coordinates are used for 
+#' the rows,
+#' if 2 for the columns. Default 1 (rows).
+#' @param row_labels Numeric vector. Indices for the rows for which a label 
+#' should be added
+#' (label should be stored in rownames). Default NULL.
+#' @param col_labels Numeric vector. Indices for the columns for which a label 
+#' should be added
+#' (label should be stored in colnames).
+#' Default NULL (no columns).
+#' @param type String. Type of plot to draw. Either "ggplot" or "plotly". 
+#' Default "plotly".
+#' @param ... Further arguments.
+#' @export
+#' @examples
+setGeneric("bicplot", function(obj,
+                               metadf = NULL,
+                               color_by = NULL,
+                               xdim = 1,
+                               ydim = 2,
+                               princ_coords = 1,
+                               row_labels = NULL,
+                               col_labels = NULL,
+                               type = "plotly",
+                               show_all = TRUE,
+                                ...){
+  standardGeneric("bicplot")
+})
 
 
 # create Method function of S4 generic function ca_biplot from APL package, allowing 
 #' it to accept caclust-class as imput and color the genes and cells in a 2D plot
-#' @importMethodsFrom  APL ca_biplot
-#' @rdname ca_biplot
+#' @rdname bicplot
 #' @export
-setMethod(f = "ca_biplot",
+setMethod(f = "bicplot",
           signature(obj = "cacomp"),
           function(obj, 
                    metadf = NULL,
                    color_by = NULL,
                    xdim = 1,
                    ydim = 2,
-                   coords = 1,
+                   princ_coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "plotly",
-                   rm.show = TRUE,
+                   show_all = TRUE,
                    ...,
                    caclust = NULL){
             
@@ -1164,6 +1209,7 @@ setMethod(f = "ca_biplot",
                             row_labels = row_labels,
                             col_labels = col_labels,
                             type = type,
+                            show_all = show_all,
                             ...)
             
             return(p)
