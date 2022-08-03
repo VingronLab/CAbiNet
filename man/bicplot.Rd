@@ -2,12 +2,13 @@
 % Please edit documentation in R/plot.R
 \name{bicplot}
 \alias{bicplot}
-\alias{bicplot,cacomp,caclust-method}
+\alias{bicplot,caclust,cacomp-method}
+\alias{bicplot,SingleCellExperiment,cacomp-method}
 \title{Plot of 2D CA projection of the data.}
 \usage{
 bicplot(
+  obj,
   caobj,
-  caclust,
   xdim = 1,
   ydim = 2,
   coords = 1,
@@ -17,30 +18,47 @@ bicplot(
   ...
 )
 
-\S4method{bicplot}{cacomp,caclust}(
+\S4method{bicplot}{caclust,cacomp}(
+  obj,
   caobj,
-  caclust,
   xdim = 1,
   ydim = 2,
   coords = 1,
   row_labels = NULL,
   col_labels = NULL,
-  type = "plotly",
-  rm.show = TRUE,
-  ...
+  type = "ggplot",
+  ...,
+  rm_show = TRUE
+)
+
+\S4method{bicplot}{SingleCellExperiment,cacomp}(
+  obj,
+  caobj,
+  xdim = 1,
+  ydim = 2,
+  coords = 1,
+  row_labels = NULL,
+  col_labels = NULL,
+  type = "ggplot",
+  ...,
+  color_by = "cluster"
 )
 }
 \arguments{
+\item{obj}{caclust object containing clustering results.}
+
 \item{caobj}{An object of class "cacomp" with the relevant standardized and 
 principal coordinates calculated,
  or alternatively an object of class "Seurat" or "SingleCellExperiment" 
  with a dim. reduction named "CA" saved.}
 
-\item{caclust}{caclust object containing clustering results.}
-
 \item{xdim}{Integer. The dimension for the x-axis. Default 1.}
 
 \item{ydim}{Integer. The dimension for the y-axis. Default 2.}
+
+\item{coords}{Integer. If 1 then principal coordinates are used for 
+the rows,
+if 2 for the columns. Default 1 (rows).}
 
 \item{row_labels}{Numeric vector. Indices for the rows for which a label 
 should be added
@@ -56,9 +74,9 @@ Default "plotly".}
 
 \item{...}{Further arguments.}
 
-\item{princ_coords}{Integer. If 1 then principal coordinates are used for 
-the rows,
-if 2 for the columns. Default 1 (rows).}
+\item{rm_show}{Show pruned genes during biclustering.}
+
+\item{color_by}{column name in one of or both of colData(obj) and rowData(obj)}
 }
 \value{
 Plot of class "plotly" or "ggplot".

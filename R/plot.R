@@ -1160,52 +1160,138 @@ setMethod(f = "plot_feature_biMAP",
 
 
 
-
-metadata_biMAP <- function(umap_coords, 
-                           sce, 
-                           color_cells_by, 
-                           continous = FALSE){
-  meta_df <- SummarizedExperiment::colData(sce)
+#' Plot continous or categorical data as a biMAP
+#' 
+#' @param caclust A caclust object with bimap coordinates stored.
+#' @param meta_df data.frame with column specified by color_cells_by with cell
+#' names as rownames (e.g. colData() from SingleCellExperiment object)
+#' @param color_cells_by coloumn name in meta_df
+#' 
+#' @returns 
+#' ggplot of metadata biMAP
+metadata_biMAP <- function(caclust, 
+                           meta_df, 
+                           color_cells_by){
+  
+  stopifnot(is(caclust, "caclust"))
+  
+  stopifnot("color_cells_by not a column in meta_df" = 
+              color_cells_by %in% colnames(meta_df))
+  
+  umap_coords <- caclust@bimap
+  
+  
+  if (is(meta_df[[color_cells_by]], "factor") | 
+      is(meta_df[[color_cells_by]], "character")) {
+    continous <- FALSE
+  } else {
+    continous <- TRUE
+  }
+  
 
   cell_idx <- which(umap_coords$type == "cell")
-
+  
+  stopifnot("cell names not in meta_df rownames!" = 
+              any(umap_coords[cell_idx,]$name %in% rownames(meta_df)))
+  
   umap_coords[,color_cells_by] <- NA
   umap_coords[cell_idx, color_cells_by] <- meta_df[umap_coords[cell_idx,]$name, color_cells_by] 
 
 
 
-  p <- ggplot()+
-    geom_point(umap_coords[umap_coords$type == "gene",],
-               mapping=aes_(~x, ~y), color ="#A9A9A9", alpha = 0.5) +  #grey
-    geom_point(umap_coords[umap_coords$type == "cell",],
-               mapping=aes_(~x, ~y, color = as.name(color_cells_by)),
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping = ggplot2::aes_(~x, ~y), color = "#A9A9A9", alpha = 0.5) +  #grey
+    ggplot2::geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping = ggplot2::aes_(~x, ~y, color = as.name(color_cells_by)),
                alpha = 0.8)
 
-    if(isTRUE(continous)){
-
-      p <- p + viridis::scale_color_viridis(name=color_cells_by, discrete = FALSE)
+    if (isTRUE(continous)) {
+  
+      p <- p + viridis::scale_color_viridis(name = color_cells_by,
+                                            discrete = !continous)
 
     } 
 
 
-    p<- p + 
-      labs(x="Dim 1",
-           y="Dim 2")+
-      theme_bw()
+    p <- p + 
+      ggplot2::labs(x = "Dim 1",
+                    y = "Dim 2") +
+      ggplot2::theme_bw()
 
     return(p)
 }
 
 
-#' Shuffle rows of a data frame for better plotting.
-#' @param df data.frame
+
+#' Plot continous or categorical data as a biMAP
+#' 
+#' @param obj caclust or SingleCellExperiment object.
+#' @inheritParams metadata_biMAP
+#' @returns 
+#' ggplot of metadata biMAP
 #' @export
-mix <- function(df){
-  df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
-}
+setGeneric("plot_metadata_biMAP", function(obj,
+                                           color_cells_by,
+                                           ...){
+  
+  
+  setGeneric("plot_metadata_biMAP")
+})
 
 
+#' @rdname plot_metadata_biMAP
+#' @param meta_df data.frame with column specified by color_cells_by with cell
+#' names as rownames (e.g. colData() from SingleCellExperiment object)
+#' @export
+setMethod(f = "plot_metadata_biMAP", 
+          signature(obj = "caclust"),
+          function(obj,
+                   color_cells_by,
+                   ...,
+                   meta_df){
+            
+  p <- metadata_biMAP(caclust = obj, 
+                      meta_df = meta_df, 
+                      color_cells_by = color_cells_by)
+  
+  return(p)
+            
+})
 
+
+#' @rdname plot_metadata_biMAP
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
+#' 
+#' @export
+setMethod(f = "plot_metadata_biMAP",
+          signature(obj = "SingleCellExperiment"),
+          function(obj,
+                   color_cells_by,
+                   ...,
+                   caclust_meta_name = 'caclust'){
+            
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))) {
+              stop(paste('The aclust object with name', 
+                         caclust_meta_name, 
+                         'is not found in metadata(sce),",
+                         "please try a different "biMAP_meta_name".'))
+            }
+            
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            meta_df = SummarizedExperiment::colData(obj)
+            
+            if (isFALSE(color_cells_by %in% c(colnames(meta_df)))) {
+              stop('color_cells_by not found in colData(obj)')
+            }
+            
+           p <- metadata_biMAP(caclust = caclust, 
+                               meta_df = meta_df, 
+                               color_cells_by = color_cells_by)
+           
+           return(p)
+})
 
   
 #' Plot of 2D CA projection of the data.
@@ -1225,15 +1311,14 @@ mix <- function(df){
 #' respectively.
 #' @return
 #' Plot of class "plotly" or "ggplot".
-#'
+#' @param obj caclust object containing clustering results.
 #' @param caobj An object of class "cacomp" with the relevant standardized and 
 #' principal coordinates calculated,
 #'  or alternatively an object of class "Seurat" or "SingleCellExperiment" 
 #'  with a dim. reduction named "CA" saved.
-#' @param caclust caclust object containing clustering results.
 #' @param xdim Integer. The dimension for the x-axis. Default 1.
 #' @param ydim Integer. The dimension for the y-axis. Default 2.
-#' @param princ_coords Integer. If 1 then principal coordinates are used for 
+#' @param coords Integer. If 1 then principal coordinates are used for 
 #' the rows,
 #' if 2 for the columns. Default 1 (rows).
 #' @param row_labels Numeric vector. Indices for the rows for which a label 
@@ -1247,213 +1332,103 @@ mix <- function(df){
 #' Default "plotly".
 #' @param ... Further arguments.
 #' @export
-setGeneric("bicplot", function(caobj,
-                               caclust,
-                                 xdim = 1,
-                                 ydim = 2,
-                                 coords = 1,
-                                 row_labels = NULL,
-                                 col_labels = NULL,
-                                 type = "plotly",
-                                 ...) {
+setGeneric("bicplot", function(obj,
+                               caobj,
+                               xdim = 1,
+                               ydim = 2,
+                               coords = 1,
+                               row_labels = NULL,
+                               col_labels = NULL,
+                               type = "plotly",
+                               ...) {
   standardGeneric("bicplot")
 })
 
 
-#TODO lots of new dependencies. Better way?
 #' @rdname bicplot
+#' @param rm_show Show pruned genes during biclustering.
 #' @export
 setMethod(f = "bicplot",
-          signature(caobj = "cacomp", caclust = "caclust"),
-          function(caobj, 
-                   caclust,
+          signature(obj = "caclust", caobj = "cacomp"),
+          function(obj, 
+                   caobj,
                    xdim = 1,
                    ydim = 2,
                    coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
-                   type = "plotly",
-                   rm.show = TRUE,
-                   ...){
+                   type = "ggplot",
+                   ...,
+                   rm_show = TRUE){
             
-            if (!is(caobj,"cacomp")){
+            if (!is(caobj,"cacomp")) {
               stop("Not a CA object. Please run cacomp() first!")
             }
             
-            ngenes <- nrow(caobj@std_coords_rows)
-            ncells <- nrow(caobj@std_coords_cols)
-            gene.idx <- which(rownames(caobj@prin_coords_rows) %in% names(gene_clusters(caclust)))
-            cell.idx <- which(rownames(caobj@prin_coords_cols) %in% names(cell_clusters(caclust)))
+            cc <- cell_clusters(obj)
+            gc <- gene_clusters(obj)
             
-            cells <- data.frame(clusters = rep('trimmed', ncells)) 
-            genes <- data.frame(clusters = rep('trimmed', ngenes))
+            cell.idx <- which(names(cc) %in% 
+                              rownames(caobj@std_coords_cols))
             
-            cells[cell.idx,] <- as.vector(cell_clusters(caclust))
-            genes[gene.idx,] <- as.vector(gene_clusters(caclust))
+            gene.idx <- which(names(gc) %in% 
+                              rownames(caobj@std_coords_rows))
             
-            if (coords == 1){
-              
-              if(sum(!is.null(caobj@prin_coords_rows), !is.null(caobj@std_coords_cols)) != 2){
-                stop("Principal and/or standard coordinates not found, ",
-                     "please run ca_coords() first!")
-              }
-              rows <- cbind(caobj@prin_coords_rows, genes)
-              cols <- cbind(caobj@std_coords_cols, cells)
-            } else if (coords == 2){
-              if(sum(!is.null(caobj@prin_coords_cols), !is.null(caobj@std_coords_rows)) != 2){
-                stop("Principal and/or standard coordinates not found, ",
-                     "please run ca_coords() first!")
-              }
-              rows <- cbind(caobj@std_coords_rows, genes)
-              cols <- cbind(caobj@prin_coords_cols, cells)
-            }else if (coords == 3){
-              if(sum(!is.null(caobj@U), !is.null(caobj@V)) != 2){
-                stop("Singular eigenvectors not found, ",
-                     "please run ca_coords() first!")
-              }
-              rows <- cbind(caobj@U, genes)
-              cols <- cbind(caobj@V, cells)
-            } else {
-              stop("princ_coords must be either 1 for rows or 2 for columns.")
-            }
+            cell_meta <- cc[cell.idx]
+            gene_meta <- gc[gene.idx]
             
-            rows <- as.data.frame(rows)
-            cols <- as.data.frame(cols)
-            
-            if (isFALSE(rm.show)){
-              rows <- rows[rows$cluster != 'trimmed',]
-              cols <- cols[cols$cluster != 'trimmed',]
-            }
-            
-            # rows <- rows[rownames(rows) %in% names(genes),]
-            # cols <- cols[rownames(cols) %in% names(cells),]
-            if (type == "ggplot"){
+            if (isTRUE(rm_show)){
+              # rm_cells_idx <- which(!rownames(caobj@std_coords_cols) %in% 
+              #                       names(cc))
               
-              # rows <- as.data.frame(rows)
-              # cols <- as.data.frame(cols)
-              #
-              rnmx <- colnames(rows)[xdim]
-              rnmy <- colnames(rows)[ydim]
-              cnmx <- colnames(cols)[xdim]
-              cnmy <- colnames(cols)[ydim]
+              # rm_cells <- rep("pruned", length(rm_cells_idx))
+              # names(rm_cells) <- rownames(caobj@std_coords_cols)[rm_cells_idx]
               
-              p <- ggplot2::ggplot()+
-                ggplot2::geom_point(data=cols,
-                                    ggplot2::aes_(x = as.name(cnmx), y = as.name(cnmy),
-                                                  colour= cols$clusters),
-                                    # colour = "#990000",
-                                    shape = 4) +
-                ggplot2::geom_point(data=rows,
-                                    ggplot2::aes_(x = as.name(rnmx), y = as.name(rnmy),
-                                                  colour= rows$clusters),
-                                    # colour = "#0066FF",
-					alpha = 1, 
-                                    shape = 1) +
-                ggplot2::theme_bw() #+ ggsci::scale_color_npg()
+              rm_genes_idx <- which(!rownames(caobj@std_coords_rows) %in% 
+                                      names(gc))
               
-              if (!is.null(row_labels)){
-                p <- p +
-                  ggplot2::geom_point(data=rows[row_labels,],
-                                      ggplot2::aes_(x = as.name(rnmx),
-                                                    y = as.name(rnmy),
-                                                    colour= rows$clusters[row_labels]),
-                                      # colour = "#FF0000",
-                                      shape = 16) +
-                  ggrepel::geom_text_repel(data=rows[row_labels,],
-                                           ggplot2::aes_(x = as.name(rnmx),
-                                                         y = as.name(rnmy),
-                                                         colour= rows[row_labels,]$clusters,
-                                                         label=rownames(rows[row_labels,])),
-                                           # colour = "#FF0000",
-                                           max.overlaps = Inf)
-              }
-              if (!is.null(col_labels)){
-                p <- p +
-                  ggplot2::geom_point(data=cols[col_labels,],
-                                      ggplot2::aes_(x = as.name(cnmx),
-                                                    y = as.name(cnmy),
-                                                    colour= cols[col_labels,]$clusters),
-                                      # colour = "#990000",
-                                      shape = 1) +
-                  ggrepel::geom_text_repel(data=cols[col_labels,],
-                                           ggplot2::aes_(x = as.name(cnmx),
-                                                         y = as.name(cnmy),
-                                                         colour= cols[col_labels,]$clusters,
-                                                         label=rownames(cols[col_labels,])),
-                                           # colour = "#990000",
-                                           max.overlaps = Inf)
-              }
-            } else if (type == "plotly"){
-              p <- plotly::plot_ly(type='scatter',
-                                   source='plot2D',
-                                   mode='markers') %>%
-                plotly::add_trace(x = cols[,xdim],
-                                  y = cols[,ydim],
-                                  mode = 'markers',
-                                  text = rownames(cols),
-                                  textposition = "left",
-                                  opacity = 1,
-                                  marker = list(color = cols$clusters, # '#990000',
-                                                symbol = 'x',
-                                                size = 5),
-                                  name = 'Columns',
-                                  hoverinfo = 'text',
-                                  type = 'scatter') %>%
-                plotly::add_trace(x = rows[,xdim],
-                                  y = rows[,ydim],
-                                  mode = 'markers',
-                                  text = rownames(rows),
-                                  opacity = 0.7,
-                                  marker = list(color = rows$clusters, #'#0066FF',
-                                                symbol = 'circle-open',
-                                                size = 2.5),
-                                  name = 'genes',
-                                  hoverinfo = 'text',
-                                  type = 'scatter')
+              rm_genes <- rep("pruned", length(rm_genes_idx))
+              names(rm_genes) <- rownames(caobj@std_coords_rows)[rm_genes_idx]
               
-              if (!is.null(row_labels)){
-                p <- p %>%
-                  plotly::add_trace(x = rows[row_labels, xdim],
-                                    y = rows[row_labels, ydim],
-                                    mode = 'markers+text',
-                                    text = rownames(rows)[row_labels],
-                                    textposition = "left",
-                                    textfont = list(color= rows$clusters), #'#FF0000'),
-                                    marker = list(symbol = 'circle',
-                                                  color ='#FF0000',
-                                                  size = 5),
-                                    name = 'marked row(s)',
-                                    hoverinfo = 'text',
-                                    type = 'scatter')
-              }
-              
-              if (!is.null(col_labels)){
-                p <- p %>%
-                  plotly::add_trace(x = cols[col_labels, xdim],
-                                    y = cols[col_labels, ydim],
-                                    mode = 'markers+text',
-                                    text = rownames(cols)[col_labels],
-                                    textposition = "left",
-                                    textfont = list(color= cols$clusters), #'#990000'),
-                                    marker = list(symbol = 'circle-open',
-                                                  color = cols$clusters, #'#990000',
-                                                  size = 6.5),
-                                    name = 'marked column(s)',
-                                    hoverinfo = 'text',
-                                    type = 'scatter')
-              }
-              
-              p <- p %>%
-                plotly::layout(autosize = TRUE,
-                               title = '2D CA plot',
-                               showlegend = FALSE,
-                               xaxis = list(title = paste0('Dim', xdim)),
-                               yaxis = list(title = paste0('Dim', ydim)))
+              gene_meta <- c(gene_meta, rm_genes)
               
             }
             
-            return(p)
+
             
+            APL::ca_biplot(obj = caobj,
+                           xdim = xdim, 
+                           ydim = ydim, 
+                           princ_coords = coords, 
+                           row_labels = row_labels, 
+                           col_labels = col_labels, 
+                           type = type, 
+                           col_metadata = cell_meta,
+                           row_metadata = gene_meta)
           })
 
+
+
+#' @rdname bicplot
+#' @param color_by column name in one of or both of colData(obj) and rowData(obj)
+#' @export
+setMethod(f = "bicplot",
+          signature(obj = "SingleCellExperiment", caobj = "cacomp"),
+          function(obj, 
+                   caobj,
+                   xdim = 1,
+                   ydim = 2,
+                   coords = 1,
+                   row_labels = NULL,
+                   col_labels = NULL,
+                   type = "ggplot",
+                   ...,
+                   color_by = "cluster"){
+            
+            if (!is(caobj,"cacomp")) {
+              stop("Not a CA object. Please run cacomp() first!")
+            }
+            stop()
+            # TODO
+          })
 

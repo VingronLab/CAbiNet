@@ -9,8 +9,6 @@
 caclust(
   obj,
   k,
-  cacomp_meta_name = "CA",
-  caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -37,8 +35,6 @@ caclust(
 \S4method{caclust}{cacomp}(
   obj,
   k,
-  cacomp_meta_name = "CA",
-  caclust_meta_name = "caclust",
   algorithm = "leiden",
   SNN_prune = 1/15,
   loops = FALSE,
@@ -97,12 +93,6 @@ caclust(
 exactly four integers specifying in this order: the k_c for the cell-cell
 kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
 kNN-graph, k_gc for the gene-cell kNN-graph.}
-
-\item{cacomp_meta_name}{Character. The name of cacomp object stored in 
-metadata(SingleCellExperiment object). Default: 'caobj'.}
-
-\item{caclust_meta_name}{the name of caclust object stored in 
-metadata(SingleCellExperiment object). Default: 'caclust.'}
 
 \item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.}
 

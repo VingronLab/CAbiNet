@@ -539,8 +539,6 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
 #' @export
 setGeneric("caclust", function(obj,
                                k,
-                               cacomp_meta_name = 'CA',
-                               caclust_meta_name = 'caclust',
                                algorithm = "leiden",
                                SNN_prune = 1/15,
                                loops = FALSE,
