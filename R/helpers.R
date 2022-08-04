@@ -234,3 +234,11 @@ get_majority <- function(x){
   return(majority)
   
 }
+
+
+#' Shuffle rows of a data frame for better plotting.
+#' @param df data.frame
+#' @export
+mix <- function(df){
+  df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
+}

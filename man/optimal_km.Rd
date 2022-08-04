@@ -15,7 +15,7 @@ optimal_km(x, k, num_seeds = 10, iter_max = 10, ...)
 
 \item{iter_max}{Integer. Number of iterations.}
 
-\item{...}{not used.}
+\item{...}{Further arguments handed to stats::kmeans}
 }
 \value{
 Returns an object of class "kmeans" with is a list with several components 
