@@ -97,7 +97,7 @@ optimal_skm <- function (x,
 #' @param x Matrix. This function will cluster the rows of the input matrix.
 #' @param iter_max Integer. Number of iterations.
 #' @param num_seeds Integer. Number of trials with random seeds
-#' 
+#' @param ... Further arguments handed to stats::kmeans
 #' @return 
 #' Returns an object of class "kmeans" with is a list with several components 
 #' (see ?kmeans) which guves the local optimal kmeans clustering result within 

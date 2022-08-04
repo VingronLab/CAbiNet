@@ -982,7 +982,7 @@ feature_biMAP <- function(sce,
 
 #' BiMAP visualization of feature expression.
 #' @param sce SinleCellExperiment object
-#' @param caclust caclust object or NULL
+#' @param caclust caclust object with bimap slot or NULL
 #' @inheritParams feature_biMAP
 #' @param ... Further arguments
 #' @returns 
@@ -1023,8 +1023,6 @@ setMethod(f = "plot_feature_biMAP",
 
 #
 #' @rdname plot_feature_biMAP
-#' @param obj SinleCellExperiment object
-#' @param caclust caclust object with bimap slot
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
 #' @inheritParams plot_feature_biMAP
@@ -1245,7 +1243,7 @@ setMethod(f = "plot_metadata_biMAP",
 setGeneric("bicplot", function(obj,
                                xdim = 1,
                                ydim = 2,
-                               coords = 1,
+                               princ_coords = 1,
                                row_labels = NULL,
                                col_labels = NULL,
                                type = "ggplot",

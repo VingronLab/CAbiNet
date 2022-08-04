@@ -4,13 +4,13 @@
 \alias{bicplot}
 \alias{bicplot,caclust-method}
 \alias{bicplot,SingleCellExperiment-method}
-\title{Plot of 2D CA projection of the data.}
+\title{Plot of 2D CA projection of the clustering results.}
 \usage{
 bicplot(
   obj,
   xdim = 1,
   ydim = 2,
-  coords = 1,
+  princ_coords = 1,
   row_labels = NULL,
   col_labels = NULL,
   type = "ggplot",
@@ -23,7 +23,7 @@ bicplot(
   obj,
   xdim = 1,
   ydim = 2,
-  coords = 1,
+  princ_coords = 1,
   row_labels = NULL,
   col_labels = NULL,
   type = "ggplot",
@@ -37,7 +37,7 @@ bicplot(
   obj,
   xdim = 1,
   ydim = 2,
-  coords = 1,
+  princ_coords = 1,
   row_labels = NULL,
   col_labels = NULL,
   type = "ggplot",
@@ -56,7 +56,7 @@ results. The SingleCellExperiment should also have a CA dimensional reduction.}
 
 \item{ydim}{Integer. The dimension for the y-axis. Default 2.}
 
-\item{coords}{Integer. If 1 then principal coordinates are used for 
+\item{princ_coords}{Integer. If 1 then principal coordinates are used for 
 the rows, if 2 for the columns. Default 1 (rows).}
 
 \item{row_labels}{Numeric vector. Indices for the rows for which a label 
