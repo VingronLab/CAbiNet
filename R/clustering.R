@@ -95,7 +95,7 @@ optimal_skm <- function (x,
 #' within-cluster-sum of squared distances will be selected.
 #' @param k Integer. Number of cluters to detect for kmeans.
 #' @param x Matrix. This function will cluster the rows of the input matrix.
-#' @param iter_max the maximum number of iterations allowed.
+#' @param iter_max Integer. Number of iterations.
 #' @param num_seeds Integer. Number of trials with random seeds
 #' 
 #' @return 
@@ -525,8 +525,6 @@ check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
 #' @description
 #' `caclust()` performs biclustering on either a "cacomp" or 
 #' "SingleCellExperiment" object.
-#' @name caclust
-#' @rdname caclust
 #' @param obj A cacomp object or SingleCellExperiment object  
 #' @inheritParams run_caclust
 #' @param ... further arguments

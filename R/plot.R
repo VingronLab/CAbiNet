@@ -524,98 +524,6 @@ contour_plot <- function(umap_cells,
   
 }
 
-# #' Plotting biMAP embedding
-# #' @description
-# #' TODO
-# #' @param obj A caclust object or SingleCellExperiment object  
-# #' @param caclust_meta_name character. The name of caclust object stored in metadata(SingleCellExperiment object)
-# #' @inheritParams plot_biMAP
-# #' @details
-# #' TODO
-# #' @return
-# #' A caclust object or SingleCellExperiment object.
-# #' @export
-# setGeneric("plot_biMAP", function(obj,
-#                                   caclust_meta_name = 'caclust',
-#                                   meta_df = NULL,
-#                                   color_by = "cluster",
-#                                   type = "scatter",
-#                                   cell_size = 1,
-#                                   gene_size = 3,
-#                                   hex_n = 40,
-#                                   min_bin = 2,
-#                                   contour_n = 5,
-#                                   cell_alpha = 0.5,
-#                                   gene_alpha = 1,
-#                                   show_density = FALSE,
-#                                   color_genes = FALSE,
-#                                   label_groups = TRUE,
-#                                   group_label_size=4,
-#                                   labels_per_group=1,
-#                                   label_marker_genes = FALSE,
-#                                   ...){
-#   standardGeneric("plot_biMAP")
-# })
-#
-# #
-# #' @rdname plot_biMAP
-# #' @param color_by character which can be chosen from 'type', 'cluster' and column in the input meta_df
-# #' @param meta_df data.frame.
-# #' @inheritParams plot_biMAP
-# #' @export
-# setMethod(f = "plot_biMAP",
-#           signature(obj = "caclust"),
-#           function(obj, 
-#                    meta_df = NULL,
-#                    color_by = "cluster",
-#                    ...){
-#             
-#             p <- biMAP_plotter(caclust = obj,
-#                                color_by = color_by,
-#                                meta_df = meta_df,
-#                                ...)
-#             return(p)
-#             
-#           })
-# 
-# #
-# #' @rdname plot_biMAP
-# #' @param obj SingleCellExperiment object
-# #' @param caclust_meta_name character. Slot name of caclust object stored in meatadata(obj)
-# #' @param color_by character which can be chosen from 'type', 'cluster',column in the input meta_df and columns in colData of the obj (if meta_df == NULL)
-# #' @param meta_df data.frame.
-# #' @inheritParams plot_biMAP
-# #' @export
-# setMethod(f = "plot_biMAP",
-#           signature(obj = "SingleCellExperiment"),
-#           function(obj, 
-#                    caclust_meta_name = 'caclust',
-#                    meta_df = NULL,
-#                    color_by = "cluster",
-#                    type = 'scatter',
-#                    ...){
-#             
-#             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
-#               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
-#             }
-#             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
-#             
-#             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
-#               meta_df = colData(obj)
-#             }
-#             
-#             if(isFALSE(color_by %in% c(colnames(meta_df), colnames(caclust@bimap)))){
-#               stop('color_by not found in either meta_df or obj')
-#             }
-#             
-#             p <- biMAP_plotter(caclust = caclust,
-#                                color_by = color_by,
-#                                meta_df = meta_df,
-#                                type = type,
-#                                ...)
-#             return(p)
-#             
-#           })
 
 
 #' Plots a biMAP scatter plot
@@ -1296,7 +1204,7 @@ setMethod(f = "plot_metadata_biMAP",
 })
 
   
-#' Plot of 2D CA projection of the data.
+#' Plot of 2D CA projection of the clustering results.
 #'
 #' @description
 #' Plots the first 2 dimensions of the rows and columns in the same plot.
@@ -1317,7 +1225,7 @@ setMethod(f = "plot_metadata_biMAP",
 #' results. The SingleCellExperiment should also have a CA dimensional reduction.
 #' @param xdim Integer. The dimension for the x-axis. Default 1.
 #' @param ydim Integer. The dimension for the y-axis. Default 2.
-#' @param coords Integer. If 1 then principal coordinates are used for 
+#' @param princ_coords Integer. If 1 then principal coordinates are used for 
 #' the rows, if 2 for the columns. Default 1 (rows).
 #' @param row_labels Numeric vector. Indices for the rows for which a label 
 #' should be added
@@ -1357,7 +1265,7 @@ setMethod(f = "bicplot",
           function(obj, 
                    xdim = 1,
                    ydim = 2,
-                   coords = 1,
+                   princ_coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "ggplot",
@@ -1399,7 +1307,7 @@ setMethod(f = "bicplot",
             APL::ca_biplot(obj = caobj,
                            xdim = xdim, 
                            ydim = ydim, 
-                           princ_coords = coords, 
+                           princ_coords = princ_coords, 
                            row_labels = row_labels, 
                            col_labels = col_labels, 
                            type = type, 
@@ -1421,7 +1329,7 @@ setMethod(f = "bicplot",
           function(obj,
                    xdim = 1,
                    ydim = 2,
-                   coords = 1,
+                   princ_coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "ggplot",
@@ -1450,7 +1358,7 @@ setMethod(f = "bicplot",
             p <- bicplot(obj = caclust_obj, 
                           xdim = xdim,
                           ydim = ydim,
-                          coords = coords,
+                          princ_coords = princ_coords,
                           row_labels = row_labels,
                           col_labels = col_labels,
                           type = type,
