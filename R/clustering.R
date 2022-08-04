@@ -53,8 +53,7 @@ optimal_skm <- function (x,
                         method = NULL,
                         m = 1,
                         weights = 1,
-                        control = list(),
-                        ...){
+                        control = list()){
   
   if(!is(x, 'matrix')){
     x = as.matrix(x)
@@ -96,7 +95,7 @@ optimal_skm <- function (x,
 #' within-cluster-sum of squared distances will be selected.
 #' @param k Integer. Number of cluters to detect for kmeans.
 #' @param x Matrix. This function will cluster the rows of the input matrix.
-#' @inheritParams stats::kmeans
+#' @param iter_max the maximum number of iterations allowed.
 #' @param num_seeds Integer. Number of trials with random seeds
 #' 
 #' @return 

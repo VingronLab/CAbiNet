@@ -17,6 +17,8 @@ plot_metadata_biMAP(obj, color_cells_by, ...)
 
 \item{color_cells_by}{coloumn name in meta_df}
 
+\item{...}{Further arguments.}
+
 \item{meta_df}{data.frame with column specified by color_cells_by with cell
 names as rownames (e.g. colData() from SingleCellExperiment object)}
 

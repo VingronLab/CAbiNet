@@ -2,63 +2,62 @@
 % Please edit documentation in R/plot.R
 \name{bicplot}
 \alias{bicplot}
-\alias{bicplot,caclust,cacomp-method}
-\alias{bicplot,SingleCellExperiment,cacomp-method}
+\alias{bicplot,caclust-method}
+\alias{bicplot,SingleCellExperiment-method}
 \title{Plot of 2D CA projection of the data.}
 \usage{
 bicplot(
   obj,
-  caobj,
   xdim = 1,
   ydim = 2,
   coords = 1,
   row_labels = NULL,
   col_labels = NULL,
-  type = "plotly",
+  type = "ggplot",
+  show_all = TRUE,
+  show_rm = FALSE,
   ...
 )
 
-\S4method{bicplot}{caclust,cacomp}(
+\S4method{bicplot}{caclust}(
   obj,
-  caobj,
   xdim = 1,
   ydim = 2,
   coords = 1,
   row_labels = NULL,
   col_labels = NULL,
   type = "ggplot",
+  show_all = TRUE,
+  show_rm = FALSE,
   ...,
-  rm_show = TRUE
+  caobj
 )
 
-\S4method{bicplot}{SingleCellExperiment,cacomp}(
+\S4method{bicplot}{SingleCellExperiment}(
   obj,
-  caobj,
   xdim = 1,
   ydim = 2,
   coords = 1,
   row_labels = NULL,
   col_labels = NULL,
   type = "ggplot",
+  show_all = TRUE,
+  show_rm = FALSE,
   ...,
-  color_by = "cluster"
+  caclust_meta_name = "caclust",
+  cacomp_meta_name = "CA"
 )
 }
 \arguments{
-\item{obj}{caclust object containing clustering results.}
-
-\item{caobj}{An object of class "cacomp" with the relevant standardized and 
-principal coordinates calculated,
- or alternatively an object of class "Seurat" or "SingleCellExperiment" 
- with a dim. reduction named "CA" saved.}
+\item{obj}{caclust or SingleCellExperiment object containing clustering 
+results. The SingleCellExperiment should also have a CA dimensional reduction.}
 
 \item{xdim}{Integer. The dimension for the x-axis. Default 1.}
 
 \item{ydim}{Integer. The dimension for the y-axis. Default 2.}
 
 \item{coords}{Integer. If 1 then principal coordinates are used for 
-the rows,
-if 2 for the columns. Default 1 (rows).}
+the rows, if 2 for the columns. Default 1 (rows).}
 
 \item{row_labels}{Numeric vector. Indices for the rows for which a label 
 should be added
@@ -70,13 +69,24 @@ should be added
 Default NULL (no columns).}
 
 \item{type}{String. Type of plot to draw. Either "ggplot" or "plotly". 
-Default "plotly".}
+Default "ggplot".}
+
+\item{show_all}{logical. If FALSE cells/genes that are not in col_metadata/
+row_metadata are not plotted. If *_metadata is NULL, the cell or genes 
+respectively will still be plotted.}
+
+\item{show_rm}{Show pruned genes during biclustering.}
 
 \item{...}{Further arguments.}
 
-\item{rm_show}{Show pruned genes during biclustering.}
+\item{caobj}{An object of class "cacomp" with the relevant standardized and 
+principal coordinates calculated.}
 
-\item{color_by}{column name in one of or both of colData(obj) and rowData(obj)}
+\item{caclust_meta_name}{the name of caclust object stored in 
+metadata(SingleCellExperiment object). Default: 'caclust.'}
+
+\item{cacomp_meta_name}{Character. The name of cacomp object stored in 
+metadata(SingleCellExperiment object). Default: 'caobj'.}
 }
 \value{
 Plot of class "plotly" or "ggplot".

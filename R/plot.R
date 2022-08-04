@@ -1076,6 +1076,7 @@ feature_biMAP <- function(sce,
 #' @param sce SinleCellExperiment object
 #' @param caclust caclust object or NULL
 #' @inheritParams feature_biMAP
+#' @param ... Further arguments
 #' @returns 
 #' ggplot object
 #' @export
@@ -1228,6 +1229,7 @@ metadata_biMAP <- function(caclust,
 #' 
 #' @param obj caclust or SingleCellExperiment object.
 #' @inheritParams metadata_biMAP
+#' @param ... Further arguments.
 #' @returns 
 #' ggplot of metadata biMAP
 #' @export
@@ -1311,16 +1313,12 @@ setMethod(f = "plot_metadata_biMAP",
 #' respectively.
 #' @return
 #' Plot of class "plotly" or "ggplot".
-#' @param obj caclust object containing clustering results.
-#' @param caobj An object of class "cacomp" with the relevant standardized and 
-#' principal coordinates calculated,
-#'  or alternatively an object of class "Seurat" or "SingleCellExperiment" 
-#'  with a dim. reduction named "CA" saved.
+#' @param obj caclust or SingleCellExperiment object containing clustering 
+#' results. The SingleCellExperiment should also have a CA dimensional reduction.
 #' @param xdim Integer. The dimension for the x-axis. Default 1.
 #' @param ydim Integer. The dimension for the y-axis. Default 2.
 #' @param coords Integer. If 1 then principal coordinates are used for 
-#' the rows,
-#' if 2 for the columns. Default 1 (rows).
+#' the rows, if 2 for the columns. Default 1 (rows).
 #' @param row_labels Numeric vector. Indices for the rows for which a label 
 #' should be added
 #' (label should be stored in rownames). Default NULL.
@@ -1329,37 +1327,44 @@ setMethod(f = "plot_metadata_biMAP",
 #' (label should be stored in colnames).
 #' Default NULL (no columns).
 #' @param type String. Type of plot to draw. Either "ggplot" or "plotly". 
-#' Default "plotly".
+#' Default "ggplot".
+#' @param show_all logical. If FALSE cells/genes that are not in col_metadata/
+#' row_metadata are not plotted. If *_metadata is NULL, the cell or genes 
+#' respectively will still be plotted.
+#' @param show_rm Show pruned genes during biclustering.
 #' @param ... Further arguments.
 #' @export
 setGeneric("bicplot", function(obj,
-                               caobj,
                                xdim = 1,
                                ydim = 2,
                                coords = 1,
                                row_labels = NULL,
                                col_labels = NULL,
-                               type = "plotly",
+                               type = "ggplot",
+                               show_all = TRUE,
+                               show_rm = FALSE,
                                ...) {
   standardGeneric("bicplot")
 })
 
 
 #' @rdname bicplot
-#' @param rm_show Show pruned genes during biclustering.
+#' @param caobj An object of class "cacomp" with the relevant standardized and 
+#' principal coordinates calculated.
 #' @export
 setMethod(f = "bicplot",
-          signature(obj = "caclust", caobj = "cacomp"),
+          signature(obj = "caclust"),
           function(obj, 
-                   caobj,
                    xdim = 1,
                    ydim = 2,
                    coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "ggplot",
+                   show_all = TRUE,
+                   show_rm = FALSE,
                    ...,
-                   rm_show = TRUE){
+                   caobj){
             
             if (!is(caobj,"cacomp")) {
               stop("Not a CA object. Please run cacomp() first!")
@@ -1377,13 +1382,8 @@ setMethod(f = "bicplot",
             cell_meta <- cc[cell.idx]
             gene_meta <- gc[gene.idx]
             
-            if (isTRUE(rm_show)){
-              # rm_cells_idx <- which(!rownames(caobj@std_coords_cols) %in% 
-              #                       names(cc))
-              
-              # rm_cells <- rep("pruned", length(rm_cells_idx))
-              # names(rm_cells) <- rownames(caobj@std_coords_cols)[rm_cells_idx]
-              
+            if (isTRUE(show_rm)){
+
               rm_genes_idx <- which(!rownames(caobj@std_coords_rows) %in% 
                                       names(gc))
               
@@ -1404,31 +1404,62 @@ setMethod(f = "bicplot",
                            col_labels = col_labels, 
                            type = type, 
                            col_metadata = cell_meta,
-                           row_metadata = gene_meta)
+                           row_metadata = gene_meta,
+                           show_all = show_all)
           })
 
 
 
 #' @rdname bicplot
-#' @param color_by column name in one of or both of colData(obj) and rowData(obj)
+#' @param cacomp_meta_name Character. The name of cacomp object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caobj'.
+#' @param caclust_meta_name the name of caclust object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caclust.'
 #' @export
 setMethod(f = "bicplot",
-          signature(obj = "SingleCellExperiment", caobj = "cacomp"),
-          function(obj, 
-                   caobj,
+          signature(obj = "SingleCellExperiment"),
+          function(obj,
                    xdim = 1,
                    ydim = 2,
                    coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
                    type = "ggplot",
+                   show_all = TRUE,
+                   show_rm = FALSE,
                    ...,
-                   color_by = "cluster"){
+                   caclust_meta_name = 'caclust',
+                   cacomp_meta_name = 'CA'){
             
-            if (!is(caobj,"cacomp")) {
-              stop("Not a CA object. Please run cacomp() first!")
+            correct <- check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
+            if(isFALSE(correct)){
+              stop("No 'CA' dimension reduction object found. ",
+                   "Please run cacomp(sce_obj, top, coords = FALSE, ",
+                   "return_input=TRUE) first.")
             }
-            stop()
-            # TODO
-          })
+            
+            caobj <- as.cacomp(obj)
+
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop('The caclust_meta_name in not found in metadata(sce obj), change meta_name')
+            }
+            
+            caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            p <- bicplot(obj = caclust_obj, 
+                          xdim = xdim,
+                          ydim = ydim,
+                          coords = coords,
+                          row_labels = row_labels,
+                          col_labels = col_labels,
+                          type = type,
+                          show_all = show_all,
+                          show_rm = show_rm,
+                          caobj = caobj)
+            
+            return(p)
+            
+            
+  })
 

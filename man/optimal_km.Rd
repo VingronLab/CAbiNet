@@ -13,7 +13,7 @@ optimal_km(x, k, num_seeds = 10, iter_max = 10, ...)
 
 \item{num_seeds}{Integer. Number of trials with random seeds}
 
-\item{...}{not used.}
+\item{iter_max}{the maximum number of iterations allowed.}
 }
 \value{
 Returns an object of class "kmeans" with is a list with several components 
