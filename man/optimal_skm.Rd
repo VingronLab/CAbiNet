@@ -11,8 +11,7 @@ optimal_skm(
   method = NULL,
   m = 1,
   weights = 1,
-  control = list(),
-  ...
+  control = list()
 )
 }
 \arguments{

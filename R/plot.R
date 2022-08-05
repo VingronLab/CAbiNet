@@ -982,8 +982,9 @@ feature_biMAP <- function(sce,
 
 #' BiMAP visualization of feature expression.
 #' @param sce SinleCellExperiment object
-#' @param caclust caclust object or NULL
+#' @param caclust caclust object with bimap slot or NULL
 #' @inheritParams feature_biMAP
+#' @param ... Further arguments
 #' @returns 
 #' ggplot object
 #' @export
@@ -1022,8 +1023,6 @@ setMethod(f = "plot_feature_biMAP",
 
 #
 #' @rdname plot_feature_biMAP
-#' @param obj SinleCellExperiment object
-#' @param caclust caclust object with bimap slot
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
 #' @inheritParams plot_feature_biMAP
@@ -1068,106 +1067,305 @@ setMethod(f = "plot_feature_biMAP",
 
 
 
-
-metadata_biMAP <- function(umap_coords, 
-                           sce, 
-                           color_cells_by, 
-                           continous = FALSE){
-  meta_df <- SummarizedExperiment::colData(sce)
+#' Plot continous or categorical data as a biMAP
+#' 
+#' @param caclust A caclust object with bimap coordinates stored.
+#' @param meta_df data.frame with column specified by color_cells_by with cell
+#' names as rownames (e.g. colData() from SingleCellExperiment object)
+#' @param color_cells_by coloumn name in meta_df
+#' 
+#' @returns 
+#' ggplot of metadata biMAP
+metadata_biMAP <- function(caclust, 
+                           meta_df, 
+                           color_cells_by){
+  
+  stopifnot(is(caclust, "caclust"))
+  
+  stopifnot("color_cells_by not a column in meta_df" = 
+              color_cells_by %in% colnames(meta_df))
+  
+  umap_coords <- caclust@bimap
+  
+  
+  if (is(meta_df[[color_cells_by]], "factor") | 
+      is(meta_df[[color_cells_by]], "character")) {
+    continous <- FALSE
+  } else {
+    continous <- TRUE
+  }
+  
 
   cell_idx <- which(umap_coords$type == "cell")
-
+  
+  stopifnot("cell names not in meta_df rownames!" = 
+              any(umap_coords[cell_idx,]$name %in% rownames(meta_df)))
+  
   umap_coords[,color_cells_by] <- NA
   umap_coords[cell_idx, color_cells_by] <- meta_df[umap_coords[cell_idx,]$name, color_cells_by] 
 
 
 
-  p <- ggplot()+
-    geom_point(umap_coords[umap_coords$type == "gene",],
-               mapping=aes_(~x, ~y), color ="#A9A9A9", alpha = 0.5) +  #grey
-    geom_point(umap_coords[umap_coords$type == "cell",],
-               mapping=aes_(~x, ~y, color = as.name(color_cells_by)),
+  p <- ggplot2::ggplot() +
+    ggplot2::geom_point(umap_coords[umap_coords$type == "gene",],
+               mapping = ggplot2::aes_(~x, ~y), color = "#A9A9A9", alpha = 0.5) +  #grey
+    ggplot2::geom_point(umap_coords[umap_coords$type == "cell",],
+               mapping = ggplot2::aes_(~x, ~y, color = as.name(color_cells_by)),
                alpha = 0.8)
 
-    if(isTRUE(continous)){
-
-      p <- p + viridis::scale_color_viridis(name=color_cells_by, discrete = FALSE)
+    if (isTRUE(continous)) {
+  
+      p <- p + viridis::scale_color_viridis(name = color_cells_by,
+                                            discrete = !continous)
 
     } 
 
 
-    p<- p + 
-      labs(x="Dim 1",
-           y="Dim 2")+
-      theme_bw()
+    p <- p + 
+      ggplot2::labs(x = "Dim 1",
+                    y = "Dim 2") +
+      ggplot2::theme_bw()
 
     return(p)
 }
 
 
-#' Shuffle rows of a data frame for better plotting.
-#' @param df data.frame
-#' @export
-mix <- function(df){
-  df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
-}
 
-
+#' Plot continous or categorical data as a biMAP
 #' 
-#'   
-#' #' Plot of 2D CA projection of the data.
-setGeneric("ca_biplot", 
-            getGeneric("ca_biplot", package="APL"))
-
-
-
-# create Method function of S4 generic function ca_biplot from APL package, allowing 
-#' it to accept caclust-class as imput and color the genes and cells in a 2D plot
-#' @importMethodsFrom  APL ca_biplot
-#' @rdname ca_biplot
+#' @param obj caclust or SingleCellExperiment object.
+#' @inheritParams metadata_biMAP
+#' @param ... Further arguments.
+#' @returns 
+#' ggplot of metadata biMAP
 #' @export
-setMethod(f = "ca_biplot",
-          signature(obj = "cacomp"),
+setGeneric("plot_metadata_biMAP", function(obj,
+                                           color_cells_by,
+                                           ...){
+  
+  
+  setGeneric("plot_metadata_biMAP")
+})
+
+
+#' @rdname plot_metadata_biMAP
+#' @param meta_df data.frame with column specified by color_cells_by with cell
+#' names as rownames (e.g. colData() from SingleCellExperiment object)
+#' @export
+setMethod(f = "plot_metadata_biMAP", 
+          signature(obj = "caclust"),
+          function(obj,
+                   color_cells_by,
+                   ...,
+                   meta_df){
+            
+  p <- metadata_biMAP(caclust = obj, 
+                      meta_df = meta_df, 
+                      color_cells_by = color_cells_by)
+  
+  return(p)
+            
+})
+
+
+#' @rdname plot_metadata_biMAP
+#' @param caclust_meta_name Name under which the caclust object is stored in 
+#' the metadata of the SingleCellExperiment object.
+#' 
+#' @export
+setMethod(f = "plot_metadata_biMAP",
+          signature(obj = "SingleCellExperiment"),
+          function(obj,
+                   color_cells_by,
+                   ...,
+                   caclust_meta_name = 'caclust'){
+            
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))) {
+              stop(paste('The aclust object with name', 
+                         caclust_meta_name, 
+                         'is not found in metadata(sce),",
+                         "please try a different "biMAP_meta_name".'))
+            }
+            
+            caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            meta_df = SummarizedExperiment::colData(obj)
+            
+            if (isFALSE(color_cells_by %in% c(colnames(meta_df)))) {
+              stop('color_cells_by not found in colData(obj)')
+            }
+            
+           p <- metadata_biMAP(caclust = caclust, 
+                               meta_df = meta_df, 
+                               color_cells_by = color_cells_by)
+           
+           return(p)
+})
+
+  
+#' Plot of 2D CA projection of the clustering results.
+#'
+#' @description
+#' Plots the first 2 dimensions of the rows and columns in the same plot.
+#'
+#' @details
+#' Choosing type "plotly" will generate an interactive html plot with the 
+#' package plotly.
+#' Type "ggplot" generates a static plot.
+#' Depending on whether `princ_coords` is set to 1 or 2 either
+#' the principal coordinates of either the rows (1) or the columns (2)
+#' are chosen. For the other the standard coordinates are plotted 
+#' (assymetric biplot).
+#' Labels for rows and columns should be stored in the row and column names 
+#' respectively.
+#' @return
+#' Plot of class "plotly" or "ggplot".
+#' @param obj caclust or SingleCellExperiment object containing clustering 
+#' results. The SingleCellExperiment should also have a CA dimensional reduction.
+#' @param xdim Integer. The dimension for the x-axis. Default 1.
+#' @param ydim Integer. The dimension for the y-axis. Default 2.
+#' @param princ_coords Integer. If 1 then principal coordinates are used for 
+#' the rows, if 2 for the columns. Default 1 (rows).
+#' @param row_labels Numeric vector. Indices for the rows for which a label 
+#' should be added
+#' (label should be stored in rownames). Default NULL.
+#' @param col_labels Numeric vector. Indices for the columns for which a label 
+#' should be added
+#' (label should be stored in colnames).
+#' Default NULL (no columns).
+#' @param type String. Type of plot to draw. Either "ggplot" or "plotly". 
+#' Default "ggplot".
+#' @param show_all logical. If FALSE cells/genes that are not in col_metadata/
+#' row_metadata are not plotted. If *_metadata is NULL, the cell or genes 
+#' respectively will still be plotted.
+#' @param show_rm Show pruned genes during biclustering.
+#' @param ... Further arguments.
+#' @export
+setGeneric("bicplot", function(obj,
+                               xdim = 1,
+                               ydim = 2,
+                               princ_coords = 1,
+                               row_labels = NULL,
+                               col_labels = NULL,
+                               type = "ggplot",
+                               show_all = TRUE,
+                               show_rm = FALSE,
+                               ...) {
+  standardGeneric("bicplot")
+})
+
+
+#' @rdname bicplot
+#' @param caobj An object of class "cacomp" with the relevant standardized and 
+#' principal coordinates calculated.
+#' @export
+setMethod(f = "bicplot",
+          signature(obj = "caclust"),
           function(obj, 
-                   metadf = NULL,
-                   color_by = NULL,
                    xdim = 1,
                    ydim = 2,
-                   coords = 1,
+                   princ_coords = 1,
                    row_labels = NULL,
                    col_labels = NULL,
-                   type = "plotly",
-                   rm.show = TRUE,
+                   type = "ggplot",
+                   show_all = TRUE,
+                   show_rm = FALSE,
                    ...,
-                   caclust = NULL){
+                   caobj){
             
-            if (!is(obj,"cacomp")){
+            if (!is(caobj,"cacomp")) {
               stop("Not a CA object. Please run cacomp() first!")
             }
-            if (!is.null(caclust)){
-              stopifnot(is(caclust, 'caclust'))
+            
+            cc <- cell_clusters(obj)
+            gc <- gene_clusters(obj)
+            
+            cell.idx <- which(names(cc) %in% 
+                              rownames(caobj@std_coords_cols))
+            
+            gene.idx <- which(names(gc) %in% 
+                              rownames(caobj@std_coords_rows))
+            
+            cell_meta <- cc[cell.idx]
+            gene_meta <- gc[gene.idx]
+            
+            if (isTRUE(show_rm)){
+
+              rm_genes_idx <- which(!rownames(caobj@std_coords_rows) %in% 
+                                      names(gc))
               
-              gene_clust = data.frame( bicluster = gene_clusters(caclust))
-              cell_clust = data.frame( bicluster = cell_clusters(caclust))
-              metadf = rbind(cell_clust, gene_clust)
-              metadf$name = rownames(metadf)
-              color_by = 'bicluster'
+              rm_genes <- rep("pruned", length(rm_genes_idx))
+              names(rm_genes) <- rownames(caobj@std_coords_rows)[rm_genes_idx]
+              
+              gene_meta <- c(gene_meta, rm_genes)
+              
             }
             
+
             
-            p <-  APL::ca_biplot(obj = obj,
-                            metadf = metadf,
-                            color_by = color_by,
-                            xdim = xdim,
-                            ydim = ydim,
-                            princ_coords = princ_coords,
-                            row_labels = row_labels,
-                            col_labels = col_labels,
-                            type = type,
-                            ...)
+            APL::ca_biplot(obj = caobj,
+                           xdim = xdim, 
+                           ydim = ydim, 
+                           princ_coords = princ_coords, 
+                           row_labels = row_labels, 
+                           col_labels = col_labels, 
+                           type = type, 
+                           col_metadata = cell_meta,
+                           row_metadata = gene_meta,
+                           show_all = show_all)
+          })
+
+
+
+#' @rdname bicplot
+#' @param cacomp_meta_name Character. The name of cacomp object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caobj'.
+#' @param caclust_meta_name the name of caclust object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caclust.'
+#' @export
+setMethod(f = "bicplot",
+          signature(obj = "SingleCellExperiment"),
+          function(obj,
+                   xdim = 1,
+                   ydim = 2,
+                   princ_coords = 1,
+                   row_labels = NULL,
+                   col_labels = NULL,
+                   type = "ggplot",
+                   show_all = TRUE,
+                   show_rm = FALSE,
+                   ...,
+                   caclust_meta_name = 'caclust',
+                   cacomp_meta_name = 'CA'){
+            
+            correct <- check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
+            if(isFALSE(correct)){
+              stop("No 'CA' dimension reduction object found. ",
+                   "Please run cacomp(sce_obj, top, coords = FALSE, ",
+                   "return_input=TRUE) first.")
+            }
+            
+            caobj <- as.cacomp(obj)
+
+            if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              stop('The caclust_meta_name in not found in metadata(sce obj), change meta_name')
+            }
+            
+            caclust_obj <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            p <- bicplot(obj = caclust_obj, 
+                          xdim = xdim,
+                          ydim = ydim,
+                          princ_coords = princ_coords,
+                          row_labels = row_labels,
+                          col_labels = col_labels,
+                          type = type,
+                          show_all = show_all,
+                          show_rm = show_rm,
+                          caobj = caobj)
             
             return(p)
             
             
-          })
+  })
 

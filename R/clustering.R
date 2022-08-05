@@ -53,8 +53,7 @@ optimal_skm <- function (x,
                         method = NULL,
                         m = 1,
                         weights = 1,
-                        control = list(),
-                        ...){
+                        control = list()){
   
   if(!is(x, 'matrix')){
     x = as.matrix(x)
@@ -72,8 +71,7 @@ optimal_skm <- function (x,
                                method = method,
                                m = m,
                                weights = weights,
-                               control = control,
-                               ...)
+                               control = control)
     
     newwcs <- do.call(sum, 
                       lapply(list(1:length(newres$cluster)), 
@@ -98,9 +96,8 @@ optimal_skm <- function (x,
 #' @param k Integer. Number of cluters to detect for kmeans.
 #' @param x Matrix. This function will cluster the rows of the input matrix.
 #' @param iter_max Integer. Number of iterations.
-#' @inheritParams stats::kmeans
 #' @param num_seeds Integer. Number of trials with random seeds
-#' 
+#' @param ... Further arguments handed to stats::kmeans
 #' @return 
 #' Returns an object of class "kmeans" with is a list with several components 
 #' (see ?kmeans) which guves the local optimal kmeans clustering result within 

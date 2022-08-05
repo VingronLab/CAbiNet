@@ -47,7 +47,7 @@ run_biMAP <- function(obj,
   
   if (method == "SNNdist"){
     
-    SNNdist <- as.matrix(1-get_snn(obj))
+    SNNdist <- as.matrix(1 - get_snn(obj))
     
     reticulate::source_python(system.file("python/umap.py", package = "CAclust"), envir = globalenv())
     

@@ -37,7 +37,7 @@ plot_feature_biMAP(
 \arguments{
 \item{sce}{SinleCellExperiment object}
 
-\item{caclust}{caclust object with bimap slot}
+\item{caclust}{caclust object with bimap slot or NULL}
 
 \item{feature}{character. Name of gene to visualize}
 
@@ -45,10 +45,10 @@ plot_feature_biMAP(
 
 \item{assay}{character. Name of assay in SingleCellExperiment used for visualization.}
 
+\item{...}{Further arguments}
+
 \item{caclust_meta_name}{Name under which the caclust object is stored in 
 the metadata of the SingleCellExperiment object.}
-
-\item{obj}{SinleCellExperiment object}
 }
 \value{
 ggplot object
