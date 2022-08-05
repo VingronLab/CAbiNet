@@ -93,10 +93,10 @@ run_biMAP <- function(obj,
       }
       
       selected_items = c(selected_items, features[ix])
-      selected_items = selected_items[!duplicated(selected_items)]
+      selected_items = unique(selected_items)
       
       genec = c(genec, features[ix])
-      genec = genec[!duplicated(genec)]
+      genec = unique(genec)
     }
     
     
@@ -122,8 +122,6 @@ run_biMAP <- function(obj,
   
   colnames(umap_coords) <- c("x", "y")
   umap_coords$name <- rownames(umap_coords)
-  print(length(cellc) + length(genec))
-  print(dim(umap_coords))
   
   umap_coords$type <- "none"
   umap_coords$type[umap_coords$name %in% cellc] <- "cell" 
