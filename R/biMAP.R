@@ -130,7 +130,7 @@ run_biMAP <- function(obj,
   umap_coords$cluster <- "none"
   
   cell_idx <- na.omit(match(cellc, umap_coords$name))
-  gene_idx <- na.omit(match(gene_clusters(obj), umap_coords$name))
+  gene_idx <- na.omit(match(names(gene_clusters(obj)), umap_coords$name))
   
   umap_coords$cluster[cell_idx] <- cell_clusters(obj)
   umap_coords$cluster[gene_idx] <- gene_clusters(obj)
