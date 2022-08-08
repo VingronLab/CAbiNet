@@ -42,6 +42,9 @@ run_biMAP <- function(obj,
   stopifnot(is(obj, "caclust"))
   stopifnot(method %in% c("SNNdist", "spectral", "ca"))
   
+  cellc <- names(cell_clusters(obj))
+  genec <- names(gene_clusters(obj))
+  
   if (method == "SNNdist"){
     
     SNNdist <- as.matrix(1 - get_snn(obj))
@@ -58,7 +61,7 @@ run_biMAP <- function(obj,
   }else if (method == 'spectral'){
     eigen = get_eigen(obj)
     
-    if(is.na(eigen)) stop("Spectral clustering not run.")
+    if(is.empty(eigen)) stop("Spectral clustering not run.")
     custom.config = umap::umap.defaults
     custom.config$random_state = rand_seed
     
@@ -78,26 +81,33 @@ run_biMAP <- function(obj,
       SNN <- get_snn(obj)
       selected_items = rownames(SNN)
     }else{
-      selected_items = rownames(caobj@V)
+      selected_items = c(rownames(caobj@V), rownames(caobj@U))
+      cellc = rownames(caobj@V)
+      genec = rownames(caobj@U)
     }
     
     if(!is.null(features)){
-      features = as.vector(features)
       ix = features %in% rownames(caobj@U)
       if (sum(ix) < length(features)){
         warning('only ', sum(ix),' out of ', length(features),  ' features are found from the caobj.')
       }
-      selected_items = c(selected_items, features)
+      
+      selected_items = c(selected_items, features[ix])
+      selected_items = unique(selected_items)
+      
+      genec = c(genec, features[ix])
+      genec = unique(genec)
     }
     
     
-    eigen = rbind(caobj@V, caobj@U)
+    # eigen = rbind(caobj@V, caobj@U)
     # eigen <- rbind(caobj@std_coords_cols, caobj@prin_coords_rows)
+    eigen <- rbind(caobj@prin_coords_cols, caobj@std_coords_rows)
+    
     custom.config = umap::umap.defaults
     custom.config$random_state = rand_seed
     
     eigen <- eigen[rownames(eigen) %in% selected_items,]
-
 
     caclust_umap = umap::umap(eigen,
                               config = custom.config,
@@ -110,32 +120,24 @@ run_biMAP <- function(obj,
     stop()
   }
   
-  
-
-  if (method == "ca"){
-    cellc <- rownames(caobj@V)
-    genec <- rownames(caobj@U)
-  } else {
-    cellc <- names(cell_clusters(obj))
-    genec <- names(gene_clusters(obj))
-  }
-  
   colnames(umap_coords) <- c("x", "y")
   umap_coords$name <- rownames(umap_coords)
   
-  umap_coords$type <- NA
+  umap_coords$type <- "none"
   umap_coords$type[umap_coords$name %in% cellc] <- "cell" 
   umap_coords$type[umap_coords$name %in% genec] <- "gene" 
   
-  umap_coords$cluster <- NA
+  umap_coords$cluster <- "none"
+  
   cell_idx <- na.omit(match(cellc, umap_coords$name))
-  gene_idx <- na.omit(match(genec, umap_coords$name))
+  gene_idx <- na.omit(match(gene_clusters(obj), umap_coords$name))
   
   umap_coords$cluster[cell_idx] <- cell_clusters(obj)
   umap_coords$cluster[gene_idx] <- gene_clusters(obj)
   umap_coords$cluster <- as.factor(umap_coords$cluster)
   
   umap_coords <- umap_coords %>% dplyr::arrange(desc(type))
+  
   
   obj@bimap <- umap_coords
   return(obj)
@@ -304,8 +306,8 @@ setMethod(f = "ca_biMAP",
             
             obj <- run_biMAP(obj = obj,
                              caobj = caobj,
-                             k = 30,
-                             rand_seed = 2358,
+                             k = k,
+                             rand_seed = rand_seed,
                              method = 'ca',
                              use_SNN = use_SNN,
                              features = features)
