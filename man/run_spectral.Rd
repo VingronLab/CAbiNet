@@ -2,10 +2,56 @@
 % Please edit documentation in R/clustering.R
 \name{run_spectral}
 \alias{run_spectral}
-\title{run spectral clustering}
+\title{Run spectral clustering}
 \usage{
-run_spectral()
+run_spectral(
+  caclust,
+  dims = 30,
+  use_gap = TRUE,
+  nclust = NULL,
+  spectral_method = "kmeans",
+  iter_max = 10,
+  num_seeds = 10,
+  return_eig = TRUE
+)
+}
+\arguments{
+\item{caclust}{Caclust-class object.}
+
+\item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
+
+\item{use_gap}{Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+most important eigenvector automatically, and the number of output clusters
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified.
+The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.}
+
+\item{nclust}{Integer. Number of clusters.}
+
+\item{spectral_method}{character. Name of the method to cluster the eigenvectors.
+Can be on of the following 3:
+\itemize{
+\item "kmeans": k-means clustering
+\item "skmeans": spherical k-means clustering
+\item "GMM": Gaussian-Mixture-Model fuzzy clustering.
+}}
+
+\item{iter_max}{Number of iterations for k-means clustering and GMM.}
+
+\item{num_seeds}{Number of times k-means clustering is repeated.}
+
+\item{return_eig}{Logical. Whether or not to return eigenvectors and store them in caclust-object.}
+}
+\value{
+The clustering results of type 'caclust'.
 }
 \description{
-run spectral clustering
+Spectral clustering algorithm with normalized graph laplacian.
 }
+\seealso{
+Other biclustering: 
+\code{\link{caclust}},
+\code{\link{make_SNN}()},
+\code{\link{run_leiden}()}
+}
+\concept{biclustering}

@@ -5,9 +5,10 @@
 #' 
 #' @section Mypackage functions:
 #' The mypackage functions ...
-#'
+#' @rdname CAclust-package
 #' @docType package
 #' @name CAclust
 #' @useDynLib CAclust
 NULL
 #> NULL
+

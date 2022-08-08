@@ -4,8 +4,112 @@
 \alias{run_caclust}
 \title{Run biclustering}
 \usage{
-run_caclust()
+run_caclust(
+  caobj,
+  k,
+  algorithm = "leiden",
+  SNN_prune = 1/15,
+  loops = FALSE,
+  mode = "out",
+  select_genes = TRUE,
+  prune_overlap = TRUE,
+  overlap = 0.2,
+  calc_gene_cell_kNN = FALSE,
+  resolution = 1,
+  marker_genes = NULL,
+  n.int = 10,
+  rand_seed = 2358,
+  use_gap = TRUE,
+  nclust = NULL,
+  spectral_method = "kmeans",
+  iter_max = 10,
+  num_seeds = 10,
+  return_eig = TRUE,
+  dims = NULL,
+  cast_to_dense = TRUE
+)
+}
+\arguments{
+\item{caobj}{A cacomp object with principal and standard coordinates
+calculated.}
+
+\item{k}{Either an integer (same k for all subgraphs) or a vector of
+exactly four integers specifying in this order: the k_c for the cell-cell
+kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene
+kNN-graph, k_gc for the gene-cell kNN-graph.}
+
+\item{algorithm}{Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.}
+
+\item{SNN_prune}{numeric. Value between 0-1. Sets cutoff of acceptable jaccard
+similarity scores for neighborhood overlap of vertices in SNN. Edges with values
+less than this will be set as 0. The default value is 1/15.}
+
+\item{loops}{TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.}
+
+\item{mode}{The type of neighboring vertices to use for calculating similarity
+scores(Jaccard Index). Three options: "out", "in" and "all":
+\itemize{
+\item "out": Selecting neighbouring vertices by out-going edges;
+\item "in": Selecting neighbouring vertices by in-coming edges;
+\item "all": Selecting neigbouring vertices by both in-coming and out-going edges.
+}}
+
+\item{select_genes}{TRUE/FALSE. Should genes be selected by whether they have
+an edge in the cell-gene kNN graph?}
+
+\item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
+than `overlap` of genes with the nearest neighbours of the cell are removed.
+Pruning is only performed if select_genes = TRUE.}
+
+\item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
+prune_overlap = TRUE.}
+
+\item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
+by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+graph is transposed.}
+
+\item{resolution}{float number. Resolution for leiden algorithm.}
+
+\item{marker_genes}{character. Optional. Names of known marker genes that 
+should be excempt from any pruning on the graph and be kept.}
+
+\item{n.int}{Integer. Number of iterations for leiden algorithm.}
+
+\item{rand_seed}{integer. Random seed.}
+
+\item{use_gap}{Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+most important eigenvector automatically, and the number of output clusters
+equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified.
+The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.}
+
+\item{nclust}{Integer. Number of clusters.}
+
+\item{spectral_method}{character. Name of the method to cluster the eigenvectors.
+Can be on of the following 3:
+\itemize{
+\item "kmeans": k-means clustering
+\item "skmeans": spherical k-means clustering
+\item "GMM": Gaussian-Mixture-Model fuzzy clustering.
+}}
+
+\item{iter_max}{Number of iterations for k-means clustering and GMM.}
+
+\item{num_seeds}{Number of times k-means clustering is repeated.}
+
+\item{return_eig}{Logical. Whether or not to return eigenvectors and store them in caclust-object.}
+
+\item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
+
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
+matrix before running leiden clustering?
+Casting to dense speeds up the leiden algorithm.}
+}
+\value{
+Returns caclust objec with clustering results stored. The cell and gene
+clusters can be accessed via \code{cell_clusters(obj)}/\code{gene_clusters(obj)}.
 }
 \description{
-Run biclustering
+Convenient wrapper around \code{make_SNN} and \code{run_leiden}/\code{run_spectral}.
+\code{run_caclust} takes a cacomp object and biclusters cells and genes.
 }

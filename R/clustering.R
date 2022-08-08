@@ -1,596 +1,729 @@
+#' @include classes.R
+NULL
 
 
-#' Calculate euclidean distance
-#'
-#' @description Calculates euclidean distance.
-#'
-#' @param mat matrix.
-#' @return Matrix with pairwise euclidean distances.
-#'
-calc_euclidean <- function(mat) {
-  n = nrow(mat)
-  smat <- apply(mat, 1, crossprod)
-  mat1 <- matrix(smat, nrow = n, ncol = n)
-  mat3 <- tcrossprod(mat)
-  mat4 <- mat1 + t(mat1) - 2 * mat3
-  diag(mat4) <- 0
-  mat5 <- sqrt(mat4)
-  mat5[is.na(mat5)] = 0
-  return(mat5)
-}
 
-
-#' Calculate Association Ratio
-#'
-#' @param caobj A cacomp object with principal and standard coordinates calculated.
-#' @param direction Either "cells" or "genes". If "cells" the association ratio
-#' of each gene for each cell is calculated. If "genes" the assoc. ratio of each
-#' cell for each gene is calculated.
-#'
-#' @return
-#' Matrix with pairwise association ratios.
-calc_assR <- function(caobj, direction = "cells"){
-
-  stopifnot(is(caobj, "cacomp"))
-
-  if (direction == "cells") {
-    assR <- caobj@std_coords_cols %*% t(caobj@prin_coords_rows)
-  } else if (direction == "genes"){
-    assR <- caobj@std_coords_rows %*% t(caobj@prin_coords_cols)
-  } else {
-    stop("Please choose a valid direction. Either 'cells' or 'genes'")
-  }
-
-  return(assR)
-
-}
-
-
-#' Calculate distances for bigraph
+#' Calculate Normalized Graph Laplacian
+#' @description 
+#' Calculate Normalized graph laplacian of the input adjacency matrix, the graph laplacian
+#' L = I-D^(-1/2)AD^(-1/2), where D is a diagonal matrix with row sums of A as entries.
+#' @param adj The adjacency matix of type 'matrix/array'.
+#' @return 
+#' A sparsed normalized graph laplacian matrix of type "dgCmatrix".
 #' 
-#' @param caobj  A cacomp object with principal and standard coordinates calculated.
+NormLaplacian = function(adj){
+  
+  D = Matrix::rowSums(adj)
+  mat_D = Matrix::sparseMatrix(i = seq_len(length(D)),
+                       j = seq_len(length(D)),
+                       x = 1/sqrt(D),
+                       dims =c(nrow(adj), ncol(adj)) )
+  mat_D[is.na(mat_D)] = 0
+  mat_D[is.infinite(mat_D)] = 0
+  
+  I = Matrix::sparseMatrix(i = seq_len(length(D)),
+                           j = seq_len(length(D)),
+                           x = 1,
+                           dims =c(nrow(adj), ncol(adj)) )
+  
+  L = I - mat_D %*% adj %*% mat_D
+  
+  return(L)
+}
+
+
+
+#' An integration of several runs of skmens with different random seeds
+#' @description 
+#' This function will select the optimal clustering result from several 
+#' skmeans::skmeans runs with different random seeds, The clustering result with the smallest 
+#' within-cluster-sum of squared distances will be selected.
+#' @param k Integer. Number of cluters to detect for skmeans.
+#' @param x Matrix. This function will cluster the rows of the input matrix.
+#' @param num_seeds Integer. Number of trials with random seeds
+#' @inheritParams skmeans::skmeans
 #' 
 #' @return 
-#' List with elements:
-#' * "cc": cell-cell euclidean distances
-#' * "gg": gene-gene euclidean distances
-#' * "cg": cell-gene association ratio
-#' * "gc": gene-cell association ratio
+#' Returns an object inheriting from classes skmeans and pclust (see ?skmeans) which 
+#' gives the local optimal skmeans clustering result within several trials.
 #' 
-#' @md
-calc_distances <- function(caobj){
+optimal_skm <- function (x,
+                        k, 
+                        num_seeds = 10,
+                        method = NULL,
+                        m = 1,
+                        weights = 1,
+                        control = list()){
   
-  cell_dists <- calc_euclidean(caobj@prin_coords_cols)
-  gene_dists <- calc_euclidean(caobj@prin_coords_rows)
-  cell_gene_assr <- calc_assR(caobj, direction = "cells")
-#   gene_cell_assr <- calc_assR(caobj, direction = "genes")
-    # no need to calculate again, just take the transpose
-  gene_cell_assr <- t(cell_gene_assr) 
-
-  return(list("cc" = cell_dists,
-              "gg" = gene_dists,
-              "cg" = cell_gene_assr,
-              "gc" = gene_cell_assr))
-}
-
-
-#' Make a kNN graph
-#' @description Given a distance matrix `make_knn()` outputs the adjacency
-#' matrix of the k-nearest-neighbours graph.
-#'
-#' @param dists distance matrix
-#' @param k numeric. Number of nearest neighbours.
-#' @param decr boolean. Whether the the values in `dists` should be sorted into
-#' decreasing (TRUE) or increasing (FALSE) order.
-#'
-#' @return
-#' adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".
-#'
-#' @export
-make_knn <- function(dists,
-                     k,
-                     decr = TRUE) {
-
-  n.row <- nrow(dists)
-  n.col <- ncol(dists)
-
-  if (n.col < k) {
-    warning(
-      "k set larger than number of genes Setting k to number of genes - 1.",
-      call. = FALSE
-    )
-    k <- n.col - 1
+  if(!is(x, 'matrix')){
+    x = as.matrix(x)
   }
-  knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
-  # knd.mat <- knn.mat
-  for (i in 1:n.row) {
-    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[1:k]
-    # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
+  
+  if (num_seeds < 1){
+    stop('num_seeds should be larger than 0.')
   }
-#     knn.mat <- do.call(rbind, lapply(1:n.row, function(i){
-#             order(dists[i,], decreasing = decr)[1:k]
-#     }))
-  nn.ranked <- knn.mat[, 1:k]
-
-  # convert nn.ranked into a Graph
-  j <- as.numeric(t(nn.ranked))
-  i <- ((1:length(j)) - 1) %/% k + 1
-
-  nn.matrix <- Matrix::sparseMatrix(i = i,
-                                    j = j,
-                                    x = 1,
-                                    dims = c(nrow(x = dists), ncol(x = dists)))
-  rownames(nn.matrix) <- rownames(dists)
-  colnames(nn.matrix) <- colnames(dists)
-  return(nn.matrix)
-}
-
-#' Calculates the overlap of chosen genes between neighbouring cells
-#'
-#' @description
-#' For the cell indicated with `idx` in the rows of `cc_adj` and `cg_adj`,
-#' the genes and cells with and edge to the chosen cell are determined.
-#' Among the connected it is then determined how many have an edge to the same
-#' genes as the chosen cell. The overlap (cells with edge to same gene)/
-#' (Nr. of cells) is returned.
-#'
-#' @param idx indices of cell of interest
-#' @param cg_adj cell-gene adjacency matrix
-#' @param cc_adj cell-cell adjacency matrix
-#'
-#' @return
-#' numeric vector indicating the overlap between neighbours for each gene that
-#' is a neighbour in `cg_adj`. Same length as number of nearest neighbour genes
-#' in `cg_adj` for each cell.
-#'
-get_per_gene_overlap <- function(idx, cg_adj, cc_adj){
-
-  stopifnot(length(idx) == 1)
-
-  genes_picked <- which(cg_adj[idx,] == 1)
-  neighbours <- which(cc_adj[idx,] == 1)
-
-  cg_adj_nns <- cg_adj[neighbours, genes_picked]
-  overlap <- Matrix::colSums(cg_adj_nns)/length(neighbours)
-
-
-  return(overlap)
-}
-
-
-#' Determines the overlap of chosen genes between nearest neighbour cells
-#' @description
-#' Determines how many genes are shared (have an edge) between
-#' neighbouring cells for all cells in the dataset.
-#'
-#' @param cg_adj cell-gene adjacency matrix
-#' @param cc_adj cell-cell adjacency matrix
-#'
-#' @return
-#' Matrix (cells x genes) showing the overlap of each gene between the nearest
-#' neighbour cells.
-#'
-#' @export
-determine_overlap <- function(cg_adj, cc_adj){
-
-  overlap_mat <- matrix(0, nrow = nrow(cg_adj), ncol = ncol(cg_adj))
-
-  for (cell in seq_len(nrow(cg_adj))){
-
-    genes_picked <- which(cg_adj[cell,] == 1)
-    overlap <- get_per_gene_overlap(idx = cell,
-                                    cg_adj = cg_adj,
-                                    cc_adj = cc_adj)
-
-    overlap_mat[cell,genes_picked] <- overlap
-  }
-
-  rownames(overlap_mat) <- rownames(cg_adj)
-  colnames(overlap_mat) <- colnames(cg_adj)
-
-  return(overlap_mat)
-}
-
-
-
-#' Combine kNN graphs to large cell-gene adjecency matrix
-#'
-#' @description
-#' TODO
-#' 
-#' @param cell_dists cell-cell euclidean distances
-#' @param gene_dists gene-gene euclidean distances
-#' @param cell_gene_assr cell-gene association ratios
-#' @param gene_cell_assr gene-cell association ratios
-#' @param k_c k for cell-cell kNN
-#' @param k_g k for gene-gene kNN
-#' @param k_cg k for cell-gene kNN
-#' @param k_gc k for gene-cell kNN
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
-#' an edge in the cell-gene kNN graph?
-#' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
-#' than `overlap` of genes with the nearest neighbours of the cell are removed.
-#' @param overlap Numeric between 0 and 1. Overlap cutoff if
-#' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
-#' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
-#' graph is transposed.
-#'
-#' @return
-#' "Bigraph" of type `dgCMatrix`. The combined adjacency matrix consists of the
-#' cell-cell graph, gene-gene graph and cell-gene/gene-cell graph.
-#'
-#' @export
-create_bigraph <- function(cell_dists,
-                           gene_dists,
-                           cell_gene_assr,
-                           gene_cell_assr,
-                           k_c,
-                           k_g,
-                           k_cg,
-                           k_gc,
-                           select_genes = TRUE,
-                           prune_overlap = TRUE,
-                           overlap = 0.2,
-                           calc_gene_cell_kNN = FALSE) {
-
-  cgg_nn <- make_knn(cell_gene_assr,
-                     k = k_cg,
-                     decr = TRUE)
-
-  if(isTRUE(select_genes)){
+  
+  wcs <- Inf
+  
+  for (i in 1:num_seeds) {
+    newres <- skmeans::skmeans(x = x, 
+                               k = k, 
+                               method = method,
+                               m = m,
+                               weights = weights,
+                               control = control)
     
-    idx <- Matrix::colSums(cgg_nn) > 0
-    cgg_nn <- cgg_nn[,idx]
-    gene_dists <- gene_dists[idx,idx]
-    gene_cell_assr <- gene_cell_assr[idx,]
+    newwcs <- do.call(sum, 
+                      lapply(list(1:length(newres$cluster)), 
+                                  function(i){
+                                    sum((x[i,]-newres$prototypes[newres$cluster[i],])^2)
+                                    }))
+    
+    if (newwcs <= wcs) {
+      res <- newres
+      wcs <- newwcs
+    }
   }
-
-
-  ccg_nn <- make_knn(cell_dists,
-                     k = k_c,
-                     decr = FALSE)
-
-
-  if(isTRUE(prune_overlap)){
-
-    overlap_mat <- determine_overlap(cg_adj = cgg_nn,
-                                     cc_adj = ccg_nn)
-
-    cgg_nn[overlap_mat < overlap] <- 0
-
-    idx <- Matrix::colSums(cgg_nn) > 0
-    cgg_nn <- cgg_nn[,idx]
-    gene_dists <- gene_dists[idx,idx]
-    gene_cell_assr <- gene_cell_assr[idx,]
-
-  }
-
-
-
-  ggg_nn <- make_knn(gene_dists,
-                     k = k_g,
-                     decr = FALSE)
-
-  if(isFALSE(calc_gene_cell_kNN)){
-    gcg_nn <- Matrix::t(cgg_nn)
-
-  } else if(isTRUE(calc_gene_cell_kNN)){
-    gcg_nn <- make_knn(gene_cell_assr,
-                       k = k_gc,
-                       decr = TRUE)
-  } else {
-    stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
-  }
-
-
-
-  GSG_1 <- cbind(ccg_nn, cgg_nn)
-  GSG_2 <- cbind(gcg_nn, ggg_nn)
-
-  GSG <- rbind(GSG_1, GSG_2)
-  return(GSG)
+                                                     
+  return(res)
 }
 
-#' Create SNN graph from caobj
-#'
+#' An integration of several runs of kmens with different random seeds
 #' @description 
-#' TODO
+#' This function will select the optimal clustering result from several kmeans runs
+#' with different random seeds, The clustering result with the smallest 
+#' within-cluster-sum of squared distances will be selected.
+#' @param k Integer. Number of cluters to detect for kmeans.
+#' @param x Matrix. This function will cluster the rows of the input matrix.
+#' @param iter_max Integer. Number of iterations.
+#' @param num_seeds Integer. Number of trials with random seeds
+#' @param ... Further arguments handed to stats::kmeans
+#' @return 
+#' Returns an object of class "kmeans" with is a list with several components 
+#' (see ?kmeans) which guves the local optimal kmeans clustering result within 
+#' #num_seeds trials.
+
+optimal_km <- function (x,
+                        k, 
+                        num_seeds = 10,
+                        iter_max = 10,
+                        ...){
+  
+  if(!is(x, 'matrix')){
+    x = as.matrix(x)
+  }
+  
+  if (num_seeds < 1){
+    stop('num_seeds should be larger than 0.')
+  }
+  
+  wcs <- Inf
+  res <- NULL
+  
+  for (i in 1:num_seeds) {
+    newres <- stats::kmeans(x = x, 
+                            centers = k, 
+                            iter.max = iter_max,
+                            ...)
+
+    newwcs <- sum(newres$withinss)
+    
+    if (newwcs <= wcs) {
+      res <- newres
+      wcs <- newwcs
+    }
+  }
+  
+  return(res)
+}
+
+#' Run spectral clustering
 #' 
-#' @param caobj A cacomp object with standard and principal coordinates 
-#' calculated.
-#' @param distances A list containing the cell-cell, gene-gene, cell-gene and 
-#' gene-cell distances/association ratios. Must be named list as follows:
-#' * "cc": cell-cell euclidean distances
-#' * "gg": gene-gene euclidean distances
-#' * "cg": cell-gene association ratio
-#' * "gc": gene-cell association ratio
-#' @param k_c k for cell-cell kNN
-#' @param k_g k for gene-gene kNN
-#' @param k_cg k for cell-gene kNN
-#' @param k_gc k for gene-cell kNN
-#' @param select_genes TRUE/FALSE. Should genes be selected by wether they have
-#' an edge in the cell-gene kNN graph?
-#' @param prune_overlap TRUE/FALSE. If TRUE edges to genes that share less
-#' than `overlap` of genes with the nearest neighbours of the cell are removed.
-#' @param overlap Numeric between 0 and 1. Overlap cutoff if
-#' prune_overlap = TRUE.
-#' @param calc_cell_gene_kNN TRUE/FALSE. If TRUE a cell-gene graph is calculated
-#' by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
-#' graph is transposed.
+#' @family biclustering
+#' @description 
+#' Spectral clustering algorithm with normalized graph laplacian.
 #' 
-#' @returns 
-#' A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix
-#' are the Jaccard similarity between nodes in the graph. The range between 0
-#' and 1, with 0 meaning that no edges are shared between nodes, wheras 1 means 
-#' all edges are shared between nodes.
+#' @param caclust Caclust-class object.
+#' @param dims Integer. Number of dimensions to choose from SVD of graph laplacian.
+#' @param use_gap Logical, TRUE/FALSE. If TRUE, 'eigengap' method will be used to find the
+#' most important eigenvector automatically, and the number of output clusters 
+#' equals number of selected eigenvectors. If FALSE, 'nclust'(integer) should be specified. 
+#' The eigenvectors corresponding with the smallest 'nclust' eigenvalues will be
+#' selcted and 'nclust' clusters will be detected by skmeans/kmeans/GMM.
+#' @param nclust Integer. Number of clusters.
+#' @param spectral_method character. Name of the method to cluster the eigenvectors.
+#' Can be on of the following 3:
+#' * "kmeans": k-means clustering
+#' * "skmeans": spherical k-means clustering
+#' * "GMM": Gaussian-Mixture-Model fuzzy clustering.
+#' @param iter_max Number of iterations for k-means clustering and GMM.
+#' @param num_seeds Number of times k-means clustering is repeated.
+#' @param return_eig Logical. Whether or not to return eigenvectors and store them in caclust-object.
 #' 
+#' @return 
+#' The clustering results of type 'caclust'.
 #' @md 
 #' @export
-create_SNN <- function(caobj,
-                       distances,
-                       k_c,
-                       k_g,
-                       k_cg,
-                       k_gc,
-                       SNN_prune = 1/15,
-                       select_genes = TRUE,
-                       prune_overlap = TRUE,
-                       overlap = 0.2,
-                       calc_gene_cell_kNN = FALSE) {
+run_spectral <- function(caclust, 
+                         dims = 30,
+                         use_gap = TRUE, 
+                         nclust = NULL,
+                         spectral_method = 'kmeans',
+                         iter_max = 10, 
+                         num_seeds = 10,
+                         return_eig = TRUE) {
+  
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "run_spectral"
   
   
-  stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
-  
-  adj <- create_bigraph(cell_dists = distances[["cc"]],
-                        gene_dists = distances[["gg"]],
-                        cell_gene_assr = distances[["cg"]],
-                        gene_cell_assr = distances[["gc"]],
-                        k_c = k_c,
-                        k_g = k_g,
-                        k_cg = k_cg,
-                        k_gc = k_gc,
-                        overlap = overlap,
-                        prune_overlap = prune_overlap,
-                        select_genes = select_genes,
-                        calc_gene_cell_kNN = calc_gene_cell_kNN)
-  
-  if(!is(adj, "dgCMatrix")){
-    adj <- as(adj, "dgCMatrix")  
+  stopifnot(is(caclust, "caclust"))
+  if (is.empty(caclust@SNN)){
+    stop("No SNN graph found. Please run make_SNN() first!")
   }
   
-  snn.matrix <- ComputeSNNasym(adj, SNN_prune)
+  SNN <- caclust@SNN
   
-  rownames(snn.matrix) <- rownames(adj)
-  colnames(snn.matrix) <- rownames(adj)
-  return(snn.matrix)
+  diag(SNN) = 0
+  L = NormLaplacian(SNN)
+  
+  if (dims > ncol(SNN)){
+    
+    dims = ncol(SNN)
+    
+  }
+  
+  SVD <- irlba::irlba(L, nv = dims, smallest = TRUE) # eigenvalues in a decreasing order
+  names(SVD)[1:3] <- c("D", "U", "V")
+  
+  idx = order(SVD$D, decreasing = FALSE)
+  eigenvalues = SVD$D[idx]
+  eigenvectors = SVD$U[,idx]
+  
+  # cat('SVD for graph laplacian is done....\n')
+  
+  if (use_gap == FALSE){
+    
+    if (is.null(nclust)){
+      
+        stop('Number of selected eigenvectors of lapacian is required, change value of nclust as an integer!')
+    
+      # }else if (nclust > dims){
+      #   
+      #   stop('Number of dims should be larger than number of clusters (nclust)')
+      
+      }else{
+      
+        eig = eigenvectors[,1:nclust] # in an increasing order
+        # eig = eigenvectors
+        
+    }
+    
+    } else if (use_gap == TRUE){
+      
+      
+        eig = eigengap(eigenvalues, eigenvectors)# in an increasing order
+        nclust = ncol(eig)
+    
+  }
+  
+  if (spectral_method == 'skmeans'){
+    
+    clusters = optimal_skm(eig, k = nclust, num_seeds = num_seeds)$cluster
+  
+  }else if (spectral_method == 'kmeans'){
+    
+    clusters = optimal_km(eig,
+                         k = nclust,
+                         iter_max = iter_max,
+                         num_seeds = num_seeds)$cluster
+
+  }else if (spectral_method == 'GMM'){
+    
+    gmm = ClusterR::GMM(eig,
+                        gaussian_comps = ncol(eig),
+                        dist_mode = "maha_dist",
+                        seed_mode = "random_subset",
+                        km_iter = iter_max,
+                        em_iter = iter_max,
+                        verbose = F)   
+    
+    gmm_res = ClusterR::predict_GMM(data = eig,
+                                 CENTROIDS = gmm$centroids, 
+                                 COVARIANCE = gmm$covariance_matrices,
+                                 WEIGHTS = gmm$weights)
+    
+    gmm_res <- gmm_res[-which(names(gmm_res)=="log_likelihood")]
+    
+    cluster_proba <- gmm_res$cluster_proba
+    clusters <- gmm_res$cluster_labels
+    
+    rownames(cluster_proba) <- rownames(SNN)
+    colnames(cluster_proba) <- paste("BC", seq_len(ncol(cluster_proba)))
+
+    # cell_idx <- which(rownames(cluster_proba) %in% rownames(caobj@prin_coords_cols))
+    # gene_idx <- which(rownames(cluster_proba) %in% rownames(caobj@prin_coords_rows))
+    
+    cell_prob <- cluster_proba[caclust@cell_idxs,]
+    gene_prob <- cluster_proba[caclust@gene_idxs,]
+    
+    caclust@cell_prob <- cell_prob
+    caclust@gene_prob <- gene_prob
+    
+    
+    
+  }else{
+  stop('clustering method should be chosen from kmeans and skmeans!')
+  }
+  
+  # cell_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_cols))
+  # gene_idx <- which(names(clusters) %in% rownames(caobj@prin_coords_rows))
+  
+  clusters <- as.factor(clusters)
+  names(clusters) <- rownames(SNN)
+  
+  cell_clusters <- clusters[caclust@cell_idxs]
+  gene_clusters <- clusters[caclust@gene_idxs]
+  
+  caclust@cell_clusters <- cell_clusters
+  caclust@gene_clusters <- gene_clusters
+  
+  if (return_eig){
+    
+    if (is.null(dims)){
+      dims = min(30, ncol(SNN))
+    }
+    
+    eigenv <- eigenvectors[,1:dims]
+    
+    rownames(eigenv) <- rownames(SNN)
+    
+    
+  }else{
+    eigenv <- matrix()
+  }
+  
+  caclust@eigen <- eigenv
+  
+  stopifnot(validObject(caclust))
+  
+  return(caclust)
 }
+
+
+
 
 #' Leiden clustering on bigraph
 #' 
+#' @family biclustering
 #' @description 
-#' TODO
+#' This function takes a caclust object with precomputed SNN-graph and 
+#' clusters cells and genes simultaneously.
 #' 
-#' @param SNN dense or sparse matrix. A SNN graph.
-#' @param resolution resolution for leiden algorithm.
-#' @param n.int Number of iterations for leiden algorithm.
-#' @param seed Random seed.
+#' @param caclust caclust object with SNN calculated.
+#' @param resolution float number. Resolution for leiden algorithm.
+#' @param n.int Integer. Number of iterations for leiden algorithm.
+#' @param rand_seed integer. Random seed.
+#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense 
+#' matrix before running leiden clustering?
+#' Casting to dense speeds up the leiden algorithm.
 #' 
 #' @return 
-#' vector of type `factor.` Assigned clusters of cells and genes. 
-#' The names of cells and genes are saved in the names of the 
-#' vector. 
+#' Object of type "caclust" with cell and gene clusters saved.
 #' 
-run_leiden <- function(SNN, 
+run_leiden <- function(caclust,
                        resolution = 1,
                        n.int = 10, 
-                       rand_seed = 2358) {
+                       rand_seed = 2358,
+                       cast_to_dense = TRUE) {
   
-  clusters <- leiden(object = SNN,
-                     resolution_parameter = resolution,
-                     partition_type = "RBConfigurationVertexPartition",
-                     initial_membership = NULL,
-                     weights = NULL,
-                     node_sizes = NULL,
-                     n_iterations = n.int,
-                     seed = rand_seed)
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "run_leiden"
+  
+  stopifnot(is(caclust, "caclust"))
+  
+  if (is.empty(caclust@SNN)){
+    stop("No SNN graph found. Please run make_SNN() first!")
+  }
+  
+  if (is(caclust@SNN, "dgCMatrix") & isTRUE(cast_to_dense)){
+    SNN <- as.matrix(caclust@SNN)
+  } else {
+    SNN <- caclust@SNN
+  }
+  
+  
+  clusters <- leiden::leiden(object = SNN,
+                             resolution_parameter = resolution,
+                             partition_type = "RBConfigurationVertexPartition",
+                             initial_membership = NULL,
+                             weights = NULL,
+                             node_sizes = NULL,
+                             n_iterations = n.int,
+                             seed = rand_seed)
   
   
   clusters <- as.factor(clusters)
   names(clusters) <- rownames(SNN)
-  return(clusters)
+  
+  cell_clusters <- clusters[caclust@cell_idxs]
+  gene_clusters <- clusters[caclust@gene_idxs]
+  
+  caclust@cell_clusters <- cell_clusters
+  caclust@gene_clusters <- gene_clusters
+  caclust@parameters <- append(caclust@parameters, call_params)
+  
+
+  stopifnot(validObject(caclust))
+  return(caclust)
 }
 
-#' run spectral clustering
-run_spectral <- function() {
-  #TODO
-}
+
 
 #' Run biclustering
 #' 
 #' @description 
-#' TODO
+#' Convenient wrapper around `make_SNN` and `run_leiden`/`run_spectral`.
+#' `run_caclust` takes a cacomp object and biclusters cells and genes.
 #' 
 #' @param caobj A cacomp object with principal and standard coordinates 
 #' calculated.
-#' @param k_sym k for cell-cell and gene-gene kNN graph
-#' @param k_asym k for cell-gene and gene-cell kNN graph
-#' @param algorithm Algorithm for clustering. Options are "leiden" or "spectral".
-#' @param return_umap TRUE/FALSE. Whether umap coordinates should be returned.
-#' @param k_umap k for UMAP.
+#' @param k Either an integer (same k for all subgraphs) or a vector of 
+#' exactly four integers specifying in this order: the k_c for the cell-cell 
+#' kNN-graph, k_g for the gene-gene kNN-graph, k_cg for the cell-gene 
+#' kNN-graph, k_gc for the gene-cell kNN-graph.
+#' @param algorithm Character. Algorithm for clustering. Options are "leiden" or "spectral". Defalut: 'leiden'.
 #' @inheritParams create_bigraph
-#' @inheritParams create_SNN
+#' @inheritParams make_SNN
 #' @inheritParams run_leiden
+#' @inheritParams run_spectral
 #' 
 #' @return
-#' Returns list:
-#' * 'cell_clusters': factor vector containing assigned clusters for the cell 
-#' specified in the elements name.
-#' * 'gene_clusters': factor vector containing assigned clusters for the genes
-#' specified in the elements name.
-#' * 'umap_coords': If `return_umap = TRUE` additionally a data frame with 
-#' the umap_coordinates of cells and genes is returned.
-#'  
+#' Returns caclust objec with clustering results stored. The cell and gene
+#' clusters can be accessed via `cell_clusters(obj)`/`gene_clusters(obj)`.
 #' 
 #' @md
 #' @export
 run_caclust <- function(caobj,
-                        k_sym,
-                        k_asym = k_sym,
+                        k,
                         algorithm = "leiden",
                         SNN_prune = 1/15,
+                        loops = FALSE,
+                        mode = "out",
                         select_genes = TRUE,
                         prune_overlap = TRUE,
                         overlap = 0.2,
                         calc_gene_cell_kNN = FALSE,
                         resolution = 1,
+                        marker_genes = NULL,
                         n.int = 10,
                         rand_seed = 2358,
-                        return_umap = TRUE,
-                        k_umap = k_sym) {
+                        use_gap = TRUE,
+                        nclust = NULL,
+                        spectral_method = 'kmeans',
+                        iter_max = 10, 
+                        num_seeds = 10,
+                        return_eig = TRUE,
+                        dims = NULL,
+                        cast_to_dense = TRUE) {
   
-  distances <- calc_distances(caobj = caobj)
+  call_params <- as.list(match.call())
+  names(call_params)[1] <- "Call"
   
-  SNN <- create_SNN(caobj = caobj, 
-                    distances = distances,
-                    k_c = k_sym,
-                    k_g = k_sym,
-                    k_cg = k_asym,
-                    k_gc = k_asym,
-                    SNN_prune = SNN_prune,
-                    select_genes = select_genes,
-                    prune_overlap = prune_overlap,
-                    overlap = overlap,
-                    calc_gene_cell_kNN = calc_gene_cell_kNN)
+
+  stopifnot("Invalid k! Should be either a single integer or of lenght 4!" =
+              (length(k) == 1 | length(k) == 4))
+  
+  caclust <- make_SNN(caobj = caobj, 
+                      k = k,
+                      loops = loops,
+                      mode = mode,
+                      SNN_prune = SNN_prune,
+                      select_genes = select_genes,
+                      prune_overlap = prune_overlap,
+                      overlap = overlap,
+                      calc_gene_cell_kNN = calc_gene_cell_kNN,
+                      marker_genes = marker_genes)
   
   if (algorithm == "leiden"){
     
-    clusters <- run_leiden(SNN = SNN, 
+    caclust <- run_leiden(caclust = caclust, 
                            resolution = resolution,
                            n.int = n.int, 
-                           rand_seed = rand_seed)
+                           rand_seed = rand_seed,
+                           cast_to_dense = cast_to_dense)
     
   } else if (algorithm == "spectral"){
-    stop("Spectral clustering not yet implemented. sorry :(")
+    
+    if (is.null(dims)){
+      dims = length(caobj@D)
+    }
+    caclust <- run_spectral(caclust = caclust,
+                               use_gap = use_gap,
+                               nclust = nclust,
+                               spectral_method = spectral_method,
+                               iter_max = iter_max, 
+                               num_seeds = num_seeds,
+                               return_eig = return_eig,
+                               dims = dims)
+
+  } else{
+    stop("algorithm should choose from 'leiden' and 'spectral'!")
   }
 
-  
-  cell_clusters <- clusters[1:nrow(ca@prin_coords_cols)]
-  gene_clusters <- clusters[-(1:nrow(ca@prin_coords_cols))]
-  
-  if (isTRUE(return_umap)) {
-    
-    umap_out <- run_biUMAP_leiden(caobj = caobj,
-                                  SNN = SNN,
-                                  k_umap = ,
-                                  rand_seed = rand_seed)
-    
-    return(list("cell_clusters" = cell_clusters,
-                "gene_clusters" = gene_clusters,
-                "umap_coords" = umap_out))
-  } 
-  
-  
-  return(list("cell_clusters" = cell_clusters,
-              "gene_clusters" = gene_clusters))
+  return(caclust)
 }
 
 
-#' Plots UMAP depicting both cells and genes.
-#' 
-#' @description 
-#' TODO
-#' 
-#' @param caobj A cacomp object with principal and standard coordinates 
-#' calculated.
-#' @param SNN dense or sparse matrix. A SNN graph.
-#' @param k_umap Number of nearest neighbours to use from the SNN graph for
-#' UMAP
-#' @param rand_seed Random seed for UMAP.
-#' 
-#' @return 
-#' data frame containing the UMAP coordinates of cells and genes.
-#' 
-#' @export 
-run_biUMAP_leiden <- function(caobj, SNN, k_umap, rand_seed = 2358){
-  
-  k_snn = ncol(SNN)
-  SNN_idx <- matrix(data = 0, ncol = k_snn, nrow = nrow(SNN))
-  
-  for (i in seq_len(nrow(SNN))){
-    SNN_idx[i,] <- order(SNN[i,], decreasing = TRUE)
-  }
-  
-  SNN_jacc <- matrix(as.matrix(SNN)[SNN_idx],
-                     nrow = nrow(SNN_idx),
-                     ncol = ncol(SNN_idx))
-  
-  
-  rownames(SNN_idx) <- rownames(SNN)
-  rownames(SNN_jacc) <- rownames(SNN)
-  
-  custom.config = umap.defaults
-  custom.config$random_state = rand_seed
-  
-  snn_umap_graph = umap::umap.knn(indexes = SNN_idx,
-                                  distances = SNN_jac)
-  
-  assym <- rbind(caobj@std_coords_cols, cobja@prin_coords_rows)
-  assym <- assym[rownames(assym) %in% rownames(SNN),]
-  
-  caclust_umap = umap::umap(assym,
-                            config = custom.config,
-                            n_neighbors = k_umap, 
-                            knn = snn_umap_graph)
-  
-  umap_coords <- as.data.frame(caclust_umap$layout)
-  colnames(umap_coords) <- c("x", "y")
-  umap_coords$type <- "gene"
-  umap_coords$type[1:nrow(ca@std_coords_cols)] <- "cell"
-  umap_coords$cluster <- as.factor(clusters)
-  umap_coords$name <- rownames(umap_coords)
-  umap_coords <- umap_coords %>% arrange(desc(type))
-
-  
-  return(umap_coords)
-}
-
-#' Plot biUMAP
-#' 
-#' @param umap_coords data frame as outputted by `run_biUMAP_*`
-#' @param color_by Either "type" or "cluster". "type" colors by the type 
-#' (cell or gene) while "cluster" colors by the assigned cluster.
-#' 
-#' @return 
-#' ggplot of UMAP
-#' 
+#' Add caclust object to SingleCellExperiment object
+#' @description
+#' Add caclust clustering results to SingleCellExperiment object
+#' @param sce SingleCellExperiment object
+#' @param caclust CAclust::caclust object
+#' @param caclust_meta_name column name not listed in colData(sce), 
+#' rowData(sce), or metadata(sce)
+#' @returns 
+#' SingleCellExperiment with caclust object stored.
 #' @export
-plot_biUMAP <- function(umap_coords, color_by = "type"){
+#' 
+add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
+  cell.clust <- cell_clusters(caclust)
+  gene.clust <- gene_clusters(caclust)
+  idx <- rownames(sce) %in% gene.clust
+  matched_genes <- match(rownames(sce)[idx], names(gene.clust))
   
-  if(color_by == "type"){
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = type,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster))) +
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else if (color_by == "cluster"){
-    
-    p <- ggplot(umap_coords, aes(x=x, y=y, color = cluster,
-                                 text = paste0(
-                                   "Type: ", type, "\n",
-                                   "Name: ", name, "\n",
-                                   "Cluster: ", cluster)))+
-      geom_point(alpha = 0.4) +
-      theme_bw()
-  } else {
-    stop("color_by has to be either 'type' or 'cluster'.")
-  }
+  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell.clust
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
+  
+  S4Vectors::metadata(sce)[[caclust_meta_name]] <- caclust
+  
+  return(sce)
+}
 
+
+#' check_caobj_sce
+#' @description 
+#' Check if cacomp object is already added to SingleCellExperiment object
+#' @param sce SingleCellExperiment object
+#' @param cacomp_meta_name Character. Name of cacomp slpt in sce object.
+#' @returns 
+#' TRUE if cacomp object is stored, FALSE otherwise.
+#' 
+check_caobj_sce <- function(sce, cacomp_meta_name = 'CA'){
   
-  return(p)
+  ix <- cacomp_meta_name %in% SingleCellExperiment::reducedDimNames(sce)
+  
+  return(ix)
   
 }
 
 
+
+#' caclust
+#' @family biclustering
+#' @description
+#' `caclust()` performs biclustering on either a "cacomp" or 
+#' "SingleCellExperiment" object.
+#' @param obj A cacomp object or SingleCellExperiment object  
+#' @inheritParams run_caclust
+#' @param ... further arguments
+#' @details
+#' Convenient wrapper around `make_SNN` and `run_leiden`/`run_spectral`.
+#' `run_caclust` takes a cacomp object and biclusters cells and genes.
+#' @return
+#' A caclust object or SingleCellExperiment object
+#' @export
+setGeneric("caclust", function(obj,
+                               k,
+                               algorithm = "leiden",
+                               SNN_prune = 1/15,
+                               loops = FALSE,
+                               mode = "out",
+                               select_genes = TRUE,
+                               prune_overlap = TRUE,
+                               overlap = 0.2,
+                               calc_gene_cell_kNN = FALSE,
+                               resolution = 1,
+                               marker_genes = NULL,
+                               n.int = 10,
+                               rand_seed = 2358,
+                               use_gap = TRUE,
+                               nclust = NULL,
+                               spectral_method = 'kmeans',
+                               iter_max = 10, 
+                               num_seeds = 10,
+                               return_eig = TRUE,
+                               dims = NULL,
+                               cast_to_dense = TRUE,
+                               ...){
+  standardGeneric("caclust")
+})
+
+
+#' 
+#' @rdname caclust
+#' @export
+setMethod(f = "caclust",
+          signature(obj = "cacomp"),
+          function(obj, 
+                   k,
+                   algorithm = "leiden",
+                   SNN_prune = 1/15,
+                   loops = FALSE,
+                   mode = "out",
+                   select_genes = TRUE,
+                   prune_overlap = TRUE,
+                   overlap = 0.2,
+                   calc_gene_cell_kNN = FALSE,
+                   resolution = 1,
+                   marker_genes = NULL,
+                   n.int = 10,
+                   rand_seed = 2358,
+                   use_gap = TRUE,
+                   nclust = NULL,
+                   spectral_method = 'kmeans',
+                   iter_max = 10, 
+                   num_seeds = 10,
+                   return_eig = TRUE,
+                   dims = NULL,
+                   cast_to_dense = TRUE,
+                   ...){
+          
+          caclust_res <- run_caclust(caobj = obj,
+                                     k = k,
+                                     algorithm = algorithm,
+                                     SNN_prune = SNN_prune,
+                                     loops = loops,
+                                     mode = mode,
+                                     select_genes = select_genes,
+                                     prune_overlap = prune_overlap,
+                                     overlap =overlap,
+                                     calc_gene_cell_kNN = calc_gene_cell_kNN,
+                                     resolution = resolution ,
+                                     marker_genes =marker_genes,
+                                     n.int = n.int,
+                                     rand_seed = rand_seed,
+                                     use_gap = use_gap,
+                                     nclust = nclust,
+                                     spectral_method = spectral_method ,
+                                     iter_max = iter_max, 
+                                     num_seeds = num_seeds,
+                                     return_eig =return_eig,
+                                     dims = dims,
+                                     cast_to_dense = cast_to_dense,
+                                     ...)
+          return(caclust_res)
+            
+})
+
+
+#' 
+#' @rdname caclust
+#' @param cacomp_meta_name Character. The name of cacomp object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caobj'.
+#' @param caclust_meta_name the name of caclust object stored in 
+#' metadata(SingleCellExperiment object). Default: 'caclust.'
+#' @export
+setMethod(f = "caclust",
+          signature(obj = "SingleCellExperiment"),
+          function(obj, 
+                   k,
+                   algorithm = "leiden",
+                   SNN_prune = 1/15,
+                   loops = FALSE,
+                   mode = "out",
+                   select_genes = TRUE,
+                   prune_overlap = TRUE,
+                   overlap = 0.2,
+                   calc_gene_cell_kNN = FALSE,
+                   resolution = 1,
+                   marker_genes = NULL,
+                   n.int = 10,
+                   rand_seed = 2358,
+                   use_gap = TRUE,
+                   nclust = NULL,
+                   spectral_method = 'kmeans',
+                   iter_max = 10, 
+                   num_seeds = 10,
+                   return_eig = TRUE,
+                   dims = NULL,
+                   cast_to_dense = TRUE,
+                   ...,
+                   caclust_meta_name = 'caclust',
+                   cacomp_meta_name = 'CA'){
+            
+            correct <- check_caobj_sce(obj, cacomp_meta_name = cacomp_meta_name)
+            
+            if(isFALSE(correct)){
+              stop("No 'CA' dimension reduction object found. ",
+                   "Please run cacomp(sce_obj, top, coords = FALSE, ",
+                   "return_input=TRUE) first.")
+            }
+            
+            
+            if (isTRUE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
+              warning('The given meta_name or "caclust" is already in colData(sce)/rowData(sce)/metadata(sce), the slot will be overwritten!')
+            }
+            
+            caobj <- APL::as.cacomp(obj)
+            
+            caclust_res <- run_caclust(caobj = caobj,
+                                       k = k,
+                                       algorithm = algorithm,
+                                       SNN_prune = SNN_prune,
+                                       loops = loops,
+                                       mode = mode,
+                                       select_genes = select_genes,
+                                       prune_overlap = prune_overlap,
+                                       overlap =overlap,
+                                       calc_gene_cell_kNN = calc_gene_cell_kNN,
+                                       resolution = resolution ,
+                                       marker_genes =marker_genes,
+                                       n.int = n.int,
+                                       rand_seed = rand_seed,
+                                       use_gap = use_gap,
+                                       nclust = nclust,
+                                       spectral_method = spectral_method ,
+                                       iter_max = iter_max, 
+                                       num_seeds = num_seeds,
+                                       return_eig =return_eig,
+                                       dims = dims,
+                                       cast_to_dense = cast_to_dense,
+                                         ...)
+            obj <- add_caclust_sce(sce = obj, 
+                                   caclust = caclust_res,
+                                   caclust_meta_name = caclust_meta_name)
+          
+          return(obj)
+          
+})
+
+
+#' Assign cluster to cells/genes
+#' @description 
+#' Based on a probability cutoff genes/cells are assigned to all clusters for
+#' which they have a probability higher than 'cutoff'.
+#' @param caclust_obj A caclust object
+#' @param type Either "cell" or "gene".
+#' @param cutoff Probability cutoff.
+#' 
+#' @returns 
+#' logical matrix indicating which gene belongs to which cluster.
+#' @export
+assign_clusters_GMM <- function(caclust_obj, type = "genes", cutoff=0.5){
+  
+  if(type == "genes"){
+    prob_slot <- "gene_prob"
+  } else if (type == "cells"){
+    prob_slot <- "cells_prob"
+  }
+  
+  probs <- slot(caclust_obj, prob_slot)
+  stopifnot("No probabilities in caclust object." = !is.empty(probs))
+  
+  probs <- probs > cutoff
+  
+  return(probs)
+}
+          

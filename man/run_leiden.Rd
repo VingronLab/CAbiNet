@@ -4,22 +4,38 @@
 \alias{run_leiden}
 \title{Leiden clustering on bigraph}
 \usage{
-run_leiden(SNN, resolution = 1, n.int = 10, seed = 2358)
+run_leiden(
+  caclust,
+  resolution = 1,
+  n.int = 10,
+  rand_seed = 2358,
+  cast_to_dense = TRUE
+)
 }
 \arguments{
-\item{SNN}{dense or sparse matrix. A SNN graph.}
+\item{caclust}{caclust object with SNN calculated.}
 
-\item{resolution}{resolution for leiden algorithm.}
+\item{resolution}{float number. Resolution for leiden algorithm.}
 
-\item{n.int}{Number of iterations for leiden algorithm.}
+\item{n.int}{Integer. Number of iterations for leiden algorithm.}
 
-\item{seed}{Random seed.}
+\item{rand_seed}{integer. Random seed.}
+
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
+matrix before running leiden clustering?
+Casting to dense speeds up the leiden algorithm.}
 }
 \value{
-vector of type `factor.` Assigned clusters of cells and genes. 
-The names of cells and genes are saved in the names of the 
-vector.
+Object of type "caclust" with cell and gene clusters saved.
 }
 \description{
-
+This function takes a caclust object with precomputed SNN-graph and 
+clusters cells and genes simultaneously.
 }
+\seealso{
+Other biclustering: 
+\code{\link{caclust}},
+\code{\link{make_SNN}()},
+\code{\link{run_spectral}()}
+}
+\concept{biclustering}

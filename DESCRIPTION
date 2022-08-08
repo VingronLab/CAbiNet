@@ -8,14 +8,44 @@ Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
+Depends:
+  APL
 Imports: 
   Rcpp (>= 1.0.8),
-  APL,
   Matrix,
   leiden,
-  umap
+  umap,
+  dplyr,
+  ggplot2,
+  magrittr,
+  methods,
+  RcppEigen,
+  biclust,
+  reticulate,
+  ggrepel,
+  plotly,
+  skmeans,
+  SingleCellExperiment,
+  SummarizedExperiment,
+  ClusterR,
+  hexbin,
+  Polychrome,
+  RColorBrewer,
+  S4Vectors,
+  irlba,
+  viridis
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Collate: 
+    'CAclust.R'
+    'RcppExports.R'
+    'classes.R'
+    'biMAP.R'
+    'clustering.R'
+    'graph.R'
+    'helpers.R'
+    'importPackages.R'
+    'plot.R'

@@ -11,9 +11,23 @@
 #' @param SNN A sparse matrix (adjacency matrix)
 #' @param prune numeric. Below which Jaccard similarity edges should be 
 #' removed.
-#' 
+#' @param  mode The type of neighboring vertices to use for calculating similarity
+#'  scores(Jaccard Index). Three options: "out", "in" and "all":
+#' * "out": Select neighbouring vertices by out-going edges;
+#' * "in": Selecting neighbouring vertices by in-coming edges;
+#' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
 #' @export
-ComputeSNNasym <- function(SNN, prune) {
-    .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune)
+ComputeSNNasym <- function(SNN, prune, mode) {
+    .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune, mode)
+}
+
+#' WIP replacement for `determine_overlap` function
+#' @description
+#' DO NOT USE! Slower than R implementation
+#' 
+#' @param cc_adj cell-cell adjacency matrix
+#' @param cg_adj cell-gene adjacency matrix
+calc_overlap <- function(cc_adj, cg_adj) {
+    .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
 }
 
