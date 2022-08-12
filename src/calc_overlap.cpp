@@ -1,3 +1,4 @@
+
 #include <RcppEigen.h>
 #include <vector> //std::vector
 #include <string>
@@ -6,83 +7,54 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppEigen)]]
 
 //' WIP replacement for `determine_overlap` function
+//' @name calc_overlap
 //' @description
 //' DO NOT USE! Slower than R implementation
-//' 
 //' @param cc_adj cell-cell adjacency matrix
 //' @param cg_adj cell-gene adjacency matrix
+//' @export
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, 
+Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
                                          Eigen::SparseMatrix<int> cg_adj) {
-
+  
   // initialize vector to store triplets
   typedef Eigen::Triplet<double> Trip;
   std::vector<Trip> trp;
+  Eigen::SparseMatrix<int> overlap_mat_all = cc_adj * cg_adj;
+  Eigen::SparseMatrix<int> cc_tadj = cc_adj.transpose();
   
+  // calcualte the rowSums of matrix cc_adj which is also the number of neighbourhoods of each cell
+  std::vector<double> cell_nn_nums;
+  for (int i=0; i < cc_tadj.outerSize(); i++){
+    int k = 0;
+    
+    for (Eigen::SparseMatrix<int>::InnerIterator it(cc_tadj, i); it; ++it){  // Iterate over rows
+      k += 1;
+    }
+    
+    cell_nn_nums.push_back(k);
+  }
   
   // loop over genes (its faster in column major matrix)
   for (int i=0; i < cg_adj.outerSize(); i++){
     
-    std::vector<int> cell_idxs;
-    
-    // get the idxs of all the cells that have edge to gene
+    // only preserve the edges which are shown in cg_adj matrix
     for (Eigen::SparseMatrix<int>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
-      cell_idxs.push_back(it.row());
+      
+      double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
+      
+      trp.push_back(Trip(it.row(),
+                         i, 
+                         value));
     }
-    
-    // for each cell that has an edge, get the nearest neighbours
-    for(int k = 0; k < cell_idxs.size(); k++){
-
-      std::vector<int> cell_NNs;
-      
-      // loop over cell-cell Adj. matrix to get the neighbors.
-      // is there a way so we dont have to loop over the whole matrix?
-      for(int l=0; l < cc_adj.outerSize(); l++){
-        for (Eigen::SparseMatrix<int>::InnerIterator it(cc_adj, l); it; ++it){
-          
-          if(it.row() == cell_idxs[k]){
-            cell_NNs.push_back(it.col());
-          } else if(it.row() > cell_idxs[k]){
-            break;
-          } else {
-            continue;
-          }
-          
-        }
-      }
-    
-    
-      std::vector<int> n_overlap; //size of overlap
-      
-      // needed for intersection (Why?)
-      std::sort(cell_NNs.begin(), cell_NNs.end());
-      std::sort(cell_idxs.begin(), cell_idxs.end());
-      
-      // get the intersection of cells that have an edge to the gene
-      // and that are neighbours of the cell with index cell_idxs[k]
-      std::set_intersection(cell_NNs.begin(), cell_NNs.end(),
-                            cell_idxs.begin(), cell_idxs.end(),
-                            std::back_inserter(n_overlap));
-      
-      
-      double perc_ov;
-      double ov_size = n_overlap.size();
-      double nn_size = cell_NNs.size();
-      perc_ov = ov_size / nn_size; //percent of overlap
-      
-      // update triplet list for overlap matrix
-      trp.push_back(Trip(cell_idxs[k],i, perc_ov)); // (index, index, value)
-
     }
-  }
   
   // build Matrix from triplets
   Eigen::SparseMatrix<double> overlap(cg_adj.rows(), cg_adj.cols());
   overlap.setFromTriplets(trp.begin(), trp.end());
-
+  
   return overlap;
 }
-
 
 // /*** R
 // 
