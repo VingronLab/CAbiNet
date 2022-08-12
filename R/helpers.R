@@ -79,41 +79,9 @@ calc_distances <- function(caobj){
 
 
 
-
-#' Calculates the overlap of chosen genes between neighbouring cells
-#'
-#' @description
-#' For the cell indicated with `idx` in the rows of `cc_adj` and `cg_adj`,
-#' the genes and cells with and edge to the chosen cell are determined.
-#' Among the connected it is then determined how many have an edge to the same
-#' genes as the chosen cell. The overlap (cells with edge to same gene)/
-#' (Nr. of cells) is returned.
-#'
-#' @param idx indices of cell of interest
-#' @param cg_adj cell-gene adjacency matrix
-#' @param cc_adj cell-cell adjacency matrix
-#'
-#' @return
-#' numeric vector indicating the overlap between neighbours for each gene that
-#' is a neighbour in `cg_adj`. Same length as number of nearest neighbour genes
-#' in `cg_adj` for each cell.
-#'
-get_per_gene_overlap <- function(idx, cg_adj, cc_adj){
-  
-  stopifnot(length(idx) == 1)
-  
-  genes_picked <- which(cg_adj[idx,] == 1)
-  neighbours <- which(cc_adj[idx,] == 1)
-  
-  cg_adj_nns <- cg_adj[neighbours, genes_picked]
-  overlap <- Matrix::colSums(cg_adj_nns)/length(neighbours)
-  
-  
-  return(overlap)
-}
-
-
-#' Determines the overlap of chosen genes between nearest neighbour cells
+#' 
+#' Determines the overlap of chosen genes between nearest neighbour cells.
+#' It works faster on sparse matrix than on dense matrix.
 #' @description
 #' Determines how many genes are shared (have an edge) between
 #' neighbouring cells for all cells in the dataset.
@@ -126,26 +94,14 @@ get_per_gene_overlap <- function(idx, cg_adj, cc_adj){
 #' neighbour cells.
 #'
 determine_overlap <- function(cg_adj, cc_adj){
-  
-  overlap_mat <- matrix(0, nrow = nrow(cg_adj), ncol = ncol(cg_adj))
-  
-  for (cell in seq_len(nrow(cg_adj))){
-    
-    genes_picked <- which(cg_adj[cell,] == 1)
-    overlap <- get_per_gene_overlap(idx = cell,
-                                    cg_adj = cg_adj,
-                                    cc_adj = cc_adj)
-    
-    overlap_mat[cell,genes_picked] <- overlap
-  }
-  
-  rownames(overlap_mat) <- rownames(cg_adj)
-  colnames(overlap_mat) <- colnames(cg_adj)
+
+  overlap_mat <- cc_adj %*% cg_adj
+  overlap_mat <- overlap_mat/rowSums(cc_adj)
+
+  overlap_mat <- overlap_mat * cg_adj
   
   return(overlap_mat)
 }
-
-
 
 
 
