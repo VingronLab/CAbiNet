@@ -168,8 +168,9 @@ create_bigraph <- function(cell_dists,
   
   if(isTRUE(select_genes) & isTRUE(prune_overlap)){
     
-    overlap_mat <- determine_overlap(cg_adj = cgg_nn,
-                                     cc_adj = ccg_nn)
+    overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+                                 cg_adj = cgg_nn)
+    
     
     cgg_nn[overlap_mat < overlap] <- 0
     

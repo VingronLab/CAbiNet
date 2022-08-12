@@ -22,11 +22,12 @@ ComputeSNNasym <- function(SNN, prune, mode) {
 }
 
 #' WIP replacement for `determine_overlap` function
+#' @name calc_overlap
 #' @description
 #' DO NOT USE! Slower than R implementation
-#' 
 #' @param cc_adj cell-cell adjacency matrix
 #' @param cg_adj cell-gene adjacency matrix
+#' @export
 calc_overlap <- function(cc_adj, cg_adj) {
     .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
 }
