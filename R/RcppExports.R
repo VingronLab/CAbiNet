@@ -24,7 +24,7 @@ ComputeSNNasym <- function(SNN, prune, mode) {
 #' WIP replacement for `determine_overlap` function
 #' @name calc_overlap
 #' @description
-#' DO NOT USE! Slower than R implementation
+#' c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
 #' @param cc_adj cell-cell adjacency matrix
 #' @param cg_adj cell-gene adjacency matrix
 #' @export

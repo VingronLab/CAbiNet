@@ -1208,8 +1208,8 @@ setMethod(f = "plot_metadata_biMAP",
 #' Plots the first 2 dimensions of the rows and columns in the same plot.
 #'
 #' @details
-#' Choosing type "plotly" will generate an interactive html plot with the 
-#' package plotly.
+#' Choosing type "ggplotly" will generate an interactive html plot with the 
+#' package ggplotly.
 #' Type "ggplot" generates a static plot.
 #' Depending on whether `princ_coords` is set to 1 or 2 either
 #' the principal coordinates of either the rows (1) or the columns (2)
@@ -1218,7 +1218,7 @@ setMethod(f = "plot_metadata_biMAP",
 #' Labels for rows and columns should be stored in the row and column names 
 #' respectively.
 #' @return
-#' Plot of class "plotly" or "ggplot".
+#' Plot of class "ggplotly" or "ggplot".
 #' @param obj caclust or SingleCellExperiment object containing clustering 
 #' results. The SingleCellExperiment should also have a CA dimensional reduction.
 #' @param xdim Integer. The dimension for the x-axis. Default 1.
@@ -1232,7 +1232,7 @@ setMethod(f = "plot_metadata_biMAP",
 #' should be added
 #' (label should be stored in colnames).
 #' Default NULL (no columns).
-#' @param type String. Type of plot to draw. Either "ggplot" or "plotly". 
+#' @param type String. Type of plot to draw. Either "ggplot" or "ggplotly". 
 #' Default "ggplot".
 #' @param show_all logical. If FALSE cells/genes that are not in col_metadata/
 #' row_metadata are not plotted. If *_metadata is NULL, the cell or genes 

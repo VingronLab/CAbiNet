@@ -12,5 +12,5 @@ calc_overlap(cc_adj, cg_adj)
 \item{cg_adj}{cell-gene adjacency matrix}
 }
 \description{
-DO NOT USE! Slower than R implementation
+c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
 }
