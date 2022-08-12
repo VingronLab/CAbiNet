@@ -25,8 +25,8 @@ ComputeSNNasym <- function(SNN, prune, mode) {
 #' @name calc_overlap
 #' @description
 #' c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
-#' @param cc_adj cell-cell adjacency matrix
-#' @param cg_adj cell-gene adjacency matrix
+#' @param cc_adj sparse matrix (dgCMatrix), cell-cell adjacency matrix
+#' @param cg_adj sparse matrix (dgCMatrix), cell-gene adjacency matrix
 #' @export
 calc_overlap <- function(cc_adj, cg_adj) {
     .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
