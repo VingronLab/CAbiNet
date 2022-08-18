@@ -330,7 +330,7 @@ run_spectral <- function(caclust,
 #' 
 #' @return 
 #' Object of type "caclust" with cell and gene clusters saved.
-#' 
+#' @export
 run_leiden <- function(caclust,
                        resolution = 1,
                        n.int = 10, 
