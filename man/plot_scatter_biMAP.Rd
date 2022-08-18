@@ -101,6 +101,8 @@ coordinates of the point.}
 
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
 
+\item{style}{"ggplot" or "plotly::ggplotly" style output figure. Default: 'ggplotly'}
+
 \item{...}{Further arguments.}
 
 \item{caclust_meta_name}{Name under which the caclust object is stored in 

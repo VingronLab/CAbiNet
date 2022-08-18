@@ -63,6 +63,8 @@ coordinates of the point.}
 \item{group_label_size}{integer. Size of the group label.}
 
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
+
+\item{style}{"ggplot" or "plotly::ggplotly" style output figure. Default: 'ggplotly'}
 }
 \value{
 biMAP plot as ggplot object.
