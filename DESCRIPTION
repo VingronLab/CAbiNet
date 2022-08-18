@@ -1,12 +1,33 @@
 Package: CAclust
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
-Date: 2022-02-17
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Title: Biclustering and visualization of scRNAseq data.
+Version: 0.99.0
+Authors@R:
+  c(person(given = "Clemens",
+           family = "Kohl",
+           role = c("cre", "aut"),
+           email = "kohl@molgen.mpg.de"),
+    person(given = "Yan",
+           family = "Zhao",
+           role = c("aut"),
+           email = "zhao@molgen.mpg.de"),
+   person(given = "Martin",
+          family = "Vingron",
+          role = c("aut"),
+          email = "vingron@molgen.mpg.de"))
+Description: CAclust allows fast and robust biclustering of single-cell RNA-seq
+  through Correspondence Analysis. Clustering results of cells and genes can be
+  conviently displayed in a biMAP.
+biocViews: 
+  StatisticalMethod,
+  DimensionReduction,
+  SingleCell,
+  Sequencing,
+  RNASeq,
+  GeneExpression,
+  Clustering,
+  GraphAndNetwork
+License: GPL (>= 3)
 Encoding: UTF-8
 Depends:
   APL
@@ -37,6 +58,8 @@ Imports:
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
 Suggests: 
+    rmarkdown,
+    knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
@@ -49,3 +72,4 @@ Collate:
     'helpers.R'
     'importPackages.R'
     'plot.R'
+VignetteBuilder: knitr
