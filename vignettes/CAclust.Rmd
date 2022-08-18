@@ -10,7 +10,7 @@ author:
 - name: Martin Vingron
   affiliation: Max Planck Institute for Molecular Genetics, Berlin, Germany
   email: vingron@molgen.mpg.de
-package: APL
+package: CAbiNET
 output:
   BiocStyle::html_document
 abstract: |
