@@ -17,6 +17,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  style = "ggplot",
   ...
 )
 
@@ -31,6 +32,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  style = "ggplot",
   ...
 )
 
@@ -45,6 +47,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  style = "ggplot",
   ...,
   caclust_meta_name = "caclust"
 )

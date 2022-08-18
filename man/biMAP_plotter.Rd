@@ -20,7 +20,8 @@ biMAP_plotter(
   color_genes = FALSE,
   label_groups = TRUE,
   group_label_size = 4,
-  label_marker_genes = FALSE
+  label_marker_genes = FALSE,
+  style = "ggplot"
 )
 }
 \arguments{
