@@ -92,8 +92,10 @@ biMAP_plotter <- function(caclust,
     if(!is(meta_df,"data.frame")){
       meta_df <- as.data.frame(meta_df)
     }
+
     if((color_by %in% colnames(meta_df)) &
        (color_by %in% colnames(umap_coords))){
+
       stop('color_by is found both from meta_df and bimap coordinates dataframe at the same time, 
            plot_biMAP is confused about which to use, please rename the column name in meta_df.')
     }
