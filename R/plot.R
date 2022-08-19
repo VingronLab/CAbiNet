@@ -58,7 +58,6 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' coordinates of the point.
 #' @param group_label_size integer. Size of the group label.
 #' @param label_marker_genes logical. If TRUE, names of genes are displayed.
-#' @param  style "ggplot" or "plotly::ggplotly" style output figure. Default: 'ggplotly'
 #' 
 #' @returns
 #' biMAP plot as ggplot object.

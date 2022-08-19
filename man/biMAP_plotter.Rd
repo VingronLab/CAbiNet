@@ -20,8 +20,7 @@ biMAP_plotter(
   color_genes = FALSE,
   label_groups = TRUE,
   group_label_size = 4,
-  label_marker_genes = FALSE,
-  style = "ggplot"
+  label_marker_genes = FALSE
 )
 }
 \arguments{
@@ -63,8 +62,6 @@ coordinates of the point.}
 \item{group_label_size}{integer. Size of the group label.}
 
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
-
-\item{style}{"ggplot" or "plotly::ggplotly" style output figure. Default: 'ggplotly'}
 }
 \value{
 biMAP plot as ggplot object.
