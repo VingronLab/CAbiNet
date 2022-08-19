@@ -78,8 +78,7 @@ biMAP_plotter <- function(caclust,
                           color_genes = FALSE,
                           label_groups = TRUE,
                           group_label_size = 4,
-                          label_marker_genes = FALSE,
-                          style = 'ggplot'){
+                          label_marker_genes = FALSE){
   
   stopifnot(is(caclust, "caclust"))
   
@@ -229,13 +228,7 @@ biMAP_plotter <- function(caclust,
                                       size=I(group_label_size-1))
   }
   p <- p + theme_bw()
-  
-  if (style == 'ggplot'){
-    return(p)
-  }else if(style == 'ggplotly'){
-    p <- plotly::ggplotly(p, tooltip = c("text"))
-  }
-  
+
   return(p)
 }
 
@@ -558,7 +551,6 @@ setGeneric("plot_scatter_biMAP", function(obj,
                                           label_groups = TRUE,
                                           group_label_size = 4,
                                           label_marker_genes = FALSE,
-                                          style = 'ggplot',
                                           ...) {
   standardGeneric("plot_scatter_biMAP")
 })
@@ -578,7 +570,6 @@ setMethod(f = "plot_scatter_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
                    ...){
             
             p <- biMAP_plotter(caclust = obj,
@@ -596,8 +587,7 @@ setMethod(f = "plot_scatter_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes,
-                               style = style)
+                               label_marker_genes = label_marker_genes)
             
             return(p)
           })
@@ -619,7 +609,6 @@ setMethod(f = "plot_scatter_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -654,8 +643,7 @@ setMethod(f = "plot_scatter_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes,
-                               style = style)
+                               label_marker_genes = label_marker_genes)
             
             return(p)
           })
@@ -692,7 +680,6 @@ setGeneric("plot_hex_biMAP", function(obj,
                                       label_groups = TRUE,
                                       group_label_size=4,
                                       label_marker_genes = FALSE,
-                                      style = 'ggplot',
                                       ...) {
   standardGeneric("plot_hex_biMAP")
 })
@@ -714,7 +701,6 @@ setMethod(f = "plot_hex_biMAP",
                    label_groups = TRUE,
                    group_label_size=4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
                    ...){
 
   
@@ -734,8 +720,7 @@ setMethod(f = "plot_hex_biMAP",
                      color_genes = color_genes,
                      label_groups = label_groups,
                      group_label_size = group_label_size,
-                     label_marker_genes = label_marker_genes,
-                     style = style)
+                     label_marker_genes = label_marker_genes)
   
   return(p)
 })
@@ -759,7 +744,6 @@ setMethod(f = "plot_hex_biMAP",
                    label_groups = TRUE,
                    group_label_size=4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -791,8 +775,7 @@ setMethod(f = "plot_hex_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes,
-                               style = style)
+                               label_marker_genes = label_marker_genes)
             
             return(p)
           })
@@ -824,7 +807,7 @@ setGeneric("plot_contour_biMAP", function(obj,
                                           label_groups = TRUE,
                                           group_label_size = 4,
                                           label_marker_genes = FALSE,
-                                          style = 'ggplot',
+                                          
                                           ...) {
   standardGeneric("plot_contour_biMAP")
 })
@@ -843,7 +826,7 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
+                   
                    ...){
   
   p <- biMAP_plotter(caclust = obj,
@@ -861,8 +844,7 @@ setMethod(f = "plot_contour_biMAP",
                       color_genes = color_genes,
                       label_groups = label_groups,
                       group_label_size = group_label_size,
-                      label_marker_genes = label_marker_genes,
-                      style = style)
+                      label_marker_genes = label_marker_genes)
   
   return(p)
   
@@ -885,7 +867,7 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   style = 'ggplot',
+                   
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -917,8 +899,7 @@ setMethod(f = "plot_contour_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes,
-                               style = style)
+                               label_marker_genes = label_marker_genes)
             
             return(p)
             
