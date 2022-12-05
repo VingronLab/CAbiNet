@@ -914,7 +914,8 @@ feature_biMAP <- function(sce,
                          caclust, 
                          feature, 
                          color_cells_by="expression", 
-                         assay = "logcounts"){
+                         assay = "logcounts",
+                         label_size = 1){
   
   stopifnot(is(caclust, "caclust"))
   umap_coords <- caclust@bimap
@@ -969,7 +970,8 @@ feature_biMAP <- function(sce,
                color = "red") +
     ggrepel::geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
                              ggplot2::aes_(~x, ~y, label= ~name),
-                             color = "red") +
+                             color = "red",
+                             size = label_size) +
     viridis::scale_color_viridis(name=lgnd, discrete = discr) +
     ggplot2::labs(x="Dim 1",
                   y="Dim 2")+
