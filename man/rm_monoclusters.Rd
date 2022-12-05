@@ -4,6 +4,7 @@
 \alias{rm_monoclusters}
 \alias{rm_monoclusters,caclust-method}
 \alias{rm_monoclusters,Biclust-method}
+\alias{rm_monoclusters,SingleCellExperiment-method}
 \title{Remove clusters only consisting of cells/genes}
 \usage{
 rm_monoclusters(bic)
@@ -11,6 +12,8 @@ rm_monoclusters(bic)
 \S4method{rm_monoclusters}{caclust}(bic)
 
 \S4method{rm_monoclusters}{Biclust}(bic)
+
+\S4method{rm_monoclusters}{SingleCellExperiment}(bic)
 }
 \arguments{
 \item{bic}{biclustering results from caclust or biclust}

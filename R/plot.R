@@ -57,7 +57,8 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' @param label_groups logical. If TRUE puts the group label on the median 
 #' coordinates of the point.
 #' @param group_label_size integer. Size of the group label.
-#' @param label_marker_genes logical. If TRUE, names of genes are displayed.
+#' @param label_marker_genes logical or character vector. If TRUE, names of detected marker 
+#' genes are displayed. If is character vector, the given marker genes are labeled.
 #' 
 #' @returns
 #' biMAP plot as ggplot object.
@@ -204,7 +205,7 @@ biMAP_plotter <- function(caclust,
 
   if(label_groups){
     
-    label_coords <- umap_cells %>%
+    label_coords <- umap_coords %>%
       dplyr::group_by_at(color_by) %>%
       dplyr::summarize(fraction_of_group = dplyr::n(),
                        median_x = stats::median(x = x),
@@ -219,7 +220,18 @@ biMAP_plotter <- function(caclust,
                                       fontface = "bold")
   }
 
-  if(label_marker_genes){
+  if(isTRUE(label_marker_genes)){
+    
+    p <- p + ggrepel::geom_text_repel(data = umap_genes,
+                                      mapping = ggplot2::aes(x = x,
+                                                             y = y,
+                                                             label = name),
+                                      max.overlaps = 12,
+                                      size=I(group_label_size-1))
+  }else if (is(label_marker_genes, 'character')){
+    
+    idx <- which(umap_genes$name %in% label_marker_genes)
+    umap_genes <- umap_genes[idx,]
     
     p <- p + ggrepel::geom_text_repel(data = umap_genes,
                                       mapping = ggplot2::aes(x = x,
@@ -611,7 +623,8 @@ setMethod(f = "plot_scatter_biMAP",
                    group_label_size = 4,
                    label_marker_genes = FALSE,
                    ...,
-                   caclust_meta_name = 'caclust'){
+                   caclust_meta_name = 'caclust',
+                   subset = TRUE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', 
@@ -620,6 +633,11 @@ setMethod(f = "plot_scatter_biMAP",
             }
             
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            if(isTRUE(subset)){
+              idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+              caclust@bimap <- caclust@bimap[idx,]
+            }
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
               meta_df = SummarizedExperiment::colData(obj)
@@ -913,11 +931,19 @@ setMethod(f = "plot_contour_biMAP",
 #' @param feature character. Name of gene to visualize
 #' @param color_cells_by character. Default: expression
 #' @param assay character. Name of assay in SingleCellExperiment used for visualization.
+#' @param gene_alpha numeric. The transparent value of gene points.
+#' @param cell_alpha numeric. The transparent value of cell points.
+#' @param gene_size numeric. The size of gene points.
+#' @param cell_size numeric. The size of cell points.
 feature_biMAP <- function(sce,
                          caclust, 
                          feature, 
                          color_cells_by="expression", 
-                         assay = "logcounts"){
+                         assay = "logcounts",
+                         gene_alpha = 0.5,
+                         cell_alpha = 0.8,
+                         gene_size = 1,
+                         cell_size = 1){
   
   stopifnot(is(caclust, "caclust"))
   umap_coords <- caclust@bimap
@@ -957,7 +983,8 @@ feature_biMAP <- function(sce,
                                        "Name: ", quote(name), "\n",
                                        "Cluster: ", quote(cluster))), 
                color ="#A9A9A9", 
-               alpha = 0.5) +  #grey
+               alpha = gene_alpha,
+               size = gene_size) +  #grey
     ggplot2::geom_point(umap_coords[umap_coords$type == "cell",],
                mapping=ggplot2::aes_(~x, 
                                      ~y, 
@@ -966,7 +993,8 @@ feature_biMAP <- function(sce,
                                         "Type: ", quote(type), "\n",
                                         "Name: ", quote(name), "\n",
                                         "Cluster: ", quote(cluster))),
-               alpha = 0.8) +
+               alpha = cell_alpha,
+               size = cell_size) +
     ggplot2::geom_point(data = na.omit(umap_coords[feature,c("name", "x","y")]),
                         ggplot2::aes_(~x, ~y),
                color = "red") +
@@ -1020,7 +1048,8 @@ setMethod(f = "plot_feature_biMAP",
                                caclust = caclust,
                                feature = feature, 
                                color_cells_by=color_cells_by, 
-                               assay =assay)
+                               assay =assay,
+                               ...)
             return(p)
             
 })
@@ -1061,7 +1090,8 @@ setMethod(f = "plot_feature_biMAP",
                                caclust = caclust,
                                feature = feature, 
                                color_cells_by=color_cells_by, 
-                               assay =assay)
+                               assay =assay,
+                               ...)
             return(p)
             
 })

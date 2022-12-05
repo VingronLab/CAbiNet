@@ -395,4 +395,21 @@ setMethod(f = "rm_monoclusters",
 })
 
 
-
+#' @rdname rm_monoclusters
+#' @export
+setMethod(f = "rm_monoclusters",
+          signature=(bic="SingleCellExperiment"),
+          function(bic){
+            
+            clust = metadata(bic)[['caclust']]
+            clust = rm_monoclusters(clust)
+            metadata(bic)[['caclust']] = clust
+            
+            idxg = rownames(bic) %in% names(gene_clusters(clust))
+            idxc = colnames(bic) %in% names(cell_clusters(clust))
+            
+            bic = bic[idxg, idxc]
+                        
+            return(bic)      
+            
+          })
