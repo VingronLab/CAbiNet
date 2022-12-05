@@ -58,6 +58,8 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' coordinates of the point.
 #' @param group_label_size integer. Size of the group label.
 #' @param label_marker_genes logical. If TRUE, names of genes are displayed.
+#' @param colors Vector of hexadecimal color codes of the same length as the
+#' categories defined by color_by or longer. If NULL ignored.
 #' 
 #' @returns
 #' biMAP plot as ggplot object.
@@ -77,7 +79,8 @@ biMAP_plotter <- function(caclust,
                           color_genes = FALSE,
                           label_groups = TRUE,
                           group_label_size = 4,
-                          label_marker_genes = FALSE){
+                          label_marker_genes = FALSE,
+                          colors = NULL){
   
   stopifnot(is(caclust, "caclust"))
   
@@ -115,24 +118,28 @@ biMAP_plotter <- function(caclust,
   
   cats <- length(unique(umap_coords[,color_by]))
   
-  if (cats <= 9){
-    
-    colors <- suppressWarnings(RColorBrewer::brewer.pal(cats, "Set1"))
-    colors <- colors[seq_len(cats)]
-    names(colors) <- sort(unique(umap_coords[,color_by]))
-    
-  } else if (cats <= 12) {
-    
-    colors <- RColorBrewer::brewer.pal(cats, "Set3")
-    names(colors) <- sort(unique(umap_coords[,color_by]))
-    
-    
-  } else {
-    colors <- Polychrome::createPalette(N = cats,
-                                        seedcolors = c("#00ffff", "#ff00ff", "#ffff00"), 
-                                        range = c(10, 60))
-    names(colors) <- sort(unique(umap_coords[,color_by]))
+  if (is.null(colors)){
+      if (cats <= 9){
+      
+      colors <- suppressWarnings(RColorBrewer::brewer.pal(cats, "Set1"))
+      colors <- colors[seq_len(cats)]
+      names(colors) <- sort(unique(umap_coords[,color_by]))
+      
+    } else if (cats <= 12) {
+      
+      colors <- RColorBrewer::brewer.pal(cats, "Set3")
+      names(colors) <- sort(unique(umap_coords[,color_by]))
+      
+      
+    } else {
+      colors <- Polychrome::createPalette(N = cats,
+                                          seedcolors = c("#00ffff", "#ff00ff", "#ffff00"), 
+                                          range = c(10, 60))
+      names(colors) <- sort(unique(umap_coords[,color_by]))
+    }
+
   }
+
   
   umap_cells <- dplyr::filter(umap_coords, type == "cell")
   umap_genes <- dplyr::filter(umap_coords, type == "gene")   
@@ -588,7 +595,8 @@ setMethod(f = "plot_scatter_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes)
+                               label_marker_genes = label_marker_genes,
+                               ...)
             
             return(p)
           })
@@ -644,7 +652,8 @@ setMethod(f = "plot_scatter_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes)
+                               label_marker_genes = label_marker_genes,
+                               ...)
             
             return(p)
           })
@@ -721,7 +730,8 @@ setMethod(f = "plot_hex_biMAP",
                      color_genes = color_genes,
                      label_groups = label_groups,
                      group_label_size = group_label_size,
-                     label_marker_genes = label_marker_genes)
+                     label_marker_genes = label_marker_genes,
+                     ...)
   
   return(p)
 })
@@ -776,7 +786,8 @@ setMethod(f = "plot_hex_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes)
+                               label_marker_genes = label_marker_genes,
+                               ...)
             
             return(p)
           })
@@ -843,7 +854,8 @@ setMethod(f = "plot_contour_biMAP",
                       color_genes = color_genes,
                       label_groups = label_groups,
                       group_label_size = group_label_size,
-                      label_marker_genes = label_marker_genes)
+                      label_marker_genes = label_marker_genes,
+                      ...)
   
   return(p)
   
@@ -897,7 +909,8 @@ setMethod(f = "plot_contour_biMAP",
                                color_genes = color_genes,
                                label_groups = label_groups,
                                group_label_size = group_label_size,
-                               label_marker_genes = label_marker_genes)
+                               label_marker_genes = label_marker_genes,
+                               ...)
             
             return(p)
             
@@ -910,11 +923,13 @@ setMethod(f = "plot_contour_biMAP",
 #' @param feature character. Name of gene to visualize
 #' @param color_cells_by character. Default: expression
 #' @param assay character. Name of assay in SingleCellExperiment used for visualization.
+#' @param label_size numeric. Size of the text label.
 feature_biMAP <- function(sce,
                          caclust, 
                          feature, 
                          color_cells_by="expression", 
-                         assay = "logcounts"){
+                         assay = "logcounts",
+                         label_size = 1){
   
   stopifnot(is(caclust, "caclust"))
   umap_coords <- caclust@bimap
@@ -969,7 +984,8 @@ feature_biMAP <- function(sce,
                color = "red") +
     ggrepel::geom_text_repel(data = na.omit(umap_coords[feature,c("name", "x","y")]),
                              ggplot2::aes_(~x, ~y, label= ~name),
-                             color = "red") +
+                             color = "red",
+                             size = label_size) +
     viridis::scale_color_viridis(name=lgnd, discrete = discr) +
     ggplot2::labs(x="Dim 1",
                   y="Dim 2")+
