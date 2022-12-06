@@ -50,7 +50,8 @@ plot_scatter_biMAP(
   group_label_size = 4,
   label_marker_genes = FALSE,
   ...,
-  caclust_meta_name = "caclust"
+  caclust_meta_name = "caclust",
+  subset = TRUE
 )
 
 plot_biMAP(
@@ -95,7 +96,8 @@ coordinates of the point.}
 
 \item{group_label_size}{integer. Size of the group label.}
 
-\item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
+\item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker 
+genes are displayed. If is character vector, the given marker genes are labeled.}
 
 \item{...}{Further arguments.}
 

@@ -68,7 +68,7 @@ should be added
 (label should be stored in colnames).
 Default NULL (no columns).}
 
-\item{type}{String. Type of plot to draw. Either "ggplot" or "plotly". 
+\item{type}{String. Type of plot to draw. Either "ggplot" or "ggplotly". 
 Default "ggplot".}
 
 \item{show_all}{logical. If FALSE cells/genes that are not in col_metadata/
@@ -89,14 +89,14 @@ metadata(SingleCellExperiment object). Default: 'caclust.'}
 metadata(SingleCellExperiment object). Default: 'caobj'.}
 }
 \value{
-Plot of class "plotly" or "ggplot".
+Plot of class "ggplotly" or "ggplot".
 }
 \description{
 Plots the first 2 dimensions of the rows and columns in the same plot.
 }
 \details{
-Choosing type "plotly" will generate an interactive html plot with the 
-package plotly.
+Choosing type "ggplotly" will generate an interactive html plot with the 
+package ggplotly.
 Type "ggplot" generates a static plot.
 Depending on whether `princ_coords` is set to 1 or 2 either
 the principal coordinates of either the rows (1) or the columns (2)

@@ -319,13 +319,14 @@ is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
 #' Takes an object of class biclust and removes all clusters that only consist
 #' of cells or genes.
 #' 
-#' @param bic biclustering results from caclust or biclust
+#' @param obj biclustering results from caclust or biclust or a SingleCellExperiment object.
 #' 
 #' @return 
 #' caclust/biclust object with monoclusters removed.
 #' 
 #' @export
-setGeneric("rm_monoclusters", function(bic) {
+setGeneric("rm_monoclusters", function(obj,
+                                       ...) {
   standardGeneric("rm_monoclusters")
 })
 
@@ -333,43 +334,43 @@ setGeneric("rm_monoclusters", function(bic) {
 #' @rdname rm_monoclusters
 #' @export
 setMethod(f = "rm_monoclusters",
-          signature=(bic="caclust"),
-          function(bic){
+          signature=(obj="caclust"),
+          function(obj){
         
-        cc <- unique(cell_clusters(bic))
-        gc <- unique(gene_clusters(bic))
+        cc <- unique(cell_clusters(obj))
+        gc <- unique(gene_clusters(obj))
         
         keep <- sort(as.character(intersect(cc,gc)))
         
         if(length(keep > 0)){
           
-          bic@cell_clusters <- bic@cell_clusters[as.character(bic@cell_clusters) %in% keep]
-          bic@cell_clusters <- droplevels(bic@cell_clusters)
-          # bic@cell_clusters <- factor(as.character(bic@cell_clusters), levels = keep)
-          # bic@cell_clusters <- na.omit(bic@cell_clusters)
+          obj@cell_clusters <- obj@cell_clusters[as.character(obj@cell_clusters) %in% keep]
+          obj@cell_clusters <- droplevels(obj@cell_clusters)
+          # obj@cell_clusters <- factor(as.character(obj@cell_clusters), levels = keep)
+          # obj@cell_clusters <- na.omit(obj@cell_clusters)
           
-          bic@gene_clusters <- bic@gene_clusters[as.character(bic@gene_clusters) %in% keep]
-          bic@gene_clusters <- droplevels(bic@gene_clusters)
-          # bic@gene_clusters <- factor(as.character(bic@gene_clusters), levels = keep)
-          # bic@gene_clusters <- na.omit(bic@gene_clusters)
-          
-        }
-        
-        stopifnot(!is.null(names(bic@cell_clusters)))
-        stopifnot(!is.null(names(bic@gene_clusters)))
-        
-        if(!is.empty(bic@SNN)){
-          
-          selr <- which(rownames(bic@SNN) %in% c(names(bic@cell_clusters),
-                                                 names(bic@gene_clusters)))
-          
-          selc <- which(colnames(bic@SNN) %in% c(names(bic@cell_clusters),
-                                                 names(bic@gene_clusters)))
-          bic@SNN <- bic@SNN[selr, selc]
+          obj@gene_clusters <- obj@gene_clusters[as.character(obj@gene_clusters) %in% keep]
+          obj@gene_clusters <- droplevels(obj@gene_clusters)
+          # obj@gene_clusters <- factor(as.character(obj@gene_clusters), levels = keep)
+          # obj@gene_clusters <- na.omit(obj@gene_clusters)
           
         }
         
-        return(bic)      
+        stopifnot(!is.null(names(obj@cell_clusters)))
+        stopifnot(!is.null(names(obj@gene_clusters)))
+        
+        if(!is.empty(obj@SNN)){
+          
+          selr <- which(rownames(obj@SNN) %in% c(names(obj@cell_clusters),
+                                                 names(obj@gene_clusters)))
+          
+          selc <- which(colnames(obj@SNN) %in% c(names(obj@cell_clusters),
+                                                 names(obj@gene_clusters)))
+          obj@SNN <- obj@SNN[selr, selc]
+          
+        }
+        
+        return(obj)      
                        
 })
 
@@ -377,22 +378,48 @@ setMethod(f = "rm_monoclusters",
 #' @rdname rm_monoclusters
 #' @export
 setMethod(f = "rm_monoclusters",
-          signature=(bic="Biclust"),
-          function(bic){
+          signature=(obj="Biclust"),
+          function(obj){
             
-            keep <- colSums(bic@RowxNumber) > 0 & rowSums(bic@NumberxCol) > 0
+            keep <- colSums(obj@RowxNumber) > 0 & rowSums(obj@NumberxCol) > 0
             
             if(any(!keep)){
               
-              bic@RowxNumber <- bic@RowxNumber[,keep, drop=FALSE]
-              bic@NumberxCol <- bic@NumberxCol[keep, ,drop=FALSE]
-              bic@Number <- sum(keep)
+              obj@RowxNumber <- obj@RowxNumber[,keep, drop=FALSE]
+              obj@NumberxCol <- obj@NumberxCol[keep, ,drop=FALSE]
+              obj@Number <- sum(keep)
               
             }
             
-            return(bic)            
+            return(obj)            
             
 })
 
 
-
+#' @rdname rm_monoclusters
+#' @param sce SingleCellExperiment object with caclust object in the metadata
+#' @param subset_sce logical. Subset the SCE object to the cells which have co-clusters genes if is TRUE.
+#' @export
+setMethod(f = "rm_monoclusters",
+          signature=(obj="SingleCellExperiment"),
+          function(obj,
+                   subset_sce = FALSE){
+            
+            if (isFALSE('caclust' %in% names(metadata(obj)))){
+              stop('caclust not found from input SingleCellExperiment object metadata, run caclust function first!')
+            }
+            
+            clust = metadata(obj)[['caclust']]
+            clust = rm_monoclusters(clust)
+            metadata(obj)[['caclust']] = clust
+            
+            if (isTRUE(subset_sce)){
+              idxg = rownames(obj) %in% names(gene_clusters(clust))
+              idxc = colnames(obj) %in% names(cell_clusters(clust))
+              
+              obj = obj[, idxc]
+            }
+            
+            return(obj)      
+            
+          })

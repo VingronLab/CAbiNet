@@ -9,9 +9,9 @@ using namespace Rcpp;
 //' WIP replacement for `determine_overlap` function
 //' @name calc_overlap
 //' @description
-//' DO NOT USE! Slower than R implementation
-//' @param cc_adj cell-cell adjacency matrix
-//' @param cg_adj cell-gene adjacency matrix
+//' c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
+//' @param cc_adj sparse matrix (dgCMatrix), cell-cell adjacency matrix
+//' @param cg_adj sparse matrix (dgCMatrix), cell-gene adjacency matrix
 //' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
