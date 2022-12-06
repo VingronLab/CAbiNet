@@ -138,6 +138,8 @@ biMAP_plotter <- function(caclust,
       names(colors) <- sort(unique(umap_coords[,color_by]))
     }
 
+  } else {
+    colors <- colors[seq_len(cats)]
   }
 
   
