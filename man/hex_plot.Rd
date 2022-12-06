@@ -28,7 +28,8 @@ hex_plot(
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.}
 
-\item{colors}{named vector of of length equal to the group size.}
+\item{colors}{Vector of hexadecimal color codes of the same length as the
+categories defined by color_by or longer. If NULL ignored.}
 
 \item{color_genes}{logical. If TRUE colors genes by color_by.}
 

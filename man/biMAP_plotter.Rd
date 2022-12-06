@@ -20,7 +20,8 @@ biMAP_plotter(
   color_genes = FALSE,
   label_groups = TRUE,
   group_label_size = 4,
-  label_marker_genes = FALSE
+  label_marker_genes = FALSE,
+  colors = NULL
 )
 }
 \arguments{
@@ -63,6 +64,9 @@ coordinates of the point.}
 
 \item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker 
 genes are displayed. If is character vector, the given marker genes are labeled.}
+
+\item{colors}{Vector of hexadecimal color codes of the same length as the
+categories defined by color_by or longer. If NULL ignored.}
 }
 \value{
 biMAP plot as ggplot object.

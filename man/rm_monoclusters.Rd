@@ -7,16 +7,20 @@
 \alias{rm_monoclusters,SingleCellExperiment-method}
 \title{Remove clusters only consisting of cells/genes}
 \usage{
-rm_monoclusters(bic)
+rm_monoclusters(obj, ...)
 
-\S4method{rm_monoclusters}{caclust}(bic)
+\S4method{rm_monoclusters}{caclust}(obj)
 
-\S4method{rm_monoclusters}{Biclust}(bic)
+\S4method{rm_monoclusters}{Biclust}(obj)
 
-\S4method{rm_monoclusters}{SingleCellExperiment}(bic)
+\S4method{rm_monoclusters}{SingleCellExperiment}(obj, subset_sce = FALSE)
 }
 \arguments{
-\item{bic}{biclustering results from caclust or biclust}
+\item{obj}{biclustering results from caclust or biclust or a SingleCellExperiment object.}
+
+\item{subset_sce}{logical. Subset the SCE object to the cells which have co-clusters genes if is TRUE.}
+
+\item{sce}{SingleCellExperiment object with caclust object in the metadata}
 }
 \value{
 caclust/biclust object with monoclusters removed.

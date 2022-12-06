@@ -13,7 +13,8 @@ feature_biMAP(
   gene_alpha = 0.5,
   cell_alpha = 0.8,
   gene_size = 1,
-  cell_size = 1
+  cell_size = 1,
+  label_size = 1
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ feature_biMAP(
 \item{gene_size}{numeric. The size of gene points.}
 
 \item{cell_size}{numeric. The size of cell points.}
+
+\item{label_size}{numeric. Size of the text label.}
 }
 \description{
 plot biMAP with gene expression

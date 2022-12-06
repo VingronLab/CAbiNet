@@ -837,7 +837,6 @@ setGeneric("plot_contour_biMAP", function(obj,
                                           label_groups = TRUE,
                                           group_label_size = 4,
                                           label_marker_genes = FALSE,
-                                          
                                           ...) {
   standardGeneric("plot_contour_biMAP")
 })
@@ -856,7 +855,6 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   
                    ...){
   
   p <- biMAP_plotter(caclust = obj,
@@ -898,7 +896,6 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
-                   
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -957,7 +954,7 @@ feature_biMAP <- function(sce,
                          gene_alpha = 0.5,
                          cell_alpha = 0.8,
                          gene_size = 1,
-                         cell_size = 1){
+                         cell_size = 1,
                          label_size = 1){
   
   stopifnot(is(caclust, "caclust"))
