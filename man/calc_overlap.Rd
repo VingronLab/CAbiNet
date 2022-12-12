@@ -7,10 +7,10 @@
 calc_overlap(cc_adj, cg_adj)
 }
 \arguments{
-\item{cc_adj}{cell-cell adjacency matrix}
+\item{cc_adj}{sparse matrix (dgCMatrix), cell-cell adjacency matrix}
 
-\item{cg_adj}{cell-gene adjacency matrix}
+\item{cg_adj}{sparse matrix (dgCMatrix), cell-gene adjacency matrix}
 }
 \description{
-DO NOT USE! Slower than R implementation
+c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
 }
