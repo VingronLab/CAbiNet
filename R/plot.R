@@ -626,6 +626,9 @@ setMethod(f = "plot_scatter_biMAP",
 #' @rdname plot_scatter_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_scatter_biMAP",
           signature = (obj = "SingleCellExperiment"),
@@ -643,7 +646,7 @@ setMethod(f = "plot_scatter_biMAP",
                    interactive = FALSE,
                    ...,
                    caclust_meta_name = 'caclust',
-                   subset = TRUE){
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', 
@@ -653,8 +656,17 @@ setMethod(f = "plot_scatter_biMAP",
             
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
             if(isTRUE(subset)){
-              idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
               caclust@bimap <- caclust@bimap[idx,]
             }
             
@@ -780,6 +792,9 @@ setMethod(f = "plot_hex_biMAP",
 #' @rdname plot_hex_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_hex_biMAP",
           signature(obj = "SingleCellExperiment"),
@@ -798,12 +813,27 @@ setMethod(f = "plot_hex_biMAP",
                    label_marker_genes = FALSE,
                    interactive = FALSE,
                    ...,
-                   caclust_meta_name = 'caclust'){
+                   caclust_meta_name = 'caclust',
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
+            if(isTRUE(subset)){
+              caclust@bimap <- caclust@bimap[idx,]
+            }
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
               meta_df = SummarizedExperiment::colData(obj)
@@ -920,6 +950,9 @@ setMethod(f = "plot_contour_biMAP",
 #' @rdname plot_contour_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_contour_biMAP", 
           signature = (obj = "SingleCellExperiment"),
@@ -935,12 +968,27 @@ setMethod(f = "plot_contour_biMAP",
                    label_marker_genes = FALSE,
                    interactive = FALSE,
                    ...,
-                   caclust_meta_name = 'caclust'){
+                   caclust_meta_name = 'caclust',
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
+            if(isTRUE(subset)){
+              caclust@bimap <- caclust@bimap[idx,]
+            }
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
               meta_df = SummarizedExperiment::colData(obj)
