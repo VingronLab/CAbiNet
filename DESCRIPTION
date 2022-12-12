@@ -1,6 +1,6 @@
-Package: CAclust
+Package: CAbiNet
 Type: Package
-Title: Biclustering and visualization of scRNAseq data.
+Title: Biclustering and visualization of scRNAseq data
 Version: 0.99.0
 Authors@R:
   c(person(given = "Clemens",

@@ -141,6 +141,8 @@ biMAP_plotter <- function(caclust,
       names(colors) <- sort(unique(umap_coords[,color_by]))
     }
 
+  } else {
+    colors <- colors[seq_len(cats)]
   }
 
   
@@ -554,6 +556,8 @@ contour_plot <- function(umap_cells,
 #' a larger size to make visual differentiation easier.
 #' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
 #' object or of class "SingleCellExperiment".
+#' @param interactive If TRUE plot_scatter_biMAP returns an interactive (html) 
+#' plot. If FALSE a ggplot object is returned.
 #' @inheritParams biMAP_plotter
 #' @param ... Further arguments.
 #' @returns
@@ -571,6 +575,7 @@ setGeneric("plot_scatter_biMAP", function(obj,
                                           label_groups = TRUE,
                                           group_label_size = 4,
                                           label_marker_genes = FALSE,
+                                          interactive = FALSE,
                                           ...) {
   standardGeneric("plot_scatter_biMAP")
 })
@@ -590,6 +595,7 @@ setMethod(f = "plot_scatter_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...){
             
             p <- biMAP_plotter(caclust = obj,
@@ -609,6 +615,10 @@ setMethod(f = "plot_scatter_biMAP",
                                group_label_size = group_label_size,
                                label_marker_genes = label_marker_genes,
                                ...)
+            
+            if (isTRUE(interactive)){
+              p <- plotly::ggplotly(p)
+            }
             
             return(p)
           })
@@ -630,6 +640,7 @@ setMethod(f = "plot_scatter_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...,
                    caclust_meta_name = 'caclust',
                    subset = TRUE){
@@ -673,6 +684,10 @@ setMethod(f = "plot_scatter_biMAP",
                                label_marker_genes = label_marker_genes,
                                ...)
             
+            if (isTRUE(interactive)){
+              p <- plotly::ggplotly(p)
+            }
+            
             return(p)
           })
 
@@ -689,6 +704,8 @@ plot_biMAP <- plot_scatter_biMAP
 #' Bins cells into hexagons and colors them proportionally to their group label.
 #' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
 #' object or of class "SingleCellExperiment".
+#' @param interactive If TRUE plot_scatter_biMAP returns an interactive (html) 
+#' plot. If FALSE a ggplot object is returned.
 #' @inheritParams biMAP_plotter
 #' @param ... Further arguments
 #' @returns 
@@ -708,6 +725,7 @@ setGeneric("plot_hex_biMAP", function(obj,
                                       label_groups = TRUE,
                                       group_label_size=4,
                                       label_marker_genes = FALSE,
+                                      interactive = FALSE,
                                       ...) {
   standardGeneric("plot_hex_biMAP")
 })
@@ -729,6 +747,7 @@ setMethod(f = "plot_hex_biMAP",
                    label_groups = TRUE,
                    group_label_size=4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...){
 
   
@@ -750,6 +769,10 @@ setMethod(f = "plot_hex_biMAP",
                      group_label_size = group_label_size,
                      label_marker_genes = label_marker_genes,
                      ...)
+  
+  if (isTRUE(interactive)){
+    p <- plotly::ggplotly(p)
+  }
   
   return(p)
 })
@@ -773,6 +796,7 @@ setMethod(f = "plot_hex_biMAP",
                    label_groups = TRUE,
                    group_label_size=4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -807,6 +831,11 @@ setMethod(f = "plot_hex_biMAP",
                                label_marker_genes = label_marker_genes,
                                ...)
             
+            
+            if (isTRUE(interactive)){
+              p <- plotly::ggplotly(p)
+            }
+            
             return(p)
           })
 
@@ -822,6 +851,8 @@ setMethod(f = "plot_hex_biMAP",
 #' over the contours.
 #' @param obj Object that stores biMAP coordinates. Can be either a "caclust"
 #' object or of class "SingleCellExperiment".
+#' @param interactive If TRUE plot_scatter_biMAP returns an interactive (html) 
+#' plot. If FALSE a ggplot object is returned.
 #' @inheritParams biMAP_plotter
 #' @param ... Further arguments.
 #' @returns 
@@ -837,6 +868,7 @@ setGeneric("plot_contour_biMAP", function(obj,
                                           label_groups = TRUE,
                                           group_label_size = 4,
                                           label_marker_genes = FALSE,
+                                          interactive = FALSE,
                                           ...) {
   standardGeneric("plot_contour_biMAP")
 })
@@ -855,6 +887,7 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...){
   
   p <- biMAP_plotter(caclust = obj,
@@ -874,6 +907,10 @@ setMethod(f = "plot_contour_biMAP",
                       group_label_size = group_label_size,
                       label_marker_genes = label_marker_genes,
                       ...)
+  
+  if (isTRUE(interactive)){
+    p <- plotly::ggplotly(p)
+  }
   
   return(p)
   
@@ -896,6 +933,7 @@ setMethod(f = "plot_contour_biMAP",
                    label_groups = TRUE,
                    group_label_size = 4,
                    label_marker_genes = FALSE,
+                   interactive = FALSE,
                    ...,
                    caclust_meta_name = 'caclust'){
             
@@ -929,6 +967,10 @@ setMethod(f = "plot_contour_biMAP",
                                group_label_size = group_label_size,
                                label_marker_genes = label_marker_genes,
                                ...)
+            
+            if (isTRUE(interactive)){
+              p <- plotly::ggplotly(p)
+            }
             
             return(p)
             
