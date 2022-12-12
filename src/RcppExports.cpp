@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // ComputeSNNasym
 Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN, double prune, String mode);
-RcppExport SEXP _CAclust_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
+RcppExport SEXP _CAbiNet_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // calc_overlap
 Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, Eigen::SparseMatrix<int> cg_adj);
-RcppExport SEXP _CAclust_calc_overlap(SEXP cc_adjSEXP, SEXP cg_adjSEXP) {
+RcppExport SEXP _CAbiNet_calc_overlap(SEXP cc_adjSEXP, SEXP cg_adjSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -38,12 +38,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CAclust_ComputeSNNasym", (DL_FUNC) &_CAclust_ComputeSNNasym, 3},
-    {"_CAclust_calc_overlap", (DL_FUNC) &_CAclust_calc_overlap, 2},
+    {"_CAbiNet_ComputeSNNasym", (DL_FUNC) &_CAbiNet_ComputeSNNasym, 3},
+    {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 2},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_CAclust(DllInfo *dll) {
+RcppExport void R_init_CAbiNet(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

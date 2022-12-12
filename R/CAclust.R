@@ -1,14 +1,15 @@
-#' CAclust: Biclustering in CA space for single-cell RNA-seq data
+#' CAbiNet: Correspondence Analysis for Biclustering on Networks
 #'
-#' CAclust provides functions to build graphs of cells and genes as well as
-#' graph clustering methods appropriate for such graphs.
+#' CAbiNet provides functions to build graphs of cells and genes as well as
+#' graph clustering methods appropriate for such graphs. Cells and genes can be
+#' co-embedded in a biMAP.
 #' 
 #' @section Mypackage functions:
 #' The mypackage functions ...
-#' @rdname CAclust-package
+#' @rdname CAbiNet-package
 #' @docType package
-#' @name CAclust
-#' @useDynLib CAclust
+#' @name CAbiNet
+#' @useDynLib CAbiNet
 NULL
 #> NULL
 

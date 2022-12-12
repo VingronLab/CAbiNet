@@ -18,7 +18,7 @@
 #' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
 #' @export
 ComputeSNNasym <- function(SNN, prune, mode) {
-    .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune, mode)
+    .Call('_CAbiNet_ComputeSNNasym', PACKAGE = 'CAbiNet', SNN, prune, mode)
 }
 
 #' WIP replacement for `determine_overlap` function
@@ -29,6 +29,6 @@ ComputeSNNasym <- function(SNN, prune, mode) {
 #' @param cg_adj cell-gene adjacency matrix
 #' @export
 calc_overlap <- function(cc_adj, cg_adj) {
-    .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
+    .Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
 }
 

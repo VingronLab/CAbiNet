@@ -368,14 +368,14 @@ setMethod(f = "rm_monoclusters",
           bic@SNN <- bic@SNN[selr, selc]
           
         }
-
-        if(!is.empty(bic@bimap)){
-
-          sel <- which(bic@bimap$cluster %in% keep)
-
-          bic@bimap <- bic@bimap[sel,]
-          
-        }
+        
+        # if(!is.empty(bic@bimap)){
+        # 
+        #   sel <- which(bic@bimap$cluster %in% keep)
+        # 
+        #   bic@bimap <- bic@bimap[sel,]
+        #   
+        # }
         
         return(bic)      
                        

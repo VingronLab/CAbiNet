@@ -9,7 +9,8 @@ feature_biMAP(
   caclust,
   feature,
   color_cells_by = "expression",
-  assay = "logcounts"
+  assay = "logcounts",
+  label_size = 1
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ feature_biMAP(
 \item{color_cells_by}{character. Default: expression}
 
 \item{assay}{character. Name of assay in SingleCellExperiment used for visualization.}
+
+\item{label_size}{numeric. Size of the text label.}
 }
 \description{
 plot biMAP with gene expression

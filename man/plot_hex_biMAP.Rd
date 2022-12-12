@@ -20,6 +20,7 @@ plot_hex_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...
 )
 
@@ -37,6 +38,7 @@ plot_hex_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...
 )
 
@@ -54,6 +56,7 @@ plot_hex_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...,
   caclust_meta_name = "caclust"
 )
@@ -91,6 +94,9 @@ coordinates of the point.}
 \item{group_label_size}{integer. Size of the group label.}
 
 \item{label_marker_genes}{logical. If TRUE, names of genes are displayed.}
+
+\item{interactive}{If TRUE plot_scatter_biMAP returns an interactive (html) 
+plot. If FALSE a ggplot object is returned.}
 
 \item{...}{Further arguments}
 
