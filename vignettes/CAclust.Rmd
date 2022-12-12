@@ -1,5 +1,5 @@
 ---
-title: "Biclustering scRNAseq data with CAbiNET"
+title: "Visualizing and Biclustering scRNA-seq data with CAbiNET"
 author:
 - name: Clemens Kohl
   affiliation: Max Planck Institute for Molecular Genetics, Berlin, Germany
@@ -10,11 +10,11 @@ author:
 - name: Martin Vingron
   affiliation: Max Planck Institute for Molecular Genetics, Berlin, Germany
   email: vingron@molgen.mpg.de
-package: CAbiNET
+package: CAbiNet
 output:
   BiocStyle::html_document
 abstract: |
-  CAclust allows fast and robust biclustering of single-cell RNA-seq
+  CAbiNET allows fast and robust biclustering of single-cell RNA-seq
   through Correspondence Analysis. Clustering results of cells and genes can be
   conviently displayed in a biMAP.
 vignette: |
@@ -38,11 +38,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", results = "hold")
 
 You can install the devopmental version of the package with:
 ```{r git_install, eval=FALSE}
-devtools::install_github("ClemensKohl/CAclust")
+devtools::install_github("ClemensKohl/CAbiNet")
 ```
 
 ```{r setup}
-library(CAclust)
+library(CAbiNet)
 ```
 
 # Analyzing data with CAbiNET

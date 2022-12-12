@@ -346,14 +346,10 @@ setMethod(f = "rm_monoclusters",
           
           obj@cell_clusters <- obj@cell_clusters[as.character(obj@cell_clusters) %in% keep]
           obj@cell_clusters <- droplevels(obj@cell_clusters)
-          # obj@cell_clusters <- factor(as.character(obj@cell_clusters), levels = keep)
-          # obj@cell_clusters <- na.omit(obj@cell_clusters)
-          
+
           obj@gene_clusters <- obj@gene_clusters[as.character(obj@gene_clusters) %in% keep]
           obj@gene_clusters <- droplevels(obj@gene_clusters)
-          # obj@gene_clusters <- factor(as.character(obj@gene_clusters), levels = keep)
-          # obj@gene_clusters <- na.omit(obj@gene_clusters)
-          
+
         }
         
         stopifnot(!is.null(names(obj@cell_clusters)))
@@ -370,6 +366,20 @@ setMethod(f = "rm_monoclusters",
           
         }
         
+        if(!is.empty(obj@bimap)){
+         warning("The biMAP embedding is not valid after removing mono-clusters",
+                 "and should be recomputed!") 
+        }
+
+        # Current implementation does not subset biMAP coords.
+        # if(!is.empty(obj@bimap)){
+        # 
+        #   sel <- which(obj@bimap$cluster %in% keep)
+        # 
+        #   obj@bimap <- obj@bimap[sel,]
+        #   
+        # }
+
         return(obj)      
                        
 })
@@ -417,7 +427,7 @@ setMethod(f = "rm_monoclusters",
               idxg = rownames(obj) %in% names(gene_clusters(clust))
               idxc = colnames(obj) %in% names(cell_clusters(clust))
               
-              obj = obj[, idxc]
+              obj = obj[idxg, idxc]
             }
             
             return(obj)      

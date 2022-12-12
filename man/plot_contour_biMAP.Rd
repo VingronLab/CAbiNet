@@ -17,6 +17,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...
 )
 
@@ -31,6 +32,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...
 )
 
@@ -45,6 +47,7 @@ plot_contour_biMAP(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
+  interactive = FALSE,
   ...,
   caclust_meta_name = "caclust"
 )
@@ -76,6 +79,9 @@ coordinates of the point.}
 
 \item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker 
 genes are displayed. If is character vector, the given marker genes are labeled.}
+
+\item{interactive}{If TRUE plot_scatter_biMAP returns an interactive (html) 
+plot. If FALSE a ggplot object is returned.}
 
 \item{...}{Further arguments.}
 
