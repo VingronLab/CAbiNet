@@ -16,7 +16,8 @@ hex_plot(
   cell_alpha,
   gene_size,
   gene_alpha,
-  interact_genes
+  interact_genes,
+  plotly
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ adjusted by the number of cells in the bin?}
 
 \item{interact_genes}{character string with text and labels for genes in 
 interactive plots.}
+
+\item{plotly}{If TRUE a hex plot with labels per hexbin will be made.}
 }
 \value{
 ggplot object

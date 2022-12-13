@@ -320,7 +320,7 @@ is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
 #' of cells or genes.
 #' 
 #' @param obj biclustering results from caclust or biclust or a SingleCellExperiment object.
-#' 
+#' @param ... further arguments
 #' @return 
 #' caclust/biclust object with monoclusters removed.
 #' 
@@ -407,7 +407,6 @@ setMethod(f = "rm_monoclusters",
 
 
 #' @rdname rm_monoclusters
-#' @param sce SingleCellExperiment object with caclust object in the metadata
 #' @param subset_sce logical. Subset the SCE object to the cells which have co-clusters genes if is TRUE.
 #' @export
 setMethod(f = "rm_monoclusters",
