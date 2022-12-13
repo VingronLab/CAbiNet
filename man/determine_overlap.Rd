@@ -2,7 +2,8 @@
 % Please edit documentation in R/helpers.R
 \name{determine_overlap}
 \alias{determine_overlap}
-\title{Determines the overlap of chosen genes between nearest neighbour cells}
+\title{Determines the overlap of chosen genes between nearest neighbour cells.
+It works faster on sparse matrix than on dense matrix.}
 \usage{
 determine_overlap(cg_adj, cc_adj)
 }

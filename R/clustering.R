@@ -330,7 +330,7 @@ run_spectral <- function(caclust,
 #' 
 #' @return 
 #' Object of type "caclust" with cell and gene clusters saved.
-#' 
+#' @export
 run_leiden <- function(caclust,
                        resolution = 1,
                        n.int = 10, 
@@ -352,7 +352,9 @@ run_leiden <- function(caclust,
     SNN <- caclust@SNN
   }
   
-  
+  suppressWarnings({
+    ## due to the issue with packge leiden_0.4.3 and reticulate_1.26, 
+    ## we have to use suppressWarnings to ensure that the function runs smoothly.
   clusters <- leiden::leiden(object = SNN,
                              resolution_parameter = resolution,
                              partition_type = "RBConfigurationVertexPartition",
@@ -361,6 +363,7 @@ run_leiden <- function(caclust,
                              node_sizes = NULL,
                              n_iterations = n.int,
                              seed = rand_seed)
+  })
   
   
   clusters <- as.factor(clusters)

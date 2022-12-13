@@ -1,4 +1,4 @@
 library(testthat)
-library(CAclust)
+library(CAbiNet)
 
-test_check("CAclust")
+test_check("CAbiNet")

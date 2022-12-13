@@ -129,12 +129,13 @@ run_biMAP <- function(obj,
   
   umap_coords$cluster <- "none"
   
-  cell_idx <- na.omit(match(cellc, umap_coords$name))
-  gene_idx <- na.omit(match(gene_clusters(obj), umap_coords$name))
+  cell_idx <- na.omit(match(names(cell_clusters(obj)), umap_coords$name))
+  gene_idx <- na.omit(match(names(gene_clusters(obj)), umap_coords$name))
   
   umap_coords$cluster[cell_idx] <- cell_clusters(obj)
   umap_coords$cluster[gene_idx] <- gene_clusters(obj)
-  umap_coords$cluster <- as.factor(umap_coords$cluster)
+  umap_coords$cluster <- factor(umap_coords$cluster, 
+                                   levels = sort(as.numeric(unique(umap_coords$cluster)), decreasing = F))
   
   umap_coords <- umap_coords %>% dplyr::arrange(desc(type))
   

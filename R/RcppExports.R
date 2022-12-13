@@ -18,16 +18,17 @@
 #' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
 #' @export
 ComputeSNNasym <- function(SNN, prune, mode) {
-    .Call('_CAclust_ComputeSNNasym', PACKAGE = 'CAclust', SNN, prune, mode)
+    .Call('_CAbiNet_ComputeSNNasym', PACKAGE = 'CAbiNet', SNN, prune, mode)
 }
 
 #' WIP replacement for `determine_overlap` function
+#' @name calc_overlap
 #' @description
-#' DO NOT USE! Slower than R implementation
-#' 
-#' @param cc_adj cell-cell adjacency matrix
-#' @param cg_adj cell-gene adjacency matrix
+#' c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
+#' @param cc_adj sparse matrix (dgCMatrix), cell-cell adjacency matrix
+#' @param cg_adj sparse matrix (dgCMatrix), cell-gene adjacency matrix
+#' @export
 calc_overlap <- function(cc_adj, cg_adj) {
-    .Call('_CAclust_calc_overlap', PACKAGE = 'CAclust', cc_adj, cg_adj)
+    .Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
 }
 

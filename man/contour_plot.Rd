@@ -27,7 +27,8 @@ provided a column from the data.frame can be specified.}
 
 \item{color_genes}{logical. If TRUE colors genes by color_by.}
 
-\item{colors}{named vector of of length equal to the group size.}
+\item{colors}{Vector of hexadecimal color codes of the same length as the
+categories defined by color_by or longer. If NULL ignored.}
 
 \item{interact_genes}{character string with text and labels for genes in 
 interactive plots.}
