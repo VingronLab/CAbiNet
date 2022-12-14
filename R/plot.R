@@ -14,7 +14,7 @@ mix_rgb <- function(df, colors, cell, color_by){
   rgbcols <- col2rgb(colors)
   
   sel <- which(df$hexbin == cell)
-  n_clust <- df[sel,color_by]
+  n_clust <- dplyr::pull(df[sel,color_by])
   n_clust <- table(as.character(n_clust))
   prop <- as.numeric(n_clust)
   names(prop) <- names(n_clust)
@@ -28,6 +28,45 @@ mix_rgb <- function(df, colors, cell, color_by){
                  maxColorValue = 255)
   return(rgb_new)
 }
+
+#' concatenate table() results for hex_plot.
+#' @param x a vector
+#' @return 
+#' concatenated results for the table.
+tbl_paste <- function(x){
+  tbl <- table(x)
+  nms <- names(tbl)
+  
+  res <- c()
+  for (i in seq_along(tbl)){
+    
+    cls <- paste0("cl. ", nms[i],": ", tbl[i])
+    
+    if (length(res) == 0){
+      res <- cls
+    } else {
+      res <- paste0(res, ", ", cls)
+    }
+  }
+  return(res)
+}
+
+#' Get the number of cells from each cluster per hexbin
+#' @param umap_cells data frame containing the umap coordinates of cells with
+#' the hex saved in hexbin
+#' @return 
+#' bimap_coordinates of cells for cells with the makeup of each hexbin in the column
+#' prop.
+get_ncells <- function(umap_cells){
+  
+  umap_cells <- umap_cells %>%
+    dplyr::group_by(hexbin) %>%
+    dplyr::mutate(prop = tbl_paste(as.character(cluster))) %>%
+    dplyr::ungroup()
+  
+  return(umap_cells)
+}
+
 
 #' biMAP plotter
 #' 
@@ -61,7 +100,7 @@ mix_rgb <- function(df, colors, cell, color_by){
 #' genes are displayed. If is character vector, the given marker genes are labeled.
 #' @param colors Vector of hexadecimal color codes of the same length as the
 #' categories defined by color_by or longer. If NULL ignored.
-#' 
+#' @param plotly If TRUE a hex plot with labels per hexbin will be made.
 #' @returns
 #' biMAP plot as ggplot object.
 #' 
@@ -81,7 +120,8 @@ biMAP_plotter <- function(caclust,
                           label_groups = TRUE,
                           group_label_size = 4,
                           label_marker_genes = FALSE,
-                          colors = NULL){
+                          colors = NULL,
+                          plotly = FALSE){
   
   stopifnot(is(caclust, "caclust"))
   
@@ -188,7 +228,8 @@ biMAP_plotter <- function(caclust,
                     cell_alpha = cell_alpha,
                     gene_size = gene_size,
                     gene_alpha = gene_alpha,
-                    interact_genes = interact_genes)
+                    interact_genes = interact_genes,
+                    plotly = plotly)
     })
     
   } else if (type == "scatter"){
@@ -354,7 +395,8 @@ hex_plot <- function(umap_cells,
                      cell_alpha,
                      gene_size,
                      gene_alpha,
-                     interact_genes){
+                     interact_genes,
+                     plotly){
   
   xrange <- max(umap_cells$x)-min(umap_cells$x)
   yrange <- max(umap_cells$y)-min(umap_cells$y)
@@ -383,7 +425,8 @@ hex_plot <- function(umap_cells,
     }
   }
   
-  hexb <- hexbin::hexbin(umap_cells$x,
+ 
+   hexb <- hexbin::hexbin(umap_cells$x,
                          umap_cells$y,
                          xbins = hex_n,
                          xbnds = c(min(umap_cells$x),
@@ -413,6 +456,9 @@ hex_plot <- function(umap_cells,
   
   
   hex_colors <- vector(mode = "character", length = length(gghex$cell))
+  hex_prop <- vector(mode = "character", length = length(gghex$cell))
+  
+  umap_cells <- get_ncells(umap_cells)
   
   for (n in seq_along(gghex$cell)){
     hex_colors[n] <- mix_rgb(umap_cells,
@@ -420,15 +466,19 @@ hex_plot <- function(umap_cells,
                              cell = gghex$cell[n],
                              color_by = color_by)
     
+    hex_prop[n] <- unique(dplyr::pull(umap_cells[umap_cells$hexbin == gghex$cell[n], "prop"]))
+    
   }
   
   gghex$colors <- hex_colors
+  gghex$prop <- hex_prop
   
   if(min_bin > 0){
     gghex <- gghex[gghex$count >= min_bin,]
   }
   
-  # names(hex_colors) <- as.character(gghex$cell)
+  # hex_colors <- gghex$colors
+  # names(hex_colors) <- as.character(gghex$prop)
   
   p <- ggplot2::ggplot()
   
@@ -444,13 +494,24 @@ hex_plot <- function(umap_cells,
     
   } else {
     
-    # gghex$std_count <- (gghex$count-min(gghex$count))/(max(gghex$count)-min(gghex$count))
-    p <- p + ggplot2::geom_hex(data = gghex,
-                               mapping = ggplot2::aes(x = x,
-                                                      y = y),
-                               fill = gghex$colors,
-                               alpha = cell_alpha,
-                               stat = "identity")
+    # Currently geom_hex breaks with text aesthetic if not an interactive plot.
+    if(isTRUE(plotly)){
+      p <- p + ggplot2::geom_hex(data = gghex,
+                                 mapping = ggplot2::aes(x = x,
+                                                        y = y,
+                                                        text = prop),
+                                 fill = gghex$colors,
+                                 alpha = cell_alpha,
+                                 stat = "identity")
+    } else {
+      p <- p + ggplot2::geom_hex(data = gghex,
+                                 mapping = ggplot2::aes(x = x,
+                                                        y = y),
+                                 fill = gghex$colors,
+                                 alpha = cell_alpha,
+                                 stat = "identity")
+    }
+
     
   }
   
@@ -626,6 +687,9 @@ setMethod(f = "plot_scatter_biMAP",
 #' @rdname plot_scatter_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_scatter_biMAP",
           signature = (obj = "SingleCellExperiment"),
@@ -643,7 +707,7 @@ setMethod(f = "plot_scatter_biMAP",
                    interactive = FALSE,
                    ...,
                    caclust_meta_name = 'caclust',
-                   subset = TRUE){
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', 
@@ -653,8 +717,17 @@ setMethod(f = "plot_scatter_biMAP",
             
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
             
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
             if(isTRUE(subset)){
-              idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
               caclust@bimap <- caclust@bimap[idx,]
             }
             
@@ -768,6 +841,7 @@ setMethod(f = "plot_hex_biMAP",
                      label_groups = label_groups,
                      group_label_size = group_label_size,
                      label_marker_genes = label_marker_genes,
+                     plotly = interactive,
                      ...)
   
   if (isTRUE(interactive)){
@@ -780,6 +854,9 @@ setMethod(f = "plot_hex_biMAP",
 #' @rdname plot_hex_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_hex_biMAP",
           signature(obj = "SingleCellExperiment"),
@@ -798,12 +875,27 @@ setMethod(f = "plot_hex_biMAP",
                    label_marker_genes = FALSE,
                    interactive = FALSE,
                    ...,
-                   caclust_meta_name = 'caclust'){
+                   caclust_meta_name = 'caclust',
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
+            if(isTRUE(subset)){
+              caclust@bimap <- caclust@bimap[idx,]
+            }
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
               meta_df = SummarizedExperiment::colData(obj)
@@ -920,6 +1012,9 @@ setMethod(f = "plot_contour_biMAP",
 #' @rdname plot_contour_biMAP
 #' @param caclust_meta_name Name under which the caclust object is stored in 
 #' the metadata of the SingleCellExperiment object.
+#' @param subset Whether the biMAP embedding should be subset to the cells/genes
+#' in the SCE object. This might lead to unintended results. If unsure, we 
+#' recommend to rerun CA and caclust instead.
 #' @export
 setMethod(f = "plot_contour_biMAP", 
           signature = (obj = "SingleCellExperiment"),
@@ -935,12 +1030,27 @@ setMethod(f = "plot_contour_biMAP",
                    label_marker_genes = FALSE,
                    interactive = FALSE,
                    ...,
-                   caclust_meta_name = 'caclust'){
+                   caclust_meta_name = 'caclust',
+                   subset = FALSE){
             
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
               stop(paste('The aclust object with name', caclust_meta_name, 'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
             }
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+            
+            idx = rownames(caclust@bimap) %in% c(rownames(obj), colnames(obj))
+            
+            if(!all(idx)){
+              warning("Not all cells/genes of the biMAP embedding ",
+                      "are in the SCE object. Consider either rerunning ",
+                      "the CA and caclust (recommanded!) or using the parameter ",
+                      "'subset = TRUE'. The latter will plot only part of ",
+                      "the biMAP embedding that was calculated on more cells/genes.")
+            }
+            
+            if(isTRUE(subset)){
+              caclust@bimap <- caclust@bimap[idx,]
+            }
             
             if (is.null(meta_df) & (isFALSE(color_by %in%  colnames(caclust@bimap)))){
               meta_df = SummarizedExperiment::colData(obj)

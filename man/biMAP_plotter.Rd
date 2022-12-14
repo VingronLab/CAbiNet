@@ -21,7 +21,8 @@ biMAP_plotter(
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
-  colors = NULL
+  colors = NULL,
+  plotly = FALSE
 )
 }
 \arguments{
@@ -67,6 +68,8 @@ genes are displayed. If is character vector, the given marker genes are labeled.
 
 \item{colors}{Vector of hexadecimal color codes of the same length as the
 categories defined by color_by or longer. If NULL ignored.}
+
+\item{plotly}{If TRUE a hex plot with labels per hexbin will be made.}
 }
 \value{
 biMAP plot as ggplot object.
