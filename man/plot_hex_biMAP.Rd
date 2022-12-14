@@ -58,7 +58,8 @@ plot_hex_biMAP(
   label_marker_genes = FALSE,
   interactive = FALSE,
   ...,
-  caclust_meta_name = "caclust"
+  caclust_meta_name = "caclust",
+  subset = FALSE
 )
 }
 \arguments{
@@ -103,6 +104,10 @@ plot. If FALSE a ggplot object is returned.}
 
 \item{caclust_meta_name}{Name under which the caclust object is stored in 
 the metadata of the SingleCellExperiment object.}
+
+\item{subset}{Whether the biMAP embedding should be subset to the cells/genes
+in the SCE object. This might lead to unintended results. If unsure, we 
+recommend to rerun CA and caclust instead.}
 }
 \value{
 hex-plot biMAP as a ggplot.

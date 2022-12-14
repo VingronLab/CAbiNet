@@ -18,9 +18,9 @@ rm_monoclusters(obj, ...)
 \arguments{
 \item{obj}{biclustering results from caclust or biclust or a SingleCellExperiment object.}
 
-\item{subset_sce}{logical. Subset the SCE object to the cells which have co-clusters genes if is TRUE.}
+\item{...}{further arguments}
 
-\item{sce}{SingleCellExperiment object with caclust object in the metadata}
+\item{subset_sce}{logical. Subset the SCE object to the cells which have co-clusters genes if is TRUE.}
 }
 \value{
 caclust/biclust object with monoclusters removed.

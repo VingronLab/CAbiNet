@@ -54,7 +54,7 @@ plot_scatter_biMAP(
   interactive = FALSE,
   ...,
   caclust_meta_name = "caclust",
-  subset = TRUE
+  subset = FALSE
 )
 
 plot_biMAP(
@@ -110,6 +110,10 @@ plot. If FALSE a ggplot object is returned.}
 
 \item{caclust_meta_name}{Name under which the caclust object is stored in 
 the metadata of the SingleCellExperiment object.}
+
+\item{subset}{Whether the biMAP embedding should be subset to the cells/genes
+in the SCE object. This might lead to unintended results. If unsure, we 
+recommend to rerun CA and caclust instead.}
 }
 \value{
 biMAP scatter plot as ggplot object.
