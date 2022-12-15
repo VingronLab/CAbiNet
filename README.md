@@ -55,9 +55,10 @@ cabic <- biMAP(cabic, k = 30)
 
 # plot results
 plot_scatter_biMAP(cabic, color_genes = TRUE)
+
 plot_scatter_biMAP(cabic, 
-				   gene_alpha = 0,
-				   color_by = "cell.type",
-				   meta_df = colData(sce))
+				gene_alpha = 0,
+				color_by = "cell.type",
+				meta_df = colData(sce))
 
 ```
