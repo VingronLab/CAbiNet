@@ -25,6 +25,7 @@ library(CAbiNet)
 library(APL)
 library(scRNAseq)
 
+
 sce <- DarmanisBrainData()
 
 # Here you might want to do some preprocessing.
@@ -48,10 +49,15 @@ cabic <- caclust(obj = caobj,
               resolution = 1,
               algorithm = 'leiden')
 
-# remove unintersting clusters
-cabic <- rm_monoclusters(cabic)
+sce$cabinet <- cell_clusters(cabic)
+
+cabic <- biMAP(cabic, k = 30)
 
 # plot results
 plot_scatter_biMAP(cabic, color_genes = TRUE)
+plot_scatter_biMAP(cabic, 
+				   gene_alpha = 0,
+				   color_by = "cell.type",
+				   meta_df = colData(sce))
 
 ```
