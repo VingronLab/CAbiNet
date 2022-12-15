@@ -1,27 +1,57 @@
 
-# CAclust
+# CAbiNet
+**Correspondence Analysis for Biclustering on Networks**
 
-<!-- badges: start -->
-<!-- badges: end -->
-**WIP - not ready for usage yet!**
+This package provides functions to for the visualization and biclustering of single-cell RNA-seq data. 
 
-CAclust allows fast and robust biclustering of single-cell RNA-seq data.
 
 ## Installation
 
-You can install the devopmental version of the package with:
+You can install the package with:
 
 ``` r
-devtools::install_github("ClemensKohl/CAclust")
+
+# please also install this version of APL from github:
+devtools::install_github("VingronLab/APL", ref = "cabinet")
+devtools::install_github("VingronLab/CAbiNet")
 ```
 
-## Example
+## Quick start
 
-This is a basic example which shows you how to solve a common problem:
+Here we provide a very short example of how to use the package. We hope to provide a more detailed description of how to use CAbiNet to perform your analysis in the near future.
 
 ``` r
-library(CAclust)
-## basic example code
-```
+library(CAbiNet)
+library(APL)
+library(scRNAseq)
 
-##
+sce <- DarmanisBrainData()
+
+# Here you might want to do some preprocessing.
+
+# Correspondence Analysis
+caobj = cacomp(sce,
+               dims = 50,
+               ntop = nrow(sce),
+               python = TRUE)
+
+# SNN graph & biclustering
+cabic <- caclust(obj = caobj,
+              k = 30,
+              loops = FALSE,
+              SNN_prune = 1/15,
+              mode = "all",
+              select_genes = TRUE,
+              prune_overlap = TRUE,
+              overlap = 0.2,
+              calc_gene_cell_kNN = FALSE,
+              resolution = 1,
+              algorithm = 'leiden')
+
+# remove unintersting clusters
+cabic <- rm_monoclusters(cabic)
+
+# plot results
+plot_scatter_biMAP(cabic, color_genes = TRUE)
+
+```
