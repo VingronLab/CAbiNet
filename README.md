@@ -38,16 +38,16 @@ caobj = cacomp(sce,
 
 # SNN graph & biclustering
 cabic <- caclust(obj = caobj,
-              k = 30,
-              loops = FALSE,
-              SNN_prune = 1/15,
-              mode = "all",
-              select_genes = TRUE,
-              prune_overlap = TRUE,
-              overlap = 0.2,
-              calc_gene_cell_kNN = FALSE,
-              resolution = 1,
-              algorithm = 'leiden')
+                 k = 30,
+                 loops = FALSE,
+                 SNN_prune = 1/15,
+                 mode = "all",
+                 select_genes = TRUE,
+                 prune_overlap = TRUE,
+                 overlap = 0.2,
+                 calc_gene_cell_kNN = FALSE,
+                 resolution = 1,
+                 algorithm = 'leiden')
 
 sce$cabinet <- cell_clusters(cabic)
 
@@ -57,8 +57,9 @@ cabic <- biMAP(cabic, k = 30)
 plot_scatter_biMAP(cabic, color_genes = TRUE)
 
 plot_scatter_biMAP(cabic, 
-				gene_alpha = 0,
-				color_by = "cell.type",
-				meta_df = colData(sce))
+                   gene_alpha = 0,
+                   color_by = "cell.type",
+                   meta_df = colData(sce))
+
 
 ```
