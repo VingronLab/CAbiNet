@@ -1,6 +1,6 @@
 
 # CAbiNet
-**Correspondence Analysis for Biclustering on Networks**
+**Correspondence Analysis based Biclustering on Networks**
 
 This package provides functions to for the visualization and biclustering of single-cell RNA-seq data. 
 
