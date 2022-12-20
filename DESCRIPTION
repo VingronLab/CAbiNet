@@ -15,7 +15,7 @@ Authors@R:
           family = "Vingron",
           role = c("aut"),
           email = "vingron@molgen.mpg.de"))
-Description: CAclust allows fast and robust biclustering of single-cell RNA-seq
+Description: CAbiNet allows fast and robust biclustering of single-cell RNA-seq
   through Correspondence Analysis. Clustering results of cells and genes can be
   conviently displayed in a biMAP.
 biocViews: 
