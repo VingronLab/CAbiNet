@@ -121,7 +121,8 @@ biMAP_plotter <- function(caclust,
                           group_label_size = 4,
                           label_marker_genes = FALSE,
                           colors = NULL,
-                          plotly = FALSE){
+                          plotly = FALSE,
+                          max.overlaps = 12){
   
   stopifnot(is(caclust, "caclust"))
   
@@ -276,7 +277,7 @@ biMAP_plotter <- function(caclust,
                                       mapping = ggplot2::aes(x = x,
                                                              y = y,
                                                              label = name),
-                                      max.overlaps = 12,
+                                      max.overlaps = max.overlaps ,
                                       size=I(group_label_size-1))
   }else if (is(label_marker_genes, 'character')){
     
@@ -287,7 +288,7 @@ biMAP_plotter <- function(caclust,
                                       mapping = ggplot2::aes(x = x,
                                                              y = y,
                                                              label = name),
-                                      max.overlaps = 12,
+                                      max.overlaps = max.overlaps,
                                       size=I(group_label_size-1))
   }
   p <- p + theme_bw()
