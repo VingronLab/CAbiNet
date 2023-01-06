@@ -18,7 +18,7 @@ Authors@R:
 Description: CAbiNet allows fast and robust biclustering of single-cell RNA-seq
   through Correspondence Analysis. Clustering results of cells and genes can be
   conviently displayed in a biMAP.
-biocViews: 
+biocViews:
   StatisticalMethod,
   DimensionReduction,
   SingleCell,
@@ -31,7 +31,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Depends:
   APL
-Imports: 
+Imports:
   Rcpp (>= 1.0.8),
   Matrix,
   leiden,
@@ -57,12 +57,12 @@ Imports:
   viridis
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
-Suggests: 
+Suggests:
     rmarkdown,
     knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Collate: 
+Collate:
     'CAclust.R'
     'RcppExports.R'
     'classes.R'
@@ -73,3 +73,12 @@ Collate:
     'importPackages.R'
     'plot.R'
 VignetteBuilder: knitr
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "umap", version = "0.5.3", pip = TRUE),
+      list(package = 'numpy', version = "1.21.6", pip = TRUE),
+      list(package = "scipy", version = "1.8.0", pip = TRUE),
+      list(package = "torch", version = "1.11.0", pip = TRUE)
+    )
+  )
