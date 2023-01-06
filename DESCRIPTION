@@ -73,15 +73,7 @@ Collate:
     'importPackages.R'
     'plot.R'
 VignetteBuilder: knitr
-#Config/reticulate:
-#  list(
-#    packages = list(
-#      list(package = "umap", version = "0.5.3", pip = TRUE),
-#      list(package = 'numpy', version = "1.21.6", pip = TRUE),
-#      list(package = "scipy", version = "1.8.0", pip = TRUE),
-#      list(package = "torch", version = "1.11.0", pip = TRUE)
-#    )
-#  )
+
 Config/reticulate:
   list(
     packages = list(
