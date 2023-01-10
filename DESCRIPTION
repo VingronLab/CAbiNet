@@ -73,7 +73,6 @@ Collate:
     'importPackages.R'
     'plot.R'
 VignetteBuilder: knitr
-
 Config/reticulate:
   list(
     packages = list(
@@ -84,7 +83,3 @@ Config/reticulate:
       list(package = "umap-learn")
     )
   )
-
-.onLoad <- function(libname, pkgname) {
-  reticulate::configure_environment(pkgname)
-}

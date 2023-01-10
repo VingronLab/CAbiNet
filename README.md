@@ -33,7 +33,7 @@ sce <- DarmanisBrainData()
 # Correspondence Analysis
 caobj = cacomp(sce,
                dims = 50,
-               top = 1000, # number of genes you want to involove in the biclustering and visualization
+               top = 1000, # number of genes with highest inertia to keep.
                python = TRUE)
 
 # SNN graph & biclustering
@@ -59,7 +59,7 @@ plot_biMAP(cabic, color_genes = TRUE)
 # Interactive biMAP where you can mouse over the points to see their identities
 plot_biMAP(cabic, color_by = "cluster",
            color_genes = TRUE,
-           Interactive = TRUE)
+           interactive = TRUE)
 
 plot_scatter_biMAP(cabic,
                    gene_alpha = 0,
