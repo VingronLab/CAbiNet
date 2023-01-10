@@ -77,9 +77,14 @@ VignetteBuilder: knitr
 Config/reticulate:
   list(
     packages = list(
-      list(package = "umap",  pip = TRUE),
-      list(package = 'numpy', pip = TRUE),
-      list(package = "scipy",  pip = TRUE),
-      list(package = "torch",  pip = TRUE)
+      list(package = "umap"),
+      list(package = 'numpy'),
+      list(package = "scipy"),
+      list(package = "torch"),
+      list(package = "umap-learn")
     )
   )
+
+.onLoad <- function(libname, pkgname) {
+  reticulate::configure_environment(pkgname)
+}

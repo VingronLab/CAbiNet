@@ -2,7 +2,7 @@
 # CAbiNet
 **Correspondence Analysis based Biclustering on Networks**
 
-This package provides functions to for the visualization and biclustering of single-cell RNA-seq data. 
+This package provides functions to for the visualization and biclustering of single-cell RNA-seq data.
 
 
 ## Installation
@@ -33,12 +33,12 @@ sce <- DarmanisBrainData()
 # Correspondence Analysis
 caobj = cacomp(sce,
                dims = 50,
-               ntop = nrow(sce),
+               top = 1000, # number of genes you want to involove in the biclustering and visualization
                python = TRUE)
 
 # SNN graph & biclustering
 cabic <- caclust(obj = caobj,
-                 k = 30,
+                 k = 10,
                  loops = FALSE,
                  SNN_prune = 1/15,
                  mode = "all",
@@ -54,9 +54,14 @@ sce$cabinet <- cell_clusters(cabic)
 cabic <- biMAP(cabic, k = 30)
 
 # plot results
-plot_scatter_biMAP(cabic, color_genes = TRUE)
+plot_biMAP(cabic, color_genes = TRUE)
 
-plot_scatter_biMAP(cabic, 
+# Interactive biMAP where you can mouse over the points to see their identities
+plot_biMAP(cabic, color_by = "cluster",
+           color_genes = TRUE,
+           Interactive = TRUE)
+
+plot_scatter_biMAP(cabic,
                    gene_alpha = 0,
                    color_by = "cell.type",
                    meta_df = colData(sce))
