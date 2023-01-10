@@ -59,7 +59,7 @@ plot_biMAP(cabic, color_genes = TRUE)
 # Interactive biMAP where you can mouse over the points to see their identities
 plot_biMAP(cabic, color_by = "cluster",
            color_genes = TRUE,
-           Interactive = TRUE)
+           interactive = TRUE)
 
 plot_scatter_biMAP(cabic,
                    gene_alpha = 0,
