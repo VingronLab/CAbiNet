@@ -22,7 +22,8 @@ biMAP_plotter(
   group_label_size = 4,
   label_marker_genes = FALSE,
   colors = NULL,
-  plotly = FALSE
+  plotly = FALSE,
+  max.overlaps = 12
 )
 }
 \arguments{
