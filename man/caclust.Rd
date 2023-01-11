@@ -126,7 +126,7 @@ graph is transposed.}
 
 \item{resolution}{float number. Resolution for leiden algorithm.}
 
-\item{marker_genes}{character. Optional. Names of known marker genes that 
+\item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
 
 \item{n.int}{Integer. Number of iterations for leiden algorithm.}

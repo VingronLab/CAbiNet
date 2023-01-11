@@ -13,3 +13,8 @@
 #' @importClassesFrom biclust Biclust
 NULL
 
+
+# Load python packages
+.onLoad <- function(libname, pkgname) {
+  reticulate::configure_environment(pkgname)
+}

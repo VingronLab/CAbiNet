@@ -54,15 +54,15 @@ prune_overlap = TRUE.}
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
-\item{marker_genes}{character. Optional. Names of known marker genes that 
+\item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
 }
 \value{
-Adjacency matrix of type `dgCMatrix`. 
-The combined adjacency matrix consists of the cell-cell graph, gene-gene 
+Adjacency matrix of type `dgCMatrix`.
+The combined adjacency matrix consists of the cell-cell graph, gene-gene
 graph and cell-gene/gene-cell graph.
 }
 \description{
-Builds a single adjacency matrix consisting of cells and genes from 4 
+Builds a single adjacency matrix consisting of cells and genes from 4
 seperate sub kNN-graphs.
 }

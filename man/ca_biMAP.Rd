@@ -60,19 +60,19 @@ and genes which goes through CA analysis. Setting use_SNN = FALSE allows users t
 
 \item{caclust_meta_name}{the name of caclust object stored in metadata(obj)}
 
-\item{cacomp_meta_name}{the name of cacomp object stored in 
+\item{cacomp_meta_name}{the name of cacomp object stored in
 metadata(obj)}
 }
 \value{
 an caclust object or SingleCellExperiment objects
 }
 \description{
-The function takes either a `caclust` and a `cacomp` object as input and 
+The function takes either a `caclust` and a `cacomp` object as input and
 computes the biMAP embedings for cells and genes on the basis of the singular
 vectors of CA.
 }
 \details{
-The biMAP embeddings are computed on the basis of the singular vectors 
+The biMAP embeddings are computed on the basis of the singular vectors
 from Correspondence Analysis.
 If a `SingleCellExperiment` object with `caclust` and `cacomp`
 objects stored is provided the argument `caobj` is not required.
