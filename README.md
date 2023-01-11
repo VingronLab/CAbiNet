@@ -33,7 +33,7 @@ sce <- DarmanisBrainData()
 # Correspondence Analysis
 caobj = cacomp(sce,
                dims = 50,
-               top = 1000, # number of genes you want to involove in the biclustering and visualization
+               top = 1000, # number of genes with highest inertia to keep.
                python = TRUE)
 
 # SNN graph & biclustering
