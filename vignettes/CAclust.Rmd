@@ -42,7 +42,7 @@ If you are working with `r BiocStyle::Rpackage("CAbiNet")` package please cite o
 
 You can install the package with:
 ```{r git_install, eval=FALSE}
-devtools::install_github("VingronLab/CAbiNet")
+#devtools::install_github("VingronLab/CAbiNet")
 ```
 
 If you get any problem with installing and running our package, please report your issues to our GitHub repository https://github.com/VingronLab/CAbiNet/issues, we will help to get it work for you.
@@ -54,7 +54,7 @@ library(APL)
 
 # Analyzing an example dataset with CAbiNET
 
-CAbiNet is designed to work with either a count matrix or to be compatible with `r BiocStyle::Rpackage("SingleCellExperiment")` object. We will take one dataset from `r BiocStyle::Rpackage('scRNAseq')` as an example to illustrate how to work with our algorithm and package.
+CAbiNet is designed to work with either a count matrix or to be compatible with `r BiocStyle::Rpackage("SingleCellExperiment")` object. We will take one dataset from `r BiocStyle::Rpackage('scRNAseq')` as an example to illustrate how to work with our algorithm and package. This dataset is in a `r BiocStyle::Rpackage('SingleCellExperiment')`(SCE) object format. If you are working with `r BiocStyle::Rpackage('Seurat')` format object, you can convert it into a SCE format.
 ```{r load_data}
 # The scRNAseq package could be installed with
 # BiocManager::install('scRNAseq')
@@ -113,18 +113,18 @@ cabic <- caclust(obj = caobj,
 
 Another most important paramter is 'select_genes'. This paramter indicates whether removing redundant genes from the gene-cell graph or not. In some cases, there could be some genes having no cell neighours at all which could not be marker genes for cells.
 
-```{r biclustering}
+```{r biclustering_select}
 # SNN graph & biclustering
 cabic <- caclust(obj = caobj,
                  k = 10,
                  select_genes = TRUE,
-                 prune_overlap = FLASE,
+                 prune_overlap = FALSE,
                  algorithm = 'leiden',
                  resolution = 1)
 ```
 Furthormore, we offer an optional graph pruning procedure with parameter 'prune_overlap' and 'overlap'. Setting 'prune_overlap' as TRUE and 'overlap' as a fraction between 0 and 1 allows you to trim out the edges between genes that shared less than 'overlap'-fraction cell neighours. Note this function only works when 'select_genes' is set as TRUE.
 
-```{r biclustering}
+```{r biclustering_prune}
 # SNN graph & biclustering
 cabic <- caclust(obj = caobj,
                  k = 10,
@@ -156,7 +156,7 @@ plot_scatter_biMAP(cabic,
 You can have a brife overview of the clustering results by calculating
 ```{r print_biclusters}
 cabic
-~~~
+```
 Function 'gene_clusters()' and 'cell_clusters()' prints the clustering results of genes and cells separately.
 ```{r print_cg}
 head(gene_clusters(cabic))
@@ -180,10 +180,12 @@ The name of detected 'marker' genes can be labeled in the biMAP which can help w
 ```{r label_mkg}
 plot_biMAP(bicabic, color_by = "cluster",
            label_marker_genes = TRUE,
-           color_genes = TRUE)
+           group_label_size = 6,
+           color_genes = TRUE,
+           max.overlaps = 20)
 ```
-The biMAP can also be explored in an interactive way. The identities of genes and cells will be displayed when  you mouse over the points.
-```{r label_mkg}
+Since sometimes the name of genes could be overlapped with each other and it's difficult to recognize the names from a planar plot, we allow the biMAP to be explored in an interactive way. The identities of genes and cells will be displayed when  you mouse over the points.
+```{r label_mkg_live}
 plot_biMAP(bicabic, color_by = "cluster",
            color_genes = TRUE,
            interactive = TRUE)
@@ -198,7 +200,8 @@ plot_biMAP(bicabic, color_by = "cluster",
 ```
 The expression landscape of a gene can be visualized in a biMAP feature plot.
 ```{r biMAP_feature}
-plot_feature_biMAP(sce = sce,caclust = bicabic, feature = 'EGR1')
+plot_feature_biMAP(sce = sce, caclust = bicabic, feature = 'MEGF11',
+                   label_size = 4)
 ```
 
 Knowing that gene 'MEGF11' in specifically highly expressed in OPC cells, the cell cluster 8 could be annotated as OPC cells.
@@ -226,7 +229,7 @@ Since CAbiNet only co-clusters the up-regulated genes with cell groups, the info
 
 # Paraparing your own data for CAbiNet
 
-CAbiNet accepts both a gene-by-cell count matrix and a `r BiocStyle::Rpackage("SingleCellExperiment")` object with the counts. If you starts with
+CAbiNet accepts both a gene-by-cell count matrix and a `r BiocStyle::Rpackage("SingleCellExperiment")` object with the counts. If you starts with a matrix, you can work with the matrix directly or convert it into a SCE object.
 
 # Session info {.unnumbered}
 
