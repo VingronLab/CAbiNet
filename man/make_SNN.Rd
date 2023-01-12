@@ -58,7 +58,7 @@ prune_overlap = TRUE.}
 by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
-\item{marker_genes}{character. Optional. Names of known marker genes that 
+\item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
 }
 \value{
