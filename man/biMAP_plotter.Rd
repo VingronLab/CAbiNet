@@ -17,7 +17,7 @@ biMAP_plotter(
   min_bin = 2,
   show_density = FALSE,
   contour_n = 5,
-  color_genes = FALSE,
+  color_genes = TRUE,
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
