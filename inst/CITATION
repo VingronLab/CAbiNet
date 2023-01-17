@@ -1,0 +1,17 @@
+citHeader("To cite CAbiNet in publications use:")
+
+bibentry(
+  "Article",
+  title = "{CAbiNet}: Joint Visualization of Cells and Genes Based on a Gene-Cell Graph",
+  shorttitle = "CAbiNet",
+  author = "Zhao, Yan and Kohl, Clemens and Rosebrock, Daniel and Hu, Qinan and Hu, Yuhui and Vingron, Martin",
+  year = 2022,
+  month = 12,
+  day = 21,
+  journal = "bioRxiv",
+  doi = "10.1101/2022.12.20.521232",
+  url = "https://www.biorxiv.org/content/10.1101/2022.12.20.521232v1",
+  urldate = 2023-01-12,
+  abstract = "In routine single-cell RNA-sequencing (scRNA-seq) analysis workflows, cells are commonly visualized in 2D to show the patterns in the data. However, these visualization approaches do not give any information about the genes that define the cell groups or clusters. It is therefore desirable to display cells and genes simultaneously such that by their relative position to each other information about the genes’ expression in a cluster can be obtained. Here we propose “Correspondence Analysis based Biclustering on Networks” (CAbiNet) as a novel approach to jointly visualize cells and genes by a non-linear embedding approach, called biMAP. The biMAP allows for easy and interactive exploration of cells and their corresponding marker genes in a single plot. CabiNet additionally offers an intuitive way to perform biclustering jointly on cells and genes, providing a simplified workflow to annotate cell types on the biMAP. CAbiNet is accessible through GitHub as an R package.",
+  langid = "english",
+)

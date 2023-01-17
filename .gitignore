@@ -10,3 +10,5 @@ src/*.dll
 .ipynb*/
 inst/doc
 *.Rproj
+/doc/
+/Meta/

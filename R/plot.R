@@ -101,6 +101,7 @@ get_ncells <- function(umap_cells){
 #' @param colors Vector of hexadecimal color codes of the same length as the
 #' categories defined by color_by or longer. If NULL ignored.
 #' @param plotly If TRUE a hex plot with labels per hexbin will be made.
+#' @param max.overlaps Exclude text labels that overlap too many things.
 #' @returns
 #' biMAP plot as ggplot object.
 #' 
@@ -507,10 +508,13 @@ hex_plot <- function(umap_cells,
     } else {
       p <- p + ggplot2::geom_hex(data = gghex,
                                  mapping = ggplot2::aes(x = x,
-                                                        y = y),
+                                                        y = y,
+                                                        fill = colors,
+                                                        group = 1),
                                  fill = gghex$colors,
                                  alpha = cell_alpha,
-                                 stat = "identity")
+                                 stat = "identity") +
+        ggplot2::scale_fill_identity()
     }
 
     

@@ -71,6 +71,8 @@ genes are displayed. If is character vector, the given marker genes are labeled.
 categories defined by color_by or longer. If NULL ignored.}
 
 \item{plotly}{If TRUE a hex plot with labels per hexbin will be made.}
+
+\item{max.overlaps}{Exclude text labels that overlap too many things.}
 }
 \value{
 biMAP plot as ggplot object.
