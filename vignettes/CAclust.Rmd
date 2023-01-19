@@ -138,7 +138,7 @@ plotReducedDim(sce, dimred="UMAP", colour_by="level1class")
 
 ## Dimensionality Reduction in CAbiNet
 
-The dimensionality reduction in CAbiNet is performed with Correspondence Analysis (CA) by the package `r BiocStyle::Biocpkg('APL')`. The most important parameters in the dimensionality reduction step are the number of dimensions (`dims`) you want to keep (similar with the number of principal components in PCA) and the number of genes (`top`) with the highest inertia you want to keep. `top` is set to 5000 by default, in which case the top 5000 genes with highest inertia will be selected before performing CA. If you already picked the most highly variable genes in advance (as we did above), you can keep all genes in the count matrix which will be handed in to the function.
+The dimensionality reduction in CAbiNet is performed with Correspondence Analysis (CA) by the package `r BiocStyle::Biocpkg('APL')`. The most important parameters in the dimensionality reduction step are the number of dimensions (`dims`) you want to keep (similar with the number of principal components in PCA) and the number of genes (`top`) with the highest inertia you want to keep. `top` is set to 5000 by default, in which case the top 5000 genes with highest inertia will be selected before performing CA. If you already picked the most highly variable genes in advance (as we did above), you can keep all genes in the count matrix which will be handed to the function.
 
 The number of genes kept should no be set too low, as otherwise important marker genes are often removed from the data.
 
@@ -254,7 +254,7 @@ plot_scatter_biMAP(cabic,
                    meta_df = colData(sce))
 ```
 
-`plot_biMAP` and `plot_scatter_biMAP` both produce a scatter plot of the embedding. For very large datasets it can become difficult to differentiate between cells and genes in such a plot. If we are mainly interested in identifying the marker genes of the clusters, we can instead use the hex biMAP for a less busy visualization:
+`plot_biMAP` and `plot_scatter_biMAP` both produce a scatter plot of the embedding. For very large data sets it can become difficult to differentiate between cells and genes in such a plot. If we are mainly interested in identifying the marker genes of the clusters, we can instead use the hex biMAP for a less busy visualization:
 
 ```{r hex_biMAP}
 plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
@@ -263,7 +263,7 @@ plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
 
 ## Cell type annotation
 
-CAbiNet allows for intuitive cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP. By the position of genes and cells in the biMAP, we can easily tell the marker genes of each cell group without doing differetially expressed gene analysis.
+CAbiNet allows for intuitive cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP. By the position of genes and cells in the biMAP, we can easily tell the marker genes of each cell group without having to perform differential gene expression analysis.
 
 ```{r}
 
