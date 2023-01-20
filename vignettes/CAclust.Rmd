@@ -1,5 +1,5 @@
 ---
-title: "Visualizing and Biclustering scRNA-seq data with CAbiNET"
+title: "Visualizing and Biclustering scRNA-seq data with CAbiNet"
 author:
 - name: Clemens Kohl (contributed equally)
   equal_contrib: yes
@@ -16,11 +16,12 @@ package: CAbiNet
 output:
   BiocStyle::html_document
 abstract: |
-  CAbiNET allows fast and robust biclustering of genes and cells in single-cell RNA-seq
-  through Correspondence Analysis. Clustering results of cells and genes can be
-  conviently displayed in a biMAP.
+  CAbiNet allows fast and robust biclustering of 'marker' genes and cells in single-cell RNA
+  sequencing (scRNA-seq) data analysis through Correspondence Analysis. The cells and genes together with the
+  biclustering results can be simultaneously displayed in a planar space, the biMAP. CAbiNet can
+  facilitate the cell type annotation of scRNA-seq analysis.
 vignette: |
-  %\VignetteIndexEntry{CAbiNET: Joint visualization of cells and genes based on a gene-cell graph}
+  %\VignetteIndexEntry{CAbiNet: Joint visualization of cells and genes based on a gene-cell graph}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options:
@@ -40,7 +41,7 @@ For a more in-depth explanation of CAbiNet, please refer to the pre-print on bio
 
 If you are working with `r BiocStyle::Biocpkg("CAbiNet")` please cite:
 ```
-Zhao, Y., Kohl, C., Rosebrock, D., Hu, Q., Hu, Y., Vingron, M., 
+Zhao, Y., Kohl, C., Rosebrock, D., Hu, Q., Hu, Y., Vingron, M.,
 CAbiNet: Joint visualization of cells and genes based on a gene-cell graph.
 2022, bioRxiv, https://doi.org/10.1101/2022.12.20.521232
 
@@ -48,7 +49,7 @@ CAbiNet: Joint visualization of cells and genes based on a gene-cell graph.
 
 # Installation
 
-You can install the package from github by running:
+You can install the package from GitHub by running:
 ```{r git_install, eval=FALSE}
 # Until changes are merged into the Bioconductor version, please install the below version of APL.
 devtools::install_github("VingronLab/APL", ref = "cabinet")
@@ -63,7 +64,7 @@ library(reticulate)
 install_miniconda()
 use_condaenv(condaenv = file.path(miniconda_path(),"envs/r-reticulate"),
              required=TRUE)
-      
+
 conda_install(envname = "r-reticulate", packages = "numpy")
 conda_install(envname = "r-reticulate", packages = "torch")
 conda_install(envname = "r-reticulate", packages = "umap")
@@ -71,14 +72,14 @@ conda_install(envname = "r-reticulate", packages = "umap-learn")
 conda_install(envname = "r-reticulate", packages = "scipy")
 ```
 
-If you run into any problems when installing and running our package, please let us know by opening an issue on our GitHub repository https://github.com/VingronLab/CAbiNet/issues. We will help you to solve the problem as best as we can.
+If you run into any problem when installing and running our package, please let us know by opening an issue on our GitHub repository https://github.com/VingronLab/CAbiNet/issues. We will help you to solve the problem as best as we can.
 
 
 # Analyzing data with CAbiNet
 
-CAbiNet is designed to work with a count matrix as input, but is also fully compatible with `r BiocStyle::Biocpkg("SingleCellExperiment")` objects. We will demonstrate here on the Zeisel Brain Dataset obtained from the `r BiocStyle::Biocpkg('scRNAseq')` package how to work with our algorithm and package. This dataset is in a `r BiocStyle::Biocpkg('SingleCellExperiment')` (SCE) object format. If you are working with `r BiocStyle::Rpackage('Seurat')` object, you can still use it as input to `caclust`.
+CAbiNet is designed to work with a count matrix as input, but is also fully compatible with `r BiocStyle::Biocpkg("SingleCellExperiment")` objects. We will demonstrate here on the Zeisel Brain Dataset obtained from the `r BiocStyle::Biocpkg('scRNAseq')` package how to work with our algorithm and package. This dataset is in a `r BiocStyle::Biocpkg('SingleCellExperiment')` (SCE) object format. If you are working with `r BiocStyle::Rpackage('Seurat')` object, you can still use it as input to `cacomp` function from `r BiocStyle::Biocpkg("APL")`.
 
-In the examples below we will prepare the data and then use CAbiNet to bicluster and visualize the cells and their marker genes. We will further use the biMAP and the biclustering information to quickly and easily annotate the data set.
+In the examples below we will prepare the data and then use CAbiNet to bicluster and visualize the cells and their marker genes. We will further use the biMAP and the biclustering information to quickly and easily annotate the cell types.
 
 ## Setup
 
@@ -101,14 +102,14 @@ sce
 
 ## Data pre-processing
 
-CAbiNet is based on Correspondence Analysis, which is quite sensitive to outliers in the count matrix. We therefore strongly suggest to pre-process your data before applying CAbiNet. Here we offer some routine pre-processing steps for scRNA-seq data analysis with packages `r BiocStyle::Biocpkg('scran')` and `r BiocStyle::Biocpkg('scater')`. You can modify these steps according to your own demands.
+CAbiNet is based on Correspondence Analysis, which is sensitive to outliers in the count matrix. We therefore strongly suggest to pre-process your data before applying CAbiNet. Here we offer some routine pre-processing steps for scRNA-seq data analysis with packages `r BiocStyle::Biocpkg('scran')` and `r BiocStyle::Biocpkg('scater')`. You can modify these steps according to your own demands.
 ```{r preprocess}
 
 mt_genes <- grepl("^mt-",  rownames(sce), ignore.case = TRUE)
 
 qc_df <- perCellQCMetrics(sce, subsets=list(Mito=mt_genes))
 
-reasons <- perCellQCFilters(qc_df, 
+reasons <- perCellQCFilters(qc_df,
                             sum.field = "sum",
                             detected.field = "detected",
                             sub.fields=c("subsets_Mito_percent"))
@@ -137,7 +138,7 @@ plotReducedDim(sce, dimred="UMAP", colour_by="level1class")
 
 ## Dimensionality Reduction in CAbiNet
 
-The dimensionality reduction in CAbiNet is performed with Correspondence Analysis (CA) by the package `r BiocStyle::Biocpkg('APL')`. The most important parameters in the dimensionality reduction step is the number of dimensions (`dims`) you want to keep (similar with the number of principal components in PCA) and the number of genes (`top`) with the highest inertia you want to keep. `top` is set to 5000 by default, in which case the top 5000 genes with highest genes will be selected before performing CA. If you already picked the most highly variable genes in advance (as we did above), you can keep all genes in the count matrix.
+The dimensionality reduction in CAbiNet is performed with Correspondence Analysis (CA) by the package `r BiocStyle::Biocpkg('APL')`. The most important parameters in the dimensionality reduction step are the number of dimensions (`dims`) you want to keep (similar with the number of principal components in PCA) and the number of genes (`top`) with the highest inertia you want to keep. `top` is set to 5000 by default, in which case the top 5000 genes with highest inertia will be selected before performing CA. If you already picked the most highly variable genes in advance (as we did above), you can keep all genes in the count matrix which will be handed to the function.
 
 The number of genes kept should no be set too low, as otherwise important marker genes are often removed from the data.
 
@@ -146,14 +147,14 @@ The number of genes kept should no be set too low, as otherwise important marker
 caobj = cacomp(sce[top_genes,],
                assay = "logcounts",
                dims = 40,
-               top = nrow(cnts), 
+               top = nrow(sce[top_genes,]),
                python = TRUE)
 ```
-The parameter `python = TRUE` indicates that the singular value decomposition in CA is performed with a pythorch implementation. This can drastically speed up the computation, in particular for large datasets. If you did not install all python dependencies for APL, please set it to `FALSE`.
+The parameter `python = TRUE` indicates that the singular value decomposition in CA is performed with a pytorch implementation. This can drastically speed up the computation, in particular for large datasets. If you did not install all python dependencies for APL, please set it to `FALSE`.
 
 ## CAbiNet Biclustering
 
-CAbiNet builds up a shared-nearest-neighbour (SNN) gene-cell graph based on the dimensionality reduced CA space. To build up the graph, you need to specify the number of nearest neighours (NNs) of cells and genes in the function `caclust` with the parameter `k`. As the cell-gene gaph is made up of 4 sub-graphs (cell-cell, gene-gene, cell-gene and gene-cell graph), there are also 4 different ks that can be tuned. If `k` is set to a single integer, CAbiNet will use the same k for all 4 graphs. If however a vector of 4 integers is supplied, it will use them as k for the cell-cell, gene-gene, cell-gene and gene-cell graph in that exact order. So, for example `k = 30` is equivalent to `k = (30, 30, 30, 30)`, but `k = c(30, 15, 30, 30)` uses a k half as large as for the other graphs for the gene-gene graph. In our experience, setting k for the gene-gene graph to approx. half of the other graphs leads to a good visualization/biclustering. See also `?caclust`.
+CAbiNet builds up a shared-nearest-neighbour (SNN) gene-cell graph based on the dimensionality reduced CA space. To build up the graph, you need to specify the number of nearest neighours (NNs) of cells and genes in the function `caclust` with the parameter `k`. As the cell-gene graph is made up of 4 sub-graphs (cell-cell, gene-gene, cell-gene and gene-cell graph), there are also 4 different `k`s that can be tuned. If `k` is set to a single integer, CAbiNet will use the same k for all 4 sub-graphs. If, however, a vector of 4 integers is supplied, it will use them as `k` for the cell-cell, gene-gene, cell-gene and gene-cell graph in that exact order. So, for example `k = 30` is equivalent to `k = (30, 30, 30, 30)`, but `k = c(30, 15, 30, 30)` uses a k half as large as for the other graphs for the gene-gene graph. In our experience, setting k for the gene-gene graph to approx. half of the other graphs leads to a good visualization/biclustering. See also `?caclust`.
 
 The simplest way to run CAbiNet is therefore:
 ```{r biclustering, eval = FALSE}
@@ -165,7 +166,7 @@ cabic <- caclust(obj = caobj,
                  resolution = 1)
 ```
 
-If a large number of genes have been kept during pre-processing, the biMAP can quickly become too crowded and it can be hard to identify marker genes of interest.
+If a large number of genes have been kept during pre-processing, the biMAP can become too crowded and it can be hard to identify marker genes of interest.
 CAbiNet therefore includes a method to remove genes that do not add much information to the biMAP. The paramter `select_genes` indicates whether genes that have no edge to any cell should be removed from the graph:
 
 ```{r biclustering_select, eval = FALSE}
@@ -173,18 +174,18 @@ CAbiNet therefore includes a method to remove genes that do not add much informa
 cabic <- caclust(obj = caobj,
                  k = c(70, 35, 70, 70),
                  select_genes = TRUE,
-                 prune_overlap = FALSE, 
+                 prune_overlap = FALSE,
                  algorithm = 'leiden',
                  resolution = 1)
 ```
 
-Furthermore, we offer an optional graph pruning procedure with parameter `prune_overlap` and `overlap` to remove sporadic edges between cells and genes. Setting `prune_overlap` as `TRUE` and `overlap` as a fraction between 0 and 1 allows you to trim out edges between cells and genes that are shared with less than 'overlap'-fraction cell neighours. Note this function only works when `select_genes` is set as TRUE.
+Furthermore, we offer an optional graph pruning procedure with parameters `prune_overlap` and `overlap` to remove sporadic edges between cells and genes. Setting `prune_overlap` as `TRUE` and `overlap` as a fraction between 0 and 1 allows you to trim out edges between cells and genes that are shared with less than 'overlap'-fraction cell neighours. Note this function only works when `select_genes` is set as `TRUE`.
 
 In many cases we also have a set of marker genes that we would like to use for cell type annotation. In order to prevent the marker genes to be removed during the graph pruning we can make the algorithm aware of them using the `marker_genes` parameter.
 
 ```{r biclustering_prune, eval = TRUE}
 
-# Marker genes from A. Zeisel et al., Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq, 2015, Science 
+# Marker genes from A. Zeisel et al., Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq, 2015, Science
 markers <- c("Gad1",
              "Tbr1",
              "Spink8",
@@ -212,7 +213,7 @@ The resulting caclust object contains biclustering results and the SNN graph:
 cabic
 ```
 
-The cluster assignments for the cells or genes can be obtained with the functions 'gene_clusters()' and 'cell_clusters()':
+The cluster assignments for the cells or genes can be obtained with the functions `gene_clusters()` and `cell_clusters()`:
 ```{r clusters}
 
 sce$cabinet <- cell_clusters(cabic)
@@ -241,7 +242,7 @@ We now compute the biMAP embedding and visualize it in a scatter plot:
 cabic <- biMAP(cabic, k = 30)
 
 # plot results
-plot_biMAP(cabic, 
+plot_biMAP(cabic,
            color_genes = TRUE,
            label_marker_genes = markers)
 
@@ -253,7 +254,7 @@ plot_scatter_biMAP(cabic,
                    meta_df = colData(sce))
 ```
 
-`plot_biMAP` and `plot_scatter_biMAP` both produce a scatter plot of the embedding. For very large datasets it can become difficult to differentiate between cells and genes in such a plot. If we are mainly interested in identifying the marker genes of the clusters, we can instead use the hex biMAP for a less busy visualization:
+`plot_biMAP` and `plot_scatter_biMAP` both produce a scatter plot of the embedding. For very large data sets it can become difficult to differentiate between cells and genes in such a plot. If we are mainly interested in identifying the marker genes of the clusters, we can instead use the hex biMAP for a less busy visualization:
 
 ```{r hex_biMAP}
 plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
@@ -262,7 +263,7 @@ plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
 
 ## Cell type annotation
 
-CAbiNet allows for convenient cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP.
+CAbiNet allows for intuitive cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP. By the position of genes and cells in the biMAP, we can easily tell the marker genes of each cell group without having to perform differential gene expression analysis.
 
 ```{r}
 
@@ -275,6 +276,7 @@ cts <- c("Interneurons",
          "Endothelial",
          "Mural")
 
+## make sure the cell types and marker genes are in a one-to-one order.
 df <- data.frame(cell_type = cts,
                  marker_gene = markers)
 
@@ -301,28 +303,28 @@ for (i in seq_along(df$cabinet)){
 }
 sce$cabinet_ct <- as.factor(sce$cabinet_ct)
 
-plot_biMAP(cabic, 
-           meta_df = colData(sce), 
+plot_biMAP(cabic,
+           meta_df = colData(sce),
            color_by = "cabinet_ct",
            label_marker_genes = markers)
 ```
-The only remaining unnanotated cluster is bicluster 8. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub cell type or a group of outliers/doublets.
+The only remaining unnanotated cluster is bicluster 8. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub-cell type or a group of outliers/doublets.
 We can also see the similar cell types Endothelial and Mural have been clustered in a single cluster (labelled Endothelial).
 
 Using a feature biMAP to visualize the expression of the two Marker genes Acta2 (Mural) and Cldn5 (Endothelial) we can confirm that this cluster could be further subdivided by the location of the marker genes.
 
 ```{r biMAP_feature}
-p1 <- plot_feature_biMAP(sce = sce, 
-                   caclust = cabic, 
+p1 <- plot_feature_biMAP(sce = sce,
+                   caclust = cabic,
                    feature = 'Acta2',
                    label_size = 4)
 
-p2 <- plot_feature_biMAP(sce = sce, 
-                   caclust = cabic, 
+p2 <- plot_feature_biMAP(sce = sce,
+                   caclust = cabic,
                    feature = 'Cldn5',
                    label_size = 4)
 
-p1 
+p1
 p2
 ```
 
@@ -335,14 +337,14 @@ plot_biMAP(cabic, color_by = "cluster",
            max.overlaps = 20)
 ```
 
-Sometimes the name of genes overlap with each other and can be difficult to read the names in the plot. Exploring the biMAP interactively allows you to zoom in or out at a group of cells to inspect the genes there in more detail:
+Sometimes the name of genes overlap with each other and can be difficult to read the names in the plot. Exploring the biMAP interactively allows you to zoom in or out at a group of points to inspect the information there in more detail:
 ```{r label_mkg_live}
 plot_biMAP(cabic, color_by = "cluster",
            color_genes = TRUE,
            interactive = TRUE)
 ```
 
-# Integration with Bioconductor
+# Integration with Bioconductor packages
 
 When intergrating the clustering results and cell type annotations with the SCE object, gene expression levels can also be visualized by violin plots.
 ```{r downstream}
