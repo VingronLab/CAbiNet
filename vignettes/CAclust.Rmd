@@ -154,7 +154,7 @@ The parameter `python = TRUE` indicates that the singular value decomposition in
 
 ## CAbiNet Biclustering
 
-CAbiNet builds up a shared-nearest-neighbour (SNN) gene-cell graph based on the dimensionality reduced CA space. To build up the graph, you need to specify the number of nearest neighours (NNs) of cells and genes in the function `caclust` with the parameter `k`. As the cell-gene graph is made up of 4 sub-graphs (cell-cell, gene-gene, cell-gene and gene-cell graph), there are also 4 different `k`s that can be tuned. If `k` is set to a single integer, CAbiNet will use the same k for all 4 sub-graphs. If, however, a vector of 4 integers is supplied, it will use them as `k` for the cell-cell, gene-gene, cell-gene and gene-cell graph in that exact order. So, for example `k = 30` is equivalent to `k = (30, 30, 30, 30)`, but `k = c(30, 15, 30, 30)` uses a k half as large as for the other graphs for the gene-gene graph. See also `?caclust`.
+CAbiNet builds up a shared-nearest-neighbour (SNN) gene-cell graph based on the dimensionality reduced CA space. To build up the graph, you need to specify the number of nearest neighours (NNs) of cells and genes in the function `caclust` with the parameter `k`. As the cell-gene graph is made up of 4 sub-graphs (cell-cell, gene-gene, cell-gene and gene-cell graph), there are also 4 different `k`s that can be tuned. If `k` is set to a single integer, CAbiNet will use the same k for all 4 sub-graphs. If, however, a vector of 4 integers is supplied, it will use them as `k` for the cell-cell, gene-gene, cell-gene and gene-cell graph in that exact order. So, for example `k = 30` is equivalent to `k = (30, 30, 30, 30)`, but `k = c(30, 15, 30, 30)` uses a k half as large as for the other graphs for the gene-gene graph. In our experience, setting k for the gene-gene graph to approx. half of the other graphs leads to a good visualization/biclustering. See also `?caclust`.
 
 The simplest way to run CAbiNet is therefore:
 ```{r biclustering, eval = FALSE}
@@ -197,7 +197,7 @@ markers <- c("Gad1",
 
 # SNN graph & biclustering
 cabic <- caclust(obj = caobj,
-                 k = c(70, 70, 70, 70),
+                 k = c(70, 35, 70, 70),
                  select_genes = TRUE,
                  prune_overlap = TRUE,
                  mode = "all",
