@@ -17,12 +17,13 @@ biMAP_plotter(
   min_bin = 2,
   show_density = FALSE,
   contour_n = 5,
-  color_genes = FALSE,
+  color_genes = TRUE,
   label_groups = TRUE,
   group_label_size = 4,
   label_marker_genes = FALSE,
   colors = NULL,
-  plotly = FALSE
+  plotly = FALSE,
+  max.overlaps = 12
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ genes are displayed. If is character vector, the given marker genes are labeled.
 categories defined by color_by or longer. If NULL ignored.}
 
 \item{plotly}{If TRUE a hex plot with labels per hexbin will be made.}
+
+\item{max.overlaps}{Exclude text labels that overlap too many things.}
 }
 \value{
 biMAP plot as ggplot object.
