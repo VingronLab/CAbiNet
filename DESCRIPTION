@@ -37,7 +37,7 @@ Imports:
   leiden,
   umap,
   dplyr,
-  ggplot2 (<= 3.3.0),
+  ggplot2,
   magrittr,
   methods,
   RcppEigen,
