@@ -1,195 +1,198 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/404.html</loc>
   </url>
   <url>
-    <loc>/articles/CAclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/articles/CAbiNet.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/articles/CAclust.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/articles/index.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/authors.html</loc>
   </url>
   <url>
-    <loc>/reference/CAbiNet-package.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/index.html</loc>
   </url>
   <url>
-    <loc>/reference/ComputeSNNasym.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/CAbiNet-package.html</loc>
   </url>
   <url>
-    <loc>/reference/NormLaplacian.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/ComputeSNNasym.html</loc>
   </url>
   <url>
-    <loc>/reference/aR_metric.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/NormLaplacian.html</loc>
   </url>
   <url>
-    <loc>/reference/add_caclust_sce.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/aR_metric.html</loc>
   </url>
   <url>
-    <loc>/reference/as.caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/add_caclust_sce.html</loc>
   </url>
   <url>
-    <loc>/reference/assign_clusters_GMM.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/as.caclust.html</loc>
   </url>
   <url>
-    <loc>/reference/biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/assign_clusters_GMM.html</loc>
   </url>
   <url>
-    <loc>/reference/biMAP_plotter.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/bicplot.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/biMAP_plotter.html</loc>
   </url>
   <url>
-    <loc>/reference/ca_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/bicplot.html</loc>
   </url>
   <url>
-    <loc>/reference/caclust-class.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/ca_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/caclust-class.html</loc>
   </url>
   <url>
-    <loc>/reference/calc_assR.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/caclust.html</loc>
   </url>
   <url>
-    <loc>/reference/calc_distances.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/calc_assR.html</loc>
   </url>
   <url>
-    <loc>/reference/calc_euclidean.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/calc_distances.html</loc>
   </url>
   <url>
-    <loc>/reference/calc_overlap.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/calc_euclidean.html</loc>
   </url>
   <url>
-    <loc>/reference/cell_clusters.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/calc_overlap.html</loc>
   </url>
   <url>
-    <loc>/reference/check_caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/cell_clusters.html</loc>
   </url>
   <url>
-    <loc>/reference/check_caobj_sce.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/check_caclust.html</loc>
   </url>
   <url>
-    <loc>/reference/contour_plot.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/check_caobj_sce.html</loc>
   </url>
   <url>
-    <loc>/reference/convert_to_biclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/contour_plot.html</loc>
   </url>
   <url>
-    <loc>/reference/create_bigraph.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/convert_to_biclust.html</loc>
   </url>
   <url>
-    <loc>/reference/determine_overlap.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/create_bigraph.html</loc>
   </url>
   <url>
-    <loc>/reference/eigengap.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/determine_overlap.html</loc>
   </url>
   <url>
-    <loc>/reference/feature_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/eigengap.html</loc>
   </url>
   <url>
-    <loc>/reference/gene_clusters.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/feature_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/get_bimap.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/gene_clusters.html</loc>
   </url>
   <url>
-    <loc>/reference/get_cell_prob.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_bimap.html</loc>
   </url>
   <url>
-    <loc>/reference/get_eigen.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_cell_prob.html</loc>
   </url>
   <url>
-    <loc>/reference/get_gene_prob.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_eigen.html</loc>
   </url>
   <url>
-    <loc>/reference/get_majority.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_gene_prob.html</loc>
   </url>
   <url>
-    <loc>/reference/get_ncells.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_majority.html</loc>
   </url>
   <url>
-    <loc>/reference/get_params.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_ncells.html</loc>
   </url>
   <url>
-    <loc>/reference/get_snn.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_params.html</loc>
   </url>
   <url>
-    <loc>/reference/hex_plot.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_snn.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/hex_plot.html</loc>
   </url>
   <url>
-    <loc>/reference/is.empty.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/make_SNN.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/is.empty.html</loc>
   </url>
   <url>
-    <loc>/reference/make_knn.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/make_SNN.html</loc>
   </url>
   <url>
-    <loc>/reference/metadata_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/make_knn.html</loc>
   </url>
   <url>
-    <loc>/reference/mix.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/metadata_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/mix_rgb.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/mix.html</loc>
   </url>
   <url>
-    <loc>/reference/new_caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/mix_rgb.html</loc>
   </url>
   <url>
-    <loc>/reference/optimal_km.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/new_caclust.html</loc>
   </url>
   <url>
-    <loc>/reference/optimal_skm.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/optimal_km.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_contour_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/optimal_skm.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_feature_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_contour_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_hex_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_feature_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_metadata_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_hex_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_scatter_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_metadata_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/rm_monoclusters.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_scatter_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/run_biMAP.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/rm_monoclusters.html</loc>
   </url>
   <url>
-    <loc>/reference/run_caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/run_biMAP.html</loc>
   </url>
   <url>
-    <loc>/reference/run_leiden.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/run_caclust.html</loc>
   </url>
   <url>
-    <loc>/reference/run_spectral.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/run_leiden.html</loc>
   </url>
   <url>
-    <loc>/reference/scatter_plot.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/run_spectral.html</loc>
   </url>
   <url>
-    <loc>/reference/show.caclust.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/scatter_plot.html</loc>
   </url>
   <url>
-    <loc>/reference/tbl_paste.html</loc>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/show.caclust.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/tbl_paste.html</loc>
   </url>
 </urlset>
