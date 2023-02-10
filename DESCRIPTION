@@ -83,3 +83,4 @@ Config/reticulate:
       list(package = "umap-learn")
     )
   )
+URL: https://vingronlab.github.io/CAbiNet/
