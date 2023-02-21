@@ -4,6 +4,8 @@
 
 This package provides functions to for the visualization and biclustering of single-cell RNA-seq data.
 
+A longer vignette explaining how to install and use the package can be found here:
+https://vingronlab.github.io/CAbiNet/
 
 ## Installation
 
