@@ -18,6 +18,8 @@ devtools::install_github("VingronLab/APL", ref = "cabinet")
 devtools::install_github("VingronLab/CAbiNet")
 ```
 
+> ⚠️ A bug in ggplot2 versions >3.3.0 and <3.4.1 lead to incorrect behaviour  in `plot_hex_biMAP`. Please make sure you have ggplot2 3.4.1 or higher installed. 
+
 ## Quick start
 
 Here we provide a very short example of how to use the package. We hope to provide a more detailed description of how to use CAbiNet to perform your analysis in the near future.
