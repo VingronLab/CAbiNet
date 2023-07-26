@@ -198,3 +198,52 @@ get_majority <- function(x){
 mix <- function(df){
   df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
 }
+
+
+
+rowNorm <- function(x){
+    
+    if (is.matrix(x)){
+        norm <- sqrt(rowSums(x^2))
+    } else if (is.null(dim(x))) {
+        norm <- sqrt(sum(x^2))
+    } else {
+        stop("Unknown object.")
+    }
+    
+    return(norm)
+}
+
+
+#' Transforms vectors such that the max. inner product search (MIP) is
+#' equal to a NN search with euclidean distances.
+#' 
+#' @param vectors Matrix of row vectors
+#' 
+#' Based on:
+#' Yoram Bachrach, Yehuda Finkelstein, Ran Gilad-Bachrach, Liran Katzir,
+#'  Noam Koenigstein, Nir Nice, Ulrich Paquet. 
+#'  Speeding up the Xbox recommender system using a euclidean transformation 
+#'  for inner-product spaces. RecSys 2014
+#' 
+#' See also:
+#' https://github.com/benfred/implicit/blob/42832574f1a29c71b3263e219fc471fc97328552/implicit/utils.py#L60
+#' https://towardsdatascience.com/maximum-inner-product-search-using-nearest-neighbor-search-algorithms-c125d24777ef
+#' 
+augment_vector <- function(vectors){
+    
+    rnorms <- rowNorm(vectors)
+    max_norm <- max(rnorms)
+    
+    extra_dim <- sqrt(max_norm^2-rnorms^2)
+    
+    return(cbind(extra_dim, vectors))
+    
+}
+
+
+add_zero_dim <- function(vectors){
+    return(cbind(0, vectors))
+}
+
+

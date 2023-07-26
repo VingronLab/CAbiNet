@@ -36,10 +36,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// timesTwo
+NumericVector timesTwo(NumericVector x);
+RcppExport SEXP _CAbiNet_timesTwo(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(timesTwo(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CAbiNet_ComputeSNNasym", (DL_FUNC) &_CAbiNet_ComputeSNNasym, 3},
     {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 2},
+    {"_CAbiNet_timesTwo", (DL_FUNC) &_CAbiNet_timesTwo, 1},
     {NULL, NULL, 0}
 };
 
