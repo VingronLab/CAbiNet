@@ -237,6 +237,10 @@ indx_to_spmat <- function(indx_mat,
 }
 
 # WIP
+# TODO: add to DESCRIPTION BiocNeighbors
+# TODO: Test
+# TODO: calc_overlap, do we need to optimize it?
+# TODO: Keep working with index matrix instead of sparse matrix.
 create_bigraph_biocneighbors_spmat <- function(caobj,
                                          k_c,
                                          k_g,
