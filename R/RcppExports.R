@@ -32,7 +32,3 @@ calc_overlap <- function(cc_adj, cg_adj) {
     .Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
 }
 
-timesTwo <- function(x) {
-    .Call('_CAbiNet_timesTwo', PACKAGE = 'CAbiNet', x)
-}
-
