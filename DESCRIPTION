@@ -54,7 +54,8 @@ Imports:
   RColorBrewer,
   S4Vectors,
   irlba,
-  viridis
+  viridis,
+  BiocNeighbors
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
 Suggests:
