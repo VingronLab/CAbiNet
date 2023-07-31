@@ -419,9 +419,8 @@ create_bigraph_biocneighbors_spmat <- function(caobj,
 }
 
 
-# TODO: We need to check if the indices keep referring to the same genes after
-# all the subsetting I am doing!
-# ONLY MOVE ON IF YOU ARE SURE ABOUT THE INDICES.
+
+# TODO: ONLY MOVE ON IF YOU ARE SURE ABOUT THE INDICES.
 create_bigraph_biocneighbors_indxmat <- function(caobj,
                                                    k_c,
                                                    k_g,
@@ -470,6 +469,7 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
             }
             
             marker_knn <- lapply(cgg_nn, function(x) idx[idx %in% x])
+            # setdiff removes the marker genes from the graph, we add it later.
             cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) setdiff(cgg_nn[[x]], marker_knn[[x]]))      
             names(cgg_nn) <- rownames(caobj@std_coords_cols)
             
@@ -494,7 +494,7 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
     if (isTRUE(select_genes) & isTRUE(prune_overlap)){
       
       # TODO: Remove indx_to_spmat() calls.
-      # FIXME: Change calc_overlap for index matrices.
+      # FIXME: Change calc_overlap for index matrices. 
       overlap_mat <- calc_overlap( cc_adj = indx_to_spmat(indx_mat = ccg_nn, 
                                                           row_names = rownames(caobj@prin_coords_cols),
                                                           col_names = rownames(caobj@prin_coords_cols)),
@@ -505,10 +505,13 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
       
       # For the case overlap = 1, all the genes are supposed to removed such that
       # the algorithm allows for clustering for cells without genes.
-      cgg_nn[overlap_mat <= overlap] <- 0 #FIXME : This will need to be changed once calc_overlap is redone.
+      
+      # FIXME : This will need to be changed once calc_overlap is redone.
+      cgg_nn[overlap_mat <= overlap] <- 0 
       
     }
     
+    # add marker genes back in BEFORE we get gene_idx!
     if(!is.null(marker_genes)){
       
       cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) union(cgg_nn[[x]], marker_knn[[x]]))      
@@ -518,7 +521,6 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
     
     if (isTRUE(select_genes)){
       # indices of genes with an edge to a cell.
-      
       # If we subset to the genes that have an edge to a cell.
       gene_idx <- sort(unique(unlist(cgg_nn)))
       
@@ -548,9 +550,7 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
       
       # for each gene that has an edge to a cell (not all genes!!):
       # check to which cells it has an edge and put their indices in list.
-      # TODO: How to track to which genes we refer to? -> gene_idx! We need to 
-      # set it once and then not touch it!
-      
+      # TODO: Check if correct.
       gcg_nn <- lapply(gene_idx,
                        function(y) which(vapply(cgg_nn,
                                                 function(x) y %in% x,
