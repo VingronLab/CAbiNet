@@ -24,6 +24,9 @@ make_knn <- function(dists,
 
   n.row <- nrow(dists)
   n.col <- ncol(dists)
+  names.row <- rownames(dists)
+  names.col <- colnames(dists)
+
 
   if (n.col < k) {
     warning(
@@ -32,7 +35,7 @@ make_knn <- function(dists,
     )
     k <- n.col - 1
   }
-  knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
+
   # knd.mat <- knn.mat
 
   if (isTRUE(loops)){
@@ -44,11 +47,13 @@ make_knn <- function(dists,
     stop()
   }
 
+  knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
   for (i in 1:n.row) {
     knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[nns]
     # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
   }
   # nn.ranked <- knn.mat[,seq_len(k)]
+  rm(dists)
 
   # convert nn.ranked into a Graph
   j <- as.numeric(t(knn.mat))
@@ -57,9 +62,9 @@ make_knn <- function(dists,
   nn.matrix <- Matrix::sparseMatrix(i = i,
                                     j = j,
                                     x = 1,
-                                    dims = c(nrow(x = dists), ncol(x = dists)))
-  rownames(nn.matrix) <- rownames(dists)
-  colnames(nn.matrix) <- colnames(dists)
+                                    dims = c(n.row, n.col))
+  rownames(nn.matrix) <- names.row
+  colnames(nn.matrix) <- names.col
   return(nn.matrix)
 }
 
@@ -120,7 +125,16 @@ create_bigraph <- function(cell_dists,
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
                      decr = TRUE,
-                     loops = loops)
+                     loops = TRUE)
+
+  ccg_nn <- make_knn(cell_dists,
+                              k = k_c,
+                              decr = FALSE,
+                              loops = loops)
+
+  cgg_idx <- calc_overlap(cc_idx = cc_idx,
+                          cg_idx = cg_idx,
+                          overlap = overlap)
 
   if (!is.null(marker_genes)){
     stopifnot(is(marker_genes, "character"))
@@ -160,35 +174,43 @@ create_bigraph <- function(cell_dists,
   }
 
 
-  ccg_nn <- make_knn(cell_dists,
-                     k = k_c,
-                     decr = FALSE,
-                     loops = loops)
+
 
 
   if(isTRUE(select_genes) & isTRUE(prune_overlap)){
 
-    overlap_mat <- calc_overlap( cc_adj = ccg_nn,
-                                 cg_adj = cgg_nn)
+    # overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+                                 # cg_adj = cgg_nn)
 
-    # For the case overlap = 1, all the genes are supposed to removed such that
-    # the algorithm allows for clustering for cells without genes.
-    cgg_nn[overlap_mat <= overlap] <- 0
-    idx <- Matrix::colSums(cgg_nn) > 0
-    cgg_nn <- cgg_nn[,idx]
-    gene_dists <- gene_dists[idx,idx]
-    gene_cell_assr <- gene_cell_assr[idx,]
+    # # For the case overlap = 1, all the genes are supposed to removed such that
+    # # the algorithm allows for clustering for cells without genes.
+    # # cgg_nn[overlap_mat <= overlap] <- 0 # has been included in the cpp function
+    # idx <- Matrix::colSums(cgg_nn) > 0
+    # cgg_nn <- cgg_nn[,idx]
+    # gene_dists <- gene_dists[idx,idx]
+    # gene_cell_assr <- gene_cell_assr[idx,]
+
+    # the overlap parameter is added into calc_overlap function
+
+    idx <- unique(cgg_idx)
+
+    # subset the gene set (principal and strandard coordinates of genes) by idx then calculate the gene-gene graph
+    # subset adn update the caclust object
+    #
 
   }
 
 
   if(!is.null(marker_genes)){
 
-    cgg_nn <- cbind(cgg_nn, marker_knn)
+    ## the marker genes can be retrived by adding the indexes for given marker genes
+    ## idx = c(idx, markergene_idx)
 
-    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
-    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
-    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+    # cgg_nn <- cbind(cgg_nn, marker_knn)
+    #
+    # marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+    # gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+    # gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
 
   }
   ggg_nn <- make_knn(gene_dists,
@@ -197,24 +219,30 @@ create_bigraph <- function(cell_dists,
                      loops = loops)
 
   if(isFALSE(calc_gene_cell_kNN)){
-    gcg_nn <- Matrix::t(cgg_nn)
+    # gcg_nn <- Matrix::t(cgg_nn)
+    gc_idx = 0
 
   } else if(isTRUE(calc_gene_cell_kNN)){
-    gcg_nn <- make_knn(gene_cell_assr,
-                       k = k_gc,
-                       decr = TRUE,
-                       loops = loops)
+    # gcg_nn <- make_knn(gene_cell_assr,
+    #                    k = k_gc,
+    #                    decr = TRUE,
+    #                    loops = loops)
   } else {
     stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
   }
 
 
-
-  GSG_1 <- cbind(ccg_nn, cgg_nn)
-  GSG_2 <- cbind(gcg_nn, ggg_nn)
-
-  GSG <- rbind(GSG_1, GSG_2)
-  return(GSG)
+  snn.matrix = ComputeSNNasym(cc_idx = cc_idx,
+                              cg_idx = cg_idx,
+                              gg_idx = gg_idx,
+                              gc_idx,
+                              prune = SNN_prune,
+                              mode = mode)
+  # GSG_1 <- cbind(ccg_nn, cgg_nn)
+  # GSG_2 <- cbind(gcg_nn, ggg_nn)
+  #
+  # GSG <- rbind(GSG_1, GSG_2)
+  return(snn.matrix)
 }
 
 
@@ -295,12 +323,15 @@ make_SNN <- function(caobj,
                         calc_gene_cell_kNN = calc_gene_cell_kNN,
                         marker_genes = marker_genes)
 
+  rm(distances)
+
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")
   }
 
 
-  snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
+  # snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
+  ## use memory mapping instead of copying
 
   ## to coincide with output of "igraph"
   diag(snn.matrix) = 1
