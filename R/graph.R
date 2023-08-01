@@ -125,16 +125,7 @@ create_bigraph <- function(cell_dists,
   cgg_nn <- make_knn(cell_gene_assr,
                      k = k_cg,
                      decr = TRUE,
-                     loops = TRUE)
-
-  ccg_nn <- make_knn(cell_dists,
-                              k = k_c,
-                              decr = FALSE,
-                              loops = loops)
-
-  cgg_idx <- calc_overlap(cc_idx = cc_idx,
-                          cg_idx = cg_idx,
-                          overlap = overlap)
+                     loops = loops)
 
   if (!is.null(marker_genes)){
     stopifnot(is(marker_genes, "character"))
@@ -174,43 +165,35 @@ create_bigraph <- function(cell_dists,
   }
 
 
-
+  ccg_nn <- make_knn(cell_dists,
+                     k = k_c,
+                     decr = FALSE,
+                     loops = loops)
 
 
   if(isTRUE(select_genes) & isTRUE(prune_overlap)){
 
-    # overlap_mat <- calc_overlap( cc_adj = ccg_nn,
-                                 # cg_adj = cgg_nn)
+    overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+                                 cg_adj = cgg_nn)
 
-    # # For the case overlap = 1, all the genes are supposed to removed such that
-    # # the algorithm allows for clustering for cells without genes.
-    # # cgg_nn[overlap_mat <= overlap] <- 0 # has been included in the cpp function
-    # idx <- Matrix::colSums(cgg_nn) > 0
-    # cgg_nn <- cgg_nn[,idx]
-    # gene_dists <- gene_dists[idx,idx]
-    # gene_cell_assr <- gene_cell_assr[idx,]
-
-    # the overlap parameter is added into calc_overlap function
-
-    idx <- unique(cgg_idx)
-
-    # subset the gene set (principal and strandard coordinates of genes) by idx then calculate the gene-gene graph
-    # subset adn update the caclust object
-    #
+    # For the case overlap = 1, all the genes are supposed to removed such that
+    # the algorithm allows for clustering for cells without genes.
+    cgg_nn[overlap_mat <= overlap] <- 0
+    idx <- Matrix::colSums(cgg_nn) > 0
+    cgg_nn <- cgg_nn[,idx]
+    gene_dists <- gene_dists[idx,idx]
+    gene_cell_assr <- gene_cell_assr[idx,]
 
   }
 
 
   if(!is.null(marker_genes)){
 
-    ## the marker genes can be retrived by adding the indexes for given marker genes
-    ## idx = c(idx, markergene_idx)
+    cgg_nn <- cbind(cgg_nn, marker_knn)
 
-    # cgg_nn <- cbind(cgg_nn, marker_knn)
-    #
-    # marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
-    # gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
-    # gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
 
   }
   ggg_nn <- make_knn(gene_dists,
@@ -219,32 +202,425 @@ create_bigraph <- function(cell_dists,
                      loops = loops)
 
   if(isFALSE(calc_gene_cell_kNN)){
-    # gcg_nn <- Matrix::t(cgg_nn)
-    gc_idx = 0
+    gcg_nn <- Matrix::t(cgg_nn)
 
   } else if(isTRUE(calc_gene_cell_kNN)){
-    # gcg_nn <- make_knn(gene_cell_assr,
-    #                    k = k_gc,
-    #                    decr = TRUE,
-    #                    loops = loops)
+    gcg_nn <- make_knn(gene_cell_assr,
+                       k = k_gc,
+                       decr = TRUE,
+                       loops = loops)
   } else {
     stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
   }
 
 
-  snn.matrix = ComputeSNNasym(cc_idx = cc_idx,
-                              cg_idx = cg_idx,
-                              gg_idx = gg_idx,
-                              gc_idx,
-                              prune = SNN_prune,
-                              mode = mode)
-  # GSG_1 <- cbind(ccg_nn, cgg_nn)
-  # GSG_2 <- cbind(gcg_nn, ggg_nn)
-  #
-  # GSG <- rbind(GSG_1, GSG_2)
-  return(snn.matrix)
+
+  GSG_1 <- cbind(ccg_nn, cgg_nn)
+  GSG_2 <- cbind(gcg_nn, ggg_nn)
+
+  GSG <- rbind(GSG_1, GSG_2)
+  return(GSG)
 }
 
+
+indx_to_spmat <- function(indx_mat,
+                          row_names,
+                          col_names){
+
+    j <- as.numeric(t(indx_mat))
+    i <- ((1:length(j)) - 1) %/% ncol(indx_mat) + 1
+
+    nn.matrix <- Matrix::sparseMatrix(i = i,
+                                      j = j,
+                                      x = 1,
+                                      dims = c(length(row_names), length(col_names)))
+
+    rownames(nn.matrix) <- row_names
+    colnames(nn.matrix) <- col_names
+
+    return(nn.matrix)
+}
+
+# WIP
+# TODO: Test
+# TODO: calc_overlap, do we need to optimize it?
+# TODO: Keep working with index matrix instead of sparse matrix.
+create_bigraph_biocneighbors_spmat <- function(caobj,
+                                         k_c,
+                                         k_g,
+                                         k_cg,
+                                         k_gc,
+                                         loops = FALSE,
+                                         select_genes = TRUE,
+                                         prune_overlap = TRUE,
+                                         overlap = 0.2,
+                                         calc_gene_cell_kNN = FALSE,
+                                         marker_genes = NULL,
+                                         method = BiocNeighbors::KmknnParam(),
+                                         BPPARAM = BiocParallel::SerialParam()){
+
+    # apply vector augmentation for MIP search via euclidean distance.
+    Xt <- add_zero_dim(caobj@std_coords_cols)
+    Qt <- augment_vector(caobj@prin_coords_rows)
+
+    cgg_nn <- BiocNeighbors::queryKNN(X = Qt,
+                       query = Xt,
+                       k = k_cg,
+                       get.distance = FALSE,
+                       BNPARAM=method,
+                       BPPARAM = BPPARAM)$index
+
+    cgg_nn <- indx_to_spmat(indx_mat = cgg_nn,
+                            row_names = rownames(caobj@std_coords_cols),
+                            col_names = rownames(caobj@prin_coords_rows))
+
+
+    # gene_idx <- seq_len(nrow(caobj@prin_coords_rows))
+
+    if (!is.null(marker_genes)){
+        stopifnot(is(marker_genes, "character"))
+
+        idx <- which(colnames(cgg_nn) %in% marker_genes)
+
+        if (length(idx) == 0){
+            warning("Marker genes not found in the data.")
+            marker_genes <- NULL
+
+        } else {
+
+            if(length(idx) < length(marker_genes)){
+                warning("Not all marker genes are in the provided data.")
+                marker_genes <- marker_genes[marker_genes %in% colnames(cgg_nn)]
+            }
+
+            marker_knn <- cgg_nn[,idx]
+            cgg_nn <- cgg_nn[,-idx]
+
+            # marker_dists <- gene_dists[idx,]
+            # marker_assr <- gene_cell_assr[idx,]
+
+            # gene_dists <- gene_dists[-idx, -idx]
+            # gene_cell_assr <- gene_cell_assr[-idx,]
+
+        }
+
+    }
+
+
+    ccg_nn = BiocNeighbors::findKNN(caobj@prin_coords_cols,
+                     k=k_c,
+                     get.distance = FALSE,
+                     BNPARAM=method,
+                     BPPARAM = BPPARAM)$index
+
+    if (isTRUE(loops)){
+        ccg_nn <- cbind(seq_len(nrow(ccg_nn)),
+                        ccg_nn[, -ncol(ccg_nn), drop = FALSE])
+    }
+
+    ccg_nn <- indx_to_spmat(indx_mat = ccg_nn,
+                            row_names = rownames(caobj@prin_coords_cols),
+                            col_names = rownames(caobj@prin_coords_cols))
+
+    # ccg_nn <- make_knn(cell_dists,
+    #                    k = k_c,
+    #                    decr = FALSE,
+    #                    loops = loops)
+
+
+
+    if (isTRUE(select_genes)){
+
+      idx <- Matrix::colSums(cgg_nn) > 0
+      cgg_nn <- cgg_nn[,idx]
+      # sg_idx <- Matrix::colSums(cgg_nn) > 0
+
+
+      if (isTRUE(prune_overlap)){
+
+        overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+                                     cg_adj = cgg_nn)
+
+        # For the case overlap = 1, all the genes are supposed to removed such that
+        # the algorithm allows for clustering for cells without genes.
+        cgg_nn[overlap_mat <= overlap] <- 0
+        idx <- Matrix::colSums(cgg_nn) > 0
+        cgg_nn <- cgg_nn[,idx]
+
+      }
+
+
+    }
+
+
+
+    if(!is.null(marker_genes)){
+
+        cgg_nn <- cbind(cgg_nn, marker_knn)
+
+        # marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists))]
+        # gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists)]), t(marker_dists))
+        # gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
+
+    }
+
+    gene_idx <- which(rownames(caobj@prin_coords_rows) %in% colnames(cgg_nn))
+    ggg_nn = BiocNeighbors::findKNN(caobj@prin_coords_rows[gene_idx,],
+                     k=k_g,
+                     get.distance = FALSE,
+                     BNPARAM=method,
+                     BPPARAM = BPPARAM)$index
+
+    if (isTRUE(loops)){
+        ggg_nn <- cbind(seq_len(nrow(ggg_nn)),
+                        ggg_nn[, -ncol(ggg_nn), drop = FALSE])
+    }
+
+    ggg_nn <- indx_to_spmat(indx_mat = ggg_nn,
+                            row_names = rownames(caobj@prin_coords_rows)[gene_idx],
+                            col_names = rownames(caobj@prin_coords_rows)[gene_idx])
+
+
+    # ggg_nn <- make_knn(gene_dists,
+    #                    k = k_g,
+    #                    decr = FALSE,
+    #                    loops = loops)
+
+    if(isFALSE(calc_gene_cell_kNN)){
+        gcg_nn <- Matrix::t(cgg_nn)
+
+    } else if(isTRUE(calc_gene_cell_kNN)){
+
+        Xt <- augment_vector(caobj@prin_coords_cols)
+        Qt <- add_zero_dim(caobj@std_coords_rows[gene_idx,])
+
+        gcg_nn <- BiocNeighbors::queryKNN(X = Xt,
+                           query = Qt,
+                           k = k_gc,
+                           get.distance = FALSE,
+                           BNPARAM=method,
+                           BPPARAM = BPPARAM)$index
+
+        gcg_nn <- indx_to_spmat(indx_mat = gcg_nn,
+                                row_names = rownames(caobj@std_coords_rows)[gene_idx],
+                                col_names = rownames(caobj@prin_coords_cols))
+
+        # gcg_nn <- make_knn(gene_cell_assr,
+        #                    k = k_gc,
+        #                    decr = TRUE,
+        #                    loops = TRUE)
+    } else {
+        stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
+    }
+
+
+
+    GSG_1 <- cbind(ccg_nn, cgg_nn)
+    GSG_2 <- cbind(gcg_nn, ggg_nn)
+
+    GSG <- rbind(GSG_1, GSG_2)
+    return(GSG)
+
+}
+
+
+
+# TODO: ONLY MOVE ON IF YOU ARE SURE ABOUT THE INDICES.
+create_bigraph_biocneighbors_indxmat <- function(caobj,
+                                                   k_c,
+                                                   k_g,
+                                                   k_cg,
+                                                   k_gc,
+                                                   loops = FALSE,
+                                                   select_genes = TRUE,
+                                                   prune_overlap = TRUE,
+                                                   overlap = 0.2,
+                                                   calc_gene_cell_kNN = FALSE,
+                                                   marker_genes = NULL,
+                                                   method = BiocNeighbors::KmknnParam(),
+                                                   BPPARAM = BiocParallel::SerialParam()){
+
+    # apply vector augmentation for MIP search via euclidean distance.
+    Xt <- add_zero_dim(caobj@std_coords_cols)
+    Qt <- augment_vector(caobj@prin_coords_rows)
+
+    cgg_nn <- BiocNeighbors::queryKNN(X = Qt,
+                                      query = Xt,
+                                      k = k_cg,
+                                      get.distance = FALSE,
+                                      BNPARAM=method,
+                                      BPPARAM = BPPARAM)$index
+
+    # convert to list of indices
+    # (we cannot guarantee during pruning etc that the number of neighbors is the same)
+    cgg_nn <- as.list(data.frame(t(cgg_nn)))
+    names(cgg_nn) <- rownames(caobj@std_coords_cols)
+
+
+    if (!is.null(marker_genes)){
+        stopifnot(is(marker_genes, "character"))
+
+        idx <- which(rownames(caobj@prin_coords_rows) %in% marker_genes)
+
+        if (length(idx) == 0){
+            warning("Marker genes not found in the data.")
+            marker_genes <- NULL
+
+        } else {
+
+            if(length(idx) < length(marker_genes)){
+                warning("Not all marker genes are in the provided data.")
+                marker_genes <- marker_genes[marker_genes %in% rownames(caobj@prin_coords_rows)]
+            }
+
+            marker_knn <- lapply(cgg_nn, function(x) idx[idx %in% x])
+            # setdiff removes the marker genes from the graph, we add it later.
+            cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) setdiff(cgg_nn[[x]], marker_knn[[x]]))
+            names(cgg_nn) <- rownames(caobj@std_coords_cols)
+
+        }
+
+    }
+
+    ccg_nn = BiocNeighbors::findKNN(caobj@prin_coords_cols,
+                                    k=k_c,
+                                    get.distance = FALSE,
+                                    BNPARAM=method,
+                                    BPPARAM = BPPARAM)$index
+    rownames(ccg_nn) <- rownames(caobj@prin_coords_cols)
+
+    if (isTRUE(loops)){
+      ccg_nn <- cbind(seq_len(nrow(ccg_nn)),
+                      ccg_nn[, -ncol(ccg_nn), drop = FALSE])
+    }
+
+    ccg_nn <- as.list(data.frame(t(ccg_nn)))
+
+    if (isTRUE(select_genes) & isTRUE(prune_overlap)){
+
+      # TODO: Remove indx_to_spmat() calls.
+      # FIXME: Change calc_overlap for index matrices.
+      overlap_mat <- calc_overlap( cc_adj = indx_to_spmat(indx_mat = ccg_nn,
+                                                          row_names = rownames(caobj@prin_coords_cols),
+                                                          col_names = rownames(caobj@prin_coords_cols)),
+
+                                   cg_adj = indx_to_spmat(indx_mat = cgg_nn,
+                                                          row_names = rownames(caobj@std_coords_cols),
+                                                          col_names = rownames(caobj@prin_coords_rows)))
+
+      # For the case overlap = 1, all the genes are supposed to removed such that
+      # the algorithm allows for clustering for cells without genes.
+
+      # FIXME : This will need to be changed once calc_overlap is redone.
+      cgg_nn[overlap_mat <= overlap] <- 0
+
+    }
+
+    # add marker genes back in BEFORE we get gene_idx!
+    if(!is.null(marker_genes)){
+
+      cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) union(cgg_nn[[x]], marker_knn[[x]]))
+      names(cgg_nn) <- rownames(caobj@std_coords_cols)
+
+    }
+
+    if (isTRUE(select_genes)){
+      # indices of genes with an edge to a cell.
+      # If we subset to the genes that have an edge to a cell.
+      gene_idx <- sort(unique(unlist(cgg_nn)))
+
+    } else {
+      # If we do not subset.
+      gene_idx <- seq_len(nrow(caobj@prin_coords_rows))
+    }
+
+
+    ggg_nn = BiocNeighbors::findKNN(caobj@prin_coords_rows[gene_idx,],
+                                    k=k_g,
+                                    get.distance = FALSE,
+                                    BNPARAM=method,
+                                    BPPARAM = BPPARAM)$index
+
+    rownames(ggg_nn) <- rownames(caobj@prin_coords_rows[gene_idx,])
+
+    if (isTRUE(loops)){
+      ggg_nn <- cbind(seq_len(nrow(ggg_nn)),
+                      ggg_nn[, -ncol(ggg_nn), drop = FALSE])
+    }
+
+    ggg_nn <- as.list(data.frame(t(ggg_nn)))
+
+
+    if(isFALSE(calc_gene_cell_kNN)){
+
+      # for each gene that has an edge to a cell (not all genes!!):
+      # check to which cells it has an edge and put their indices in list.
+      # TODO: Check if correct.
+      gcg_nn <- lapply(gene_idx,
+                       function(y) which(vapply(cgg_nn,
+                                                function(x) y %in% x,
+                                                TRUE)))
+
+      names(gcg_nn) <- rownames(caobj@prin_coords_rows)[gene_idx]
+
+
+    } else if(isTRUE(calc_gene_cell_kNN)){
+
+      Xt <- augment_vector(caobj@prin_coords_cols)
+      Qt <- add_zero_dim(caobj@std_coords_rows[gene_idx,])
+
+      # calculated cell (!) indices for the subsetted genes.
+      gcg_nn <- BiocNeighbors::queryKNN(X = Xt,
+                                        query = Qt,
+                                        k = k_gc,
+                                        get.distance = FALSE,
+                                        BNPARAM=method,
+                                        BPPARAM = BPPARAM)$index
+
+      rownames(gcg_nn) <- rownames(caobj@std_coords_rows[gene_idx,])
+
+      gcg_nn <- as.list(data.frame(t(gcg_nn)))
+
+
+    } else {
+      stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
+    }
+
+    # Reindex cell-gene graph so that the gene indixes refer only to the gene
+    # that are actually left after the pruning. This ensures continuous indxs
+    # and that the adj matrix GSG is self contained (only references itself).
+
+    cgg_nn <- lapply(cgg_nn, function(x) match(x, gene_idx, nomatch = NA))
+    stopifnot(!anyNA(cgg_nn))
+
+    ncells = length(ccg_nn)
+
+    stopifnot(length(ccg_nn) == length(cgg_nn))
+
+    GSG_1 <- lapply(seq_len(length(ccg_nn)),
+                    function(x) union(ccg_nn[[x]],
+                                      cgg_nn[[x]] + ncells))
+
+    names(GSG_1) <- names(ccg_nn)
+
+    stopifnot(length(gcg_nn) == length(ggg_nn))
+
+    GSG_2 <- lapply(seq_len(length(gcg_nn)),
+                    function(x) union(gcg_nn[[x]],
+                                      ggg_nn[[x]] + ncells))
+    names(GSG_2) <- names(gcg_nn)
+
+    GSG <- c(GSG_1, GSG_2)
+
+    # cant guarantee that there is same number of indices!
+    # therefore cant do below command
+    # GSG_1 <- do.call("rbind", GSG_1)
+    # GSG_2 <- do.call("rbind", GSG_2)
+    # GSG <- rbind(GSG_1, GSG_2)
+
+    return(GSG)
+
+}
 
 
 

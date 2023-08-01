@@ -3,7 +3,7 @@
 data_dir <- file.path("./testdata")
 data <- readRDS("./testdata/mini_lympho_example.rds")
 
-ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3,dims = 4, ntop = nrow(df)))
+ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3,dims = 4, ntop = nrow(data)))
 ca_dists <- calc_distances(caobj = ca)
 
 #####################
