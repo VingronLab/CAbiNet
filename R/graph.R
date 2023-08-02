@@ -451,10 +451,10 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                                       BNPARAM=method,
                                       BPPARAM = BPPARAM)$index
 
-    # convert to list of indices
     # (we cannot guarantee during pruning etc that the number of neighbors is the same)
-    cgg_nn <- as.list(data.frame(t(cgg_nn)))
-    names(cgg_nn) <- rownames(caobj@std_coords_cols)
+    # cgg_nn <- as.list(data.frame(t(cgg_nn)))     # convert to list of indices
+
+    rownames(cgg_nn) <- rownames(caobj@std_coords_cols)
 
 
     if (!is.null(marker_genes)){
@@ -473,10 +473,13 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                 marker_genes <- marker_genes[marker_genes %in% rownames(caobj@prin_coords_rows)]
             }
 
-            marker_knn <- lapply(cgg_nn, function(x) idx[idx %in% x])
+            marker_knn <- base::apply(cgg_nn, 1, function(x) idx[idx %in% x])
+
+            # We keep it in the adjacency matrix bc calc_overlap expects it.
             # setdiff removes the marker genes from the graph, we add it later.
-            cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) setdiff(cgg_nn[[x]], marker_knn[[x]]))
-            names(cgg_nn) <- rownames(caobj@std_coords_cols)
+            # cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) setdiff(cgg_nn[[x]], marker_knn[[x]]))
+            # names(cgg_nn) <- rownames(caobj@std_coords_cols)
+
 
         }
 
@@ -487,6 +490,7 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                                     get.distance = FALSE,
                                     BNPARAM=method,
                                     BPPARAM = BPPARAM)$index
+
     rownames(ccg_nn) <- rownames(caobj@prin_coords_cols)
 
     if (isTRUE(loops)){
@@ -494,40 +498,38 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                       ccg_nn[, -ncol(ccg_nn), drop = FALSE])
     }
 
-    ccg_nn <- as.list(data.frame(t(ccg_nn)))
+    # ccg_nn <- as.list(data.frame(t(ccg_nn)))
 
     if (isTRUE(select_genes) & isTRUE(prune_overlap)){
 
-      # TODO: Remove indx_to_spmat() calls.
       # FIXME: Change calc_overlap for index matrices.
-      overlap_mat <- calc_overlap( cc_adj = indx_to_spmat(indx_mat = ccg_nn,
-                                                          row_names = rownames(caobj@prin_coords_cols),
-                                                          col_names = rownames(caobj@prin_coords_cols)),
+      # TODO: Ensure that calc_overlap removes genes.
+      overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+                                   cg_adj = cgg_nn)
 
-                                   cg_adj = indx_to_spmat(indx_mat = cgg_nn,
-                                                          row_names = rownames(caobj@std_coords_cols),
-                                                          col_names = rownames(caobj@prin_coords_rows)))
-
-      # For the case overlap = 1, all the genes are supposed to removed such that
-      # the algorithm allows for clustering for cells without genes.
-
-      # FIXME : This will need to be changed once calc_overlap is redone.
-      cgg_nn[overlap_mat <= overlap] <- 0
 
     }
 
     # add marker genes back in BEFORE we get gene_idx!
     if(!is.null(marker_genes)){
 
-      cgg_nn <- lapply(seq_len(length(cgg_nn)), function(x) union(cgg_nn[[x]], marker_knn[[x]]))
-      names(cgg_nn) <- rownames(caobj@std_coords_cols)
+
+        cgg_nn <- do.call("rbind",
+                   lapply(seq_len(nrow(cgg_nn)),
+                          function(x) add2knn(cgg_nn[x,], marker_knn[[x]]))
+                   )
+
+        rownames(cgg_nn) <- rownames(caobj@std_coords_cols)
+
 
     }
 
     if (isTRUE(select_genes)){
       # indices of genes with an edge to a cell.
       # If we subset to the genes that have an edge to a cell.
-      gene_idx <- sort(unique(unlist(cgg_nn)))
+
+      gene_idx <- sort(unique(as.numeric(cgg_nn)))
+
 
     } else {
       # If we do not subset.
@@ -548,7 +550,8 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                       ggg_nn[, -ncol(ggg_nn), drop = FALSE])
     }
 
-    ggg_nn <- as.list(data.frame(t(ggg_nn)))
+
+    # ggg_nn <- as.list(data.frame(t(ggg_nn)))
 
 
     if(isFALSE(calc_gene_cell_kNN)){
@@ -561,7 +564,15 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
                                                 function(x) y %in% x,
                                                 TRUE)))
 
-      names(gcg_nn) <- rownames(caobj@prin_coords_rows)[gene_idx]
+      max_cells <- max(lengths(gcg_nn))
+
+      gcg_nn <- lapply(gcg_nn,
+                       function(x) c(x, rep(NA_integer_, max_cells-length(x))))
+
+      gcg_nn <- do.call("rbind", gcg_nn)
+
+      rownames(gcg_nn) <- rownames(caobj@prin_coords_rows)[gene_idx]
+
 
 
     } else if(isTRUE(calc_gene_cell_kNN)){
@@ -579,7 +590,9 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
 
       rownames(gcg_nn) <- rownames(caobj@std_coords_rows[gene_idx,])
 
-      gcg_nn <- as.list(data.frame(t(gcg_nn)))
+
+      # gcg_nn <- as.list(data.frame(t(gcg_nn)))
+
 
 
     } else {
@@ -590,33 +603,42 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
     # that are actually left after the pruning. This ensures continuous indxs
     # and that the adj matrix GSG is self contained (only references itself).
 
-    cgg_nn <- lapply(cgg_nn, function(x) match(x, gene_idx, nomatch = NA))
-    stopifnot(!anyNA(cgg_nn))
 
-    ncells = length(ccg_nn)
+    # cgg_nn <- lapply(cgg_nn, function(x) match(x, gene_idx, nomatch = NA))
 
-    stopifnot(length(ccg_nn) == length(cgg_nn))
+    cgg_nn <- do.call("rbind",
+                        apply(cgg_nn,
+                              1,
+                              function(x) match(x,
+                                                gene_idx,
+                                                nomatch = NA),
+                              simplify = FALSE)
+                )
 
-    GSG_1 <- lapply(seq_len(length(ccg_nn)),
-                    function(x) union(ccg_nn[[x]],
-                                      cgg_nn[[x]] + ncells))
 
-    names(GSG_1) <- names(ccg_nn)
+    # stopifnot(!anyNA(cgg_nn))
 
-    stopifnot(length(gcg_nn) == length(ggg_nn))
+    ncells = nrow(ccg_nn)
 
-    GSG_2 <- lapply(seq_len(length(gcg_nn)),
-                    function(x) union(gcg_nn[[x]],
-                                      ggg_nn[[x]] + ncells))
-    names(GSG_2) <- names(gcg_nn)
+    stopifnot(nrow(ccg_nn) == nrow(cgg_nn))
 
-    GSG <- c(GSG_1, GSG_2)
+    GSG_1 <- cbind(ccg_nn, cgg_nn + ncells)
 
-    # cant guarantee that there is same number of indices!
-    # therefore cant do below command
-    # GSG_1 <- do.call("rbind", GSG_1)
-    # GSG_2 <- do.call("rbind", GSG_2)
-    # GSG <- rbind(GSG_1, GSG_2)
+
+    rownames(GSG_1) <- rownames(ccg_nn)
+
+    stopifnot(nrow(gcg_nn) == nrow(ggg_nn))
+    # stopifnot(nrow(gcg_nn) == nrow(ggg_nn))
+
+    GSG_2 <- cbind(gcg_nn, ggg_nn + ncells)
+
+    rownames(GSG_2) <- rownames(ggg_nn)
+
+    stopifnot(ncol(GSG_1) == ncol(GSG_2))
+
+    GSG <- rbind(GSG_1, GSG_2)
+
+
 
     return(GSG)
 
