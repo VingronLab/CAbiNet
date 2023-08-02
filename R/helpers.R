@@ -246,4 +246,21 @@ add_zero_dim <- function(vectors){
     return(cbind(0, vectors))
 }
 
-
+add2knn <- function(vec, to_add){
+    
+    nvec <- length(vec)
+    
+    vec <- na.omit(vec)
+    vec <- union(vec, to_add)
+    
+    if (length(vec) > nvec) {
+        stop("adding too many elements!")
+    } else {
+        
+        nna <- nvec-length(vec)
+        vec <- c(vec, rep(NA_integer_, nna))
+    }
+    
+    return(vec)
+    
+}
