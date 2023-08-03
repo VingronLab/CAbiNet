@@ -1,9 +1,15 @@
 
-data <- readRDS("./testdata/mini_lympho_example.rds")
-ca <- suppressWarnings(APL::cacomp(data,
+sc <- readRDS("./testdata/mini_lympho_example.rds")
+
+sc["ACTB",] <- c(0, 6, 7, 8)
+sc[,"HSC"] <- c(1, 2, 3, 8, 0)
+
+sc <- rbind(sc, "CD45" = c(3, 1, 2,1))
+
+ca <- suppressWarnings(APL::cacomp(sc,
                                    princ_coords = 3,
                                    dims = 4, 
-                                   ntop = nrow(data)))
+                                   ntop = nrow(sc)))
 
 ca_dists <- calc_distances(caobj = ca)
 
