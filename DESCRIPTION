@@ -37,7 +37,7 @@ Imports:
   leiden,
   umap,
   dplyr,
-  ggplot2 (<= 3.3.0),
+  ggplot2 (>= 3.4.1),
   magrittr,
   methods,
   RcppEigen,
@@ -54,7 +54,8 @@ Imports:
   RColorBrewer,
   S4Vectors,
   irlba,
-  viridis
+  viridis,
+  BiocNeighbors
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
 Suggests:
@@ -83,3 +84,4 @@ Config/reticulate:
       list(package = "umap-learn")
     )
   )
+URL: https://vingronlab.github.io/CAbiNet/

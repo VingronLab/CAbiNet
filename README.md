@@ -4,6 +4,8 @@
 
 This package provides functions to for the visualization and biclustering of single-cell RNA-seq data.
 
+A longer vignette explaining how to install and use the package can be found here:
+https://vingronlab.github.io/CAbiNet/
 
 ## Installation
 
@@ -15,6 +17,8 @@ You can install the package with:
 devtools::install_github("VingronLab/APL", ref = "cabinet")
 devtools::install_github("VingronLab/CAbiNet")
 ```
+
+> ⚠️ A bug in ggplot2 versions >3.3.0 and <3.4.1 lead to incorrect behaviour  in `plot_hex_biMAP`. Please make sure you have ggplot2 3.4.1 or higher installed. 
 
 ## Quick start
 

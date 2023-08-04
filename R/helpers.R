@@ -198,3 +198,108 @@ get_majority <- function(x){
 mix <- function(df){
   df <- df[sample(seq_len(nrow(df)), size = nrow(df)),]
 }
+
+
+
+rowNorm <- function(x){
+    
+    if (is.matrix(x)){
+        norm <- sqrt(rowSums(x^2))
+    } else if (is.null(dim(x))) {
+        norm <- sqrt(sum(x^2))
+    } else {
+        stop("Unknown object.")
+    }
+    
+    return(norm)
+}
+
+
+#' Transforms vectors such that the max. inner product (MIP) search is
+#' equal to a NN search with euclidean distances.
+#' 
+#' @param vectors Matrix of row vectors
+#' 
+#' @returns 
+#' A new matrix of row vectors with one additional (first) dimension that is
+#' the square root of the difference between the squared max. vector norm and 
+#' the squared vector norm. This makes the norm of all vectors effectively
+#' the same.
+#' 
+#' @details 
+#' See also:
+#' https://github.com/benfred/implicit/blob/42832574f1a29c71b3263e219fc471fc97328552/implicit/utils.py#L60
+#' https://towardsdatascience.com/maximum-inner-product-search-using-nearest-neighbor-search-algorithms-c125d24777ef
+#' 
+#' @references  
+#' Yoram Bachrach, Yehuda Finkelstein, Ran Gilad-Bachrach, Liran Katzir,
+#'  Noam Koenigstein, Nir Nice, Ulrich Paquet. 
+#'  Speeding up the Xbox recommender system using a euclidean transformation 
+#'  for inner-product spaces. RecSys 2014
+augment_vector <- function(vectors){
+    
+    rnorms <- rowNorm(vectors)
+    max_norm <- max(rnorms)
+    
+    extra_dim <- sqrt(max_norm^2-rnorms^2)
+    
+    return(cbind(extra_dim, vectors))
+    
+}
+
+#' Add an extra 0 dimension to vector
+#' @param vectors Matrix of row vectors
+#' 
+add_zero_dim <- function(vectors){
+    return(cbind(0, vectors))
+}
+
+
+#' Convert index matrix to sparse matrix.
+#' 
+#' @param indx_mat row-wise index matrix. Usually a kNN graph.
+#' @param row_names the rownames of the resulting sparse matrix.
+#' @param col_names the column names that correspond to the indexes in indx_mat.
+#' 
+#' @returns 
+#' a `Matrix::sparseMatrix` object.
+#' 
+indx_to_spmat <- function(indx_mat,
+                          row_names,
+                          col_names){
+    
+    j <- as.numeric(t(indx_mat))
+    i <- ((1:length(j)) - 1) %/% ncol(indx_mat) + 1
+    
+    nn.matrix <- Matrix::sparseMatrix(i = i,
+                                      j = j,
+                                      x = 1,
+                                      dims = c(length(row_names), length(col_names)))
+    
+    rownames(nn.matrix) <- row_names
+    colnames(nn.matrix) <- col_names
+    
+    return(nn.matrix)
+}
+
+
+
+# 
+# add2knn <- function(vec, to_add){
+#     
+#     nvec <- length(vec)
+#     
+#     vec <- na.omit(vec)
+#     vec <- union(vec, to_add)
+#     
+#     if (length(vec) > nvec) {
+#         stop("adding too many elements!")
+#     } else {
+#         
+#         nna <- nvec-length(vec)
+#         vec <- c(vec, rep(NA_integer_, nna))
+#     }
+#     
+#     return(vec)
+#     
+# }

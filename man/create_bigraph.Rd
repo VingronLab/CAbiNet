@@ -5,10 +5,7 @@
 \title{Combine kNN graphs to large cell-gene adjecency matrix}
 \usage{
 create_bigraph(
-  cell_dists,
-  gene_dists,
-  cell_gene_assr,
-  gene_cell_assr,
+  caobj,
   k_c,
   k_g,
   k_cg,
@@ -18,17 +15,14 @@ create_bigraph(
   prune_overlap = TRUE,
   overlap = 0.2,
   calc_gene_cell_kNN = FALSE,
-  marker_genes = NULL
+  marker_genes = NULL,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam()
 )
 }
 \arguments{
-\item{cell_dists}{cell-cell euclidean distances matrix}
-
-\item{gene_dists}{gene-gene euclidean distances matrix}
-
-\item{cell_gene_assr}{cell-gene association ratios matrix}
-
-\item{gene_cell_assr}{gene-cell association ratios matrix}
+\item{caobj}{A cacomp object with standard and principal coordinates
+calculated.}
 
 \item{k_c}{k for cell-cell kNN, integer.}
 
@@ -44,25 +38,36 @@ create_bigraph(
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
+than \code{overlap} of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
-by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
 \item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
+
+\item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
+algorithm to use. see Details.}
+
+\item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
 }
 \value{
-Adjacency matrix of type `dgCMatrix`.
+Adjacency matrix of type \code{dgCMatrix}.
 The combined adjacency matrix consists of the cell-cell graph, gene-gene
 graph and cell-gene/gene-cell graph.
 }
 \description{
 Builds a single adjacency matrix consisting of cells and genes from 4
 seperate sub kNN-graphs.
+}
+\details{
+\code{method} should be a kNN algorithm defined by
+\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam}. For exact kNN search use
+\code{BiocNeighbors::KmknnParam()} or \code{BiocNeighbors::VptreeParam()}.
 }
