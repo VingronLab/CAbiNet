@@ -1,7 +1,15 @@
 # data_dir <- file.path("./tests/testthat/testdata")
 # data <- readRDS("./tests/testthat/testdata/mini_lympho_example.rds")
 data_dir <- file.path("./testdata")
-data <- readRDS("./testdata/mini_lympho_example.rds")
+# data <- readRDS("./testdata/mini_lympho_example.rds")
+
+data <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB", "CD45"),
+           "B Cell"     = c(4, 0, 0, 0, 0, 3),
+           "CD8 T Cell" = c(0, 5, 0, 8, 6, 1),
+           "CD4 T Cell" = c(0, 6, 4, 0, 7, 2),
+           "HSC"        = c(1, 2, 3, 4, 8, 1))
+
+data <- as.matrix(data)
 
 ca <- suppressWarnings(APL::cacomp(data, princ_coords = 3,dims = 4, ntop = nrow(data)))
 ca_dists <- calc_distances(caobj = ca)

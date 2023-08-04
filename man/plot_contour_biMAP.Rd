@@ -58,10 +58,10 @@ plot_contour_biMAP(
 object or of class "SingleCellExperiment".}
 
 \item{meta_df}{optional. data.frame that should have either gene or cell names
-(or both) as rownames or a column named `name` and a column with the same name as 
+(or both) as rownames or a column named `name` and a column with the same name as
 `color_by`.}
 
-\item{color_by}{Either "type" or "cluster". "type" colors by the type 
+\item{color_by}{Either "type" or "cluster". "type" colors by the type
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.}
 
@@ -73,24 +73,24 @@ provided a column from the data.frame can be specified.}
 
 \item{color_genes}{logical. If TRUE colors genes by color_by.}
 
-\item{label_groups}{logical. If TRUE puts the group label on the median 
+\item{label_groups}{logical. If TRUE puts the group label on the median
 coordinates of the point.}
 
 \item{group_label_size}{integer. Size of the group label.}
 
-\item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker 
+\item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker
 genes are displayed. If is character vector, the given marker genes are labeled.}
 
-\item{interactive}{If TRUE plot_scatter_biMAP returns an interactive (html) 
+\item{interactive}{If TRUE plot_scatter_biMAP returns an interactive (html)
 plot. If FALSE a ggplot object is returned.}
 
 \item{...}{Further arguments.}
 
-\item{caclust_meta_name}{Name under which the caclust object is stored in 
+\item{caclust_meta_name}{Name under which the caclust object is stored in
 the metadata of the SingleCellExperiment object.}
 
 \item{subset}{Whether the biMAP embedding should be subset to the cells/genes
-in the SCE object. This might lead to unintended results. If unsure, we 
+in the SCE object. This might lead to unintended results. If unsure, we
 recommend to rerun CA and caclust instead.}
 }
 \value{

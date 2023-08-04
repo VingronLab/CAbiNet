@@ -114,14 +114,14 @@ scores(Jaccard Index). Three options: "out", "in" and "all":
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
+than \code{overlap} of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
-by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
 \item{resolution}{float number. Resolution for leiden algorithm.}
