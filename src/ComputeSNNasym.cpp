@@ -132,7 +132,7 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::MatrixXd<int> cc_idx,
   return SNN;
 }
 
-Eigen::SparseMatrix<double> ComputeSNNasym_map(Eigen::Map<Eigen::SparseMatrix<double>> SNN,
+Eigen::SparseMatrix<double> ComputeSNNasym_map(Eigen::Map<Eigen::SparseMatrix<double>>& SNN,
                                            double prune,
                                            String mode) {
     Eigen::VectorXd k_i(SNN.rows());

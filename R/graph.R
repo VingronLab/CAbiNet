@@ -328,11 +328,12 @@ create_bigraph_biocneighbors_spmat <- function(caobj,
       if (isTRUE(prune_overlap)){
 
         overlap_mat <- calc_overlap( cc_adj = ccg_nn,
-                                     cg_adj = cgg_nn)
+                                     cg_adj = cgg_nn,
+                                     threshold = overlap)
 
         # For the case overlap = 1, all the genes are supposed to removed such that
         # the algorithm allows for clustering for cells without genes.
-        cgg_nn[overlap_mat <= overlap] <- 0
+        # cgg_nn[overlap_mat <= overlap] <- 0 # this step is done by cpp function to reduce the copy between cpp and R
         idx <- Matrix::colSums(cgg_nn) > 0
         cgg_nn <- cgg_nn[,idx, drop = FALSE]
 
