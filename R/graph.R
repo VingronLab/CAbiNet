@@ -1,5 +1,6 @@
 
 
+<<<<<<< HEAD
 
 
 #' Make a kNN graph
@@ -73,16 +74,15 @@ make_knn <- function(dists,
 
 
 
+=======
+>>>>>>> cle
 #' Combine kNN graphs to large cell-gene adjecency matrix
-#'
 #' @description
 #' Builds a single adjacency matrix consisting of cells and genes from 4
 #' seperate sub kNN-graphs.
-#'
-#' @param cell_dists cell-cell euclidean distances matrix
-#' @param gene_dists gene-gene euclidean distances matrix
-#' @param cell_gene_assr cell-gene association ratios matrix
-#' @param gene_cell_assr gene-cell association ratios matrix
+#' @md
+#' @param caobj A cacomp object with standard and principal coordinates
+#' calculated.
 #' @param k_c k for cell-cell kNN, integer.
 #' @param k_g k for gene-gene kNN, integer.
 #' @param k_cg k for cell-gene kNN, integer.
@@ -100,6 +100,15 @@ make_knn <- function(dists,
 #' graph is transposed.
 #' @param marker_genes character. Optional. Names of known marker genes that
 #' should be excempt from any pruning on the graph and be kept.
+#' @param method [BiocNeighbors::BiocNeighborParam] object specifying the
+#'  algorithm to use. see Details.
+#' @param BPPARAM [BiocParallel] settings parameter. By default single core
+#' [BiocParallel::SerialParam()] but other parameters can be passed.
+#'
+#' @details
+#' `method` should be a kNN algorithm defined by
+#' [BiocNeighbors::BiocNeighborParam]. For exact kNN search use
+#' `BiocNeighbors::KmknnParam()` or `BiocNeighbors::VptreeParam()`.
 #'
 #' @return
 #' Adjacency matrix of type `dgCMatrix`.
@@ -107,156 +116,21 @@ make_knn <- function(dists,
 #' graph and cell-gene/gene-cell graph.
 #'
 #' @export
-create_bigraph <- function(cell_dists,
-                           gene_dists,
-                           cell_gene_assr,
-                           gene_cell_assr,
-                           k_c,
-                           k_g,
-                           k_cg,
-                           k_gc,
-                           loops = FALSE,
-                           select_genes = TRUE,
-                           prune_overlap = TRUE,
-                           overlap = 0.2,
-                           calc_gene_cell_kNN = FALSE,
-                           marker_genes = NULL) {
 
-  cgg_nn <- make_knn(cell_gene_assr,
-                     k = k_cg,
-                     decr = TRUE,
-                     loops = loops)
+create_bigraph <- function(caobj,
+                         k_c,
+                         k_g,
+                         k_cg,
+                         k_gc,
+                         loops = FALSE,
+                         select_genes = TRUE,
+                         prune_overlap = TRUE,
+                         overlap = 0.2,
+                         calc_gene_cell_kNN = FALSE,
+                         marker_genes = NULL,
+                         method = BiocNeighbors::KmknnParam(),
+                         BPPARAM = BiocParallel::SerialParam()){
 
-  if (!is.null(marker_genes)){
-    stopifnot(is(marker_genes, "character"))
-
-    idx <- which(colnames(cgg_nn) %in% marker_genes)
-
-    if (length(idx) == 0){
-      warning("Marker genes not found in the data.")
-      marker_genes <- NULL
-
-    } else {
-
-      if(length(idx) < length(marker_genes)){
-        warning("Not all marker genes are in the provided data.")
-        marker_genes <- marker_genes[marker_genes %in% colnames(cgg_nn)]
-      }
-
-      marker_knn <- cgg_nn[,idx, drop = FALSE]
-      cgg_nn <- cgg_nn[,-idx, drop = FALSE]
-
-      marker_dists <- gene_dists[idx,,drop = FALSE]
-      marker_assr <- gene_cell_assr[idx,,drop = FALSE]
-
-      gene_dists <- gene_dists[-idx, -idx, drop = FALSE]
-      gene_cell_assr <- gene_cell_assr[-idx,, drop = FALSE]
-
-    }
-
-  }
-
-  if(isTRUE(select_genes)){
-
-    idx <- Matrix::colSums(cgg_nn) > 0
-    cgg_nn <- cgg_nn[,idx, drop = FALSE]
-    gene_dists <- gene_dists[idx,idx, drop = FALSE]
-    gene_cell_assr <- gene_cell_assr[idx,,drop = FALSE]
-  }
-
-
-  ccg_nn <- make_knn(cell_dists,
-                     k = k_c,
-                     decr = FALSE,
-                     loops = loops)
-
-
-  if(isTRUE(select_genes) & isTRUE(prune_overlap)){
-
-    overlap_mat <- calc_overlap( cc_adj = ccg_nn,
-                                 cg_adj = cgg_nn)
-
-    # For the case overlap = 1, all the genes are supposed to removed such that
-    # the algorithm allows for clustering for cells without genes.
-    cgg_nn[overlap_mat <= overlap] <- 0
-    idx <- Matrix::colSums(cgg_nn) > 0
-    cgg_nn <- cgg_nn[,idx, drop = FALSE]
-    gene_dists <- gene_dists[idx,idx, drop = FALSE]
-    gene_cell_assr <- gene_cell_assr[idx,,drop = FALSE]
-
-  }
-
-
-  if(!is.null(marker_genes)){
-
-    cgg_nn <- cbind(cgg_nn, marker_knn)
-
-    marker_dists <- marker_dists[,c(colnames(gene_dists), rownames(marker_dists)), drop = FALSE]
-    gene_dists <- cbind(rbind(gene_dists, marker_dists[,colnames(gene_dists), drop = FALSE]), t(marker_dists))
-    gene_cell_assr <- rbind(gene_cell_assr, marker_assr)
-
-  }
-  ggg_nn <- make_knn(gene_dists,
-                     k = k_g,
-                     decr = FALSE,
-                     loops = loops)
-
-  if(isFALSE(calc_gene_cell_kNN)){
-    gcg_nn <- Matrix::t(cgg_nn)
-
-  } else if(isTRUE(calc_gene_cell_kNN)){
-    gcg_nn <- make_knn(gene_cell_assr,
-                       k = k_gc,
-                       decr = TRUE,
-                       loops = loops)
-  } else {
-    stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
-  }
-
-
-
-  GSG_1 <- cbind(ccg_nn, cgg_nn)
-  GSG_2 <- cbind(gcg_nn, ggg_nn)
-
-  GSG <- rbind(GSG_1, GSG_2)
-  return(GSG)
-}
-
-
-indx_to_spmat <- function(indx_mat,
-                          row_names,
-                          col_names){
-
-    j <- as.numeric(t(indx_mat))
-    i <- ((1:length(j)) - 1) %/% ncol(indx_mat) + 1
-
-    nn.matrix <- Matrix::sparseMatrix(i = i,
-                                      j = j,
-                                      x = 1,
-                                      dims = c(length(row_names), length(col_names)))
-
-    rownames(nn.matrix) <- row_names
-    colnames(nn.matrix) <- col_names
-
-    return(nn.matrix)
-}
-
-# WIP
-# TODO: Test against old version
-# FIXME: pasting together graphs when having marker genes -> same order in ggg_nn?
-create_bigraph_biocneighbors_spmat <- function(caobj,
-                                         k_c,
-                                         k_g,
-                                         k_cg,
-                                         k_gc,
-                                         loops = FALSE,
-                                         select_genes = TRUE,
-                                         prune_overlap = TRUE,
-                                         overlap = 0.2,
-                                         calc_gene_cell_kNN = FALSE,
-                                         marker_genes = NULL,
-                                         method = BiocNeighbors::KmknnParam(),
-                                         BPPARAM = BiocParallel::SerialParam()){
 
     # apply vector augmentation for MIP search via euclidean distance.
     Xt <- add_zero_dim(caobj@std_coords_cols)
@@ -266,7 +140,7 @@ create_bigraph_biocneighbors_spmat <- function(caobj,
                        query = Xt,
                        k = k_cg,
                        get.distance = FALSE,
-                       BNPARAM=method,
+                       BNPARAM = method,
                        BPPARAM = BPPARAM)$index
 
     cgg_nn <- indx_to_spmat(indx_mat = cgg_nn,
@@ -683,15 +557,9 @@ make_SNN <- function(caobj,
     stop("invalid k.")
   }
 
-  distances <- calc_distances(caobj = caobj)
-
-  stopifnot(all(c("cc", "gg", "cg", "gc") %in% names(distances)))
   stopifnot(mode %in% c("out", "in", "all"))
 
-  adj <- create_bigraph(cell_dists = distances[["cc"]],
-                        gene_dists = distances[["gg"]],
-                        cell_gene_assr = distances[["cg"]],
-                        gene_cell_assr = distances[["gc"]],
+  adj <- create_bigraph(caobj = caobj,
                         k_c = k_c,
                         k_g = k_g,
                         k_cg = k_cg,

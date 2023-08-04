@@ -23,7 +23,7 @@ scatter_plot(
 
 \item{umap_genes}{biMAP coordinates data.frame subsetted to genes.}
 
-\item{color_by}{Either "type" or "cluster". "type" colors by the type 
+\item{color_by}{Either "type" or "cluster". "type" colors by the type
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.}
 
@@ -39,10 +39,10 @@ provided a column from the data.frame can be specified.}
 
 \item{gene_alpha}{numeric. Alpha value of genes (between 0 and 1).}
 
-\item{interact_genes}{character string with text and labels for genes in 
+\item{interact_genes}{character string with text and labels for genes in
 interactive plots.}
 
-\item{interact_cells}{character string with text and labels for cells in 
+\item{interact_cells}{character string with text and labels for cells in
 interactive plot.}
 }
 \value{

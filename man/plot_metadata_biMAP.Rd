@@ -22,7 +22,7 @@ plot_metadata_biMAP(obj, color_cells_by, ...)
 \item{meta_df}{data.frame with column specified by color_cells_by with cell
 names as rownames (e.g. colData() from SingleCellExperiment object)}
 
-\item{caclust_meta_name}{Name under which the caclust object is stored in 
+\item{caclust_meta_name}{Name under which the caclust object is stored in
 the metadata of the SingleCellExperiment object.}
 }
 \value{

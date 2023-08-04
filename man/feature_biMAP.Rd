@@ -14,7 +14,7 @@ feature_biMAP(
   cell_alpha = 0.8,
   gene_size = 1,
   cell_size = 1,
-  label_size = 1
+  label_size = 4
 )
 }
 \arguments{

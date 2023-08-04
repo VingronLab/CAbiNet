@@ -21,7 +21,7 @@ contour_plot(
 
 \item{umap_genes}{biMAP coordinates data.frame subsetted to genes.}
 
-\item{color_by}{Either "type" or "cluster". "type" colors by the type 
+\item{color_by}{Either "type" or "cluster". "type" colors by the type
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.}
 
@@ -30,7 +30,7 @@ provided a column from the data.frame can be specified.}
 \item{colors}{Vector of hexadecimal color codes of the same length as the
 categories defined by color_by or longer. If NULL ignored.}
 
-\item{interact_genes}{character string with text and labels for genes in 
+\item{interact_genes}{character string with text and labels for genes in
 interactive plots.}
 
 \item{gene_size}{integer. Size of the genes in the plot.}
