@@ -504,8 +504,9 @@ create_bigraph_biocneighbors_indxmat <- function(caobj,
 
       # FIXME: Change calc_overlap for index matrices.
       # TODO: Ensure that calc_overlap removes genes.
-      overlap_mat <- calc_overlap( cc_adj = ccg_nn,
-                                   cg_adj = cgg_nn)
+      cgg_nn <- calc_overlap( cc_idx = ccg_nn,
+                              cg_idx = cgg_nn,
+                              overlap = overlap)
 
 
     }

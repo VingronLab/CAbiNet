@@ -16,7 +16,7 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::export]]
 
-Eigen::SparseMatrix<double> calc_overlap(Eigen::MatrixXd<int> cc_idx,
+Eigen::SparseMatrix<double> calc_overlap_idx(Eigen::MatrixXd<int> cc_idx,
                                          Eigen::MatrixXd<int> cg_idx,
                                          double overlap) {
 
@@ -59,31 +59,6 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::MatrixXd<int> cc_idx,
     cell_nn_nums.push_back(k)
   }
 
-  // // The codes for outputing a sparse matrix
-  // // initialize vector to store triplets
-  // std::vector<T> trp;
-  // // loop over genes (its faster in column major matrix)
-  // for (int i=0; i < cg_adj.outerSize(); i++){
-  //
-  //   // only preserve the edges which are shown in cg_adj matrix
-  //   for (Eigen::SparseMatrix<int>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
-  //
-  //     double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
-  //
-  //     if (value >= overlap){
-  //       trp.push_back(T(it.row(),
-  //                          i,
-  //                          value));
-  //     }
-  //
-  //   }
-  //   }
-  //
-  // // build Matrix from triplets
-  // Eigen::SparseMatrix<double> overlapmat(cg_adj.rows(), cg_adj.cols());
-  // overlapmat.setFromTriplets(trp.begin(), trp.end());
-  // return overlapmat;
-
 
   // The codes to output a dense MatrixXd which stores the indeces of cell-gene connections
   Eigen::MatrixXd<double> overlap_idx(cg_adj.rows(), k) = NA_INTEGER;
@@ -107,6 +82,49 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::MatrixXd<int> cc_idx,
 
 
 
+}
+
+
+Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj,
+                                         Eigen::SparseMatrix<int> cg_adj) {
+
+  // initialize vector to store triplets
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp;
+  Eigen::SparseMatrix<int> overlap_mat_all = cc_adj * cg_adj;
+  Eigen::SparseMatrix<int> cc_tadj = cc_adj.transpose();
+
+  // calcualte the rowSums of matrix cc_adj which is also the number of neighbourhoods of each cell
+  std::vector<double> cell_nn_nums;
+  for (int i=0; i < cc_tadj.outerSize(); i++){
+    int k = 0;
+
+    for (Eigen::SparseMatrix<int>::InnerIterator it(cc_tadj, i); it; ++it){  // Iterate over rows
+      k += 1;
+    }
+
+    cell_nn_nums.push_back(k);
+  }
+
+  // loop over genes (its faster in column major matrix)
+  for (int i=0; i < cg_adj.outerSize(); i++){
+
+    // only preserve the edges which are shown in cg_adj matrix
+    for (Eigen::SparseMatrix<int>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
+
+      double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
+
+      trp.push_back(Trip(it.row(),
+                         i,
+                         value));
+    }
+    }
+
+  // build Matrix from triplets
+  Eigen::SparseMatrix<double> overlap(cg_adj.rows(), cg_adj.cols());
+  overlap.setFromTriplets(trp.begin(), trp.end());
+
+  return overlap;
 }
 
 
