@@ -201,7 +201,7 @@ create_bigraph <- function(caobj,
 
       if (isTRUE(prune_overlap)){
 
-        overlap_mat <- calc_overlap( cc_adj = ccg_nn,
+        cgg_nn <- calc_overlap( cc_adj = ccg_nn,
                                      cg_adj = cgg_nn,
                                      threshold = overlap)
 
@@ -256,6 +256,12 @@ create_bigraph <- function(caobj,
 
     if(isFALSE(calc_gene_cell_kNN)){
         gcg_nn <- Matrix::t(cgg_nn)
+
+        if (k_gc != k_cg){
+          warning('The given values of k_gc and k_cg are different, But you set calc_cell_gene_kNN as FALSR,
+          so that the gene-cell graph adjacency matrix will be calculated as the transpose of cell-gene graph adjacency matrix.
+          This will ignore the k_gc value you have given. If you want to give k_gc and k_cg different values, set calc_cell_gene_kNN as TRUE please!')
+        }
 
     } else if(isTRUE(calc_gene_cell_kNN)){
 

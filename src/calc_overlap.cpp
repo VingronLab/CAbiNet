@@ -123,7 +123,7 @@ Eigen::SparseMatrix<double> calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>
 
             trp.push_back(Trip(it.row(),
                                i,
-                               value));
+                               1));
         }
     }
   }
