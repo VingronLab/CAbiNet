@@ -13,6 +13,7 @@ using namespace Rcpp;
 //' c++ implementation for calculating the cell-neighour-overlapping among k nearest cell neighbours of each gene.
 //' @param cc_adj sparse matrix (dgCMatrix), cell-cell adjacency matrix
 //' @param cg_adj sparse matrix (dgCMatrix), cell-gene adjacency matrix
+//' @param threshold numeric value between 0 and 1. The cutoff of cell-nqighour-overlapping of each gene. 
 //' @export
 // [[Rcpp::export]]
 void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
@@ -20,8 +21,7 @@ void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
                                         double threshold) {
 
   // initialize vector to store triplets
-  typedef Eigen::Triplet<double> Trip;
-  std::vector<Trip> trp;
+
   Eigen::SparseMatrix<double> overlap_mat_all = cc_adj * cg_adj;
   Eigen::SparseMatrix<double> cc_tadj = cc_adj.transpose();
 
