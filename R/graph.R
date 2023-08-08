@@ -1,81 +1,4 @@
 
-
-<<<<<<< HEAD
-
-
-#' Make a kNN graph
-#'
-#' @description Given a distance matrix, `make_knn()` builds up a  k-nearest-neighbours graph
-#' and outputs the adjacency matrix.
-#'
-#' @param dists distance matrix
-#' @param k integer. Number of nearest neighbours.
-#' @param decr boolean. Whether the the values in `dists` should be sorted into
-#' decreasing (TRUE) or increasing (FALSE) order.
-#' @param loops TRUE/FALSE. If TRUE self-loops are allowed, otherwise not.
-#'
-#' @return
-#' adjacency matrix of kNN graph: sparse matrix of type "dgCMatrix".
-#'
-#' @export
-make_knn <- function(dists,
-                     k,
-                     decr = TRUE,
-                     loops = FALSE) {
-
-  n.row <- nrow(dists)
-  n.col <- ncol(dists)
-  names.row <- rownames(dists)
-  names.col <- colnames(dists)
-
-
-  if (n.col < k) {
-    warning(
-      "k set larger than number of genes Setting k to number of genes - 1.",
-      call. = FALSE
-    )
-    k <- n.col - 1
-  }
-
-  # knd.mat <- knn.mat
-
-  if (isTRUE(loops)){
-    nns <- seq_len(k)
-
-  } else if (isFALSE(loops)) {
-    nns <- seq_len(k)+1
-  } else {
-    stop()
-  }
-
-  knn.mat <- matrix(data = 0, ncol = k, nrow = n.row)
-  for (i in 1:n.row) {
-    knn.mat[i, ] <- order(dists[i, ], decreasing = decr)[nns]
-    # knd.mat[i, ] <- dists[i, knn.mat[i, ]]
-  }
-  # nn.ranked <- knn.mat[,seq_len(k)]
-  rm(dists)
-
-  # convert nn.ranked into a Graph
-  j <- as.numeric(t(knn.mat))
-  i <- ((1:length(j)) - 1) %/% k + 1
-
-  nn.matrix <- Matrix::sparseMatrix(i = i,
-                                    j = j,
-                                    x = 1,
-                                    dims = c(n.row, n.col))
-  rownames(nn.matrix) <- names.row
-  colnames(nn.matrix) <- names.col
-  return(nn.matrix)
-}
-
-
-
-
-
-
-=======
->>>>>>> cle
 #' Combine kNN graphs to large cell-gene adjecency matrix
 #' @description
 #' Builds a single adjacency matrix consisting of cells and genes from 4
@@ -143,9 +66,12 @@ create_bigraph <- function(caobj,
                        BNPARAM = method,
                        BPPARAM = BPPARAM)$index
 
+    org_cellnames = rownames(caobj@std_coords_cols)
+    org_genenames = rownames(caobj@prin_coords_rows)
+
     cgg_nn <- indx_to_spmat(indx_mat = cgg_nn,
-                            row_names = rownames(caobj@std_coords_cols),
-                            col_names = rownames(caobj@prin_coords_rows))
+                            row_names = org_cellnames,
+                            col_names = org_genenames)
 
 
     # gene_idx <- seq_len(nrow(caobj@prin_coords_rows))
@@ -189,8 +115,8 @@ create_bigraph <- function(caobj,
     }
 
     ccg_nn <- indx_to_spmat(indx_mat = ccg_nn,
-                            row_names = rownames(caobj@prin_coords_cols),
-                            col_names = rownames(caobj@prin_coords_cols))
+                            row_names = org_cellnames,
+                            col_names = org_cellnames)
 
 
     if (isTRUE(select_genes)){
@@ -200,10 +126,11 @@ create_bigraph <- function(caobj,
 
 
       if (isTRUE(prune_overlap)){
-
-        cgg_nn <- calc_overlap( cc_adj = ccg_nn,
-                                     cg_adj = cgg_nn,
-                                     threshold = overlap)
+        # This cpp function maps to the input spare matrices directly, and modify their values on site.
+        # The weight of edges samller than overlap in cgg_nn will be set as 0 directly
+        calc_overlap(cc_adj = ccg_nn,
+                     cg_adj = cgg_nn,
+                     threshold = overlap)
 
         # For the case overlap = 1, all the genes are supposed to removed such that
         # the algorithm allows for clustering for cells without genes.
@@ -229,7 +156,7 @@ create_bigraph <- function(caobj,
     # gene_idx <- which(rownames(caobj@prin_coords_rows) %in% colnames(cgg_nn))
 
     gene_idx <- match(colnames(cgg_nn),
-                      rownames(caobj@prin_coords_rows),
+                      org_genenames,
                       nomatch = NA_integer_)
     stopifnot(!any(is.na(gene_idx)))
 
@@ -245,22 +172,17 @@ create_bigraph <- function(caobj,
     }
 
     ggg_nn <- indx_to_spmat(indx_mat = ggg_nn,
-                            row_names = rownames(caobj@prin_coords_rows)[gene_idx],
-                            col_names = rownames(caobj@prin_coords_rows)[gene_idx])
+                            row_names = org_genenames[gene_idx],
+                            col_names = org_genenames[gene_idx])
 
-
-    # ggg_nn <- make_knn(gene_dists,
-    #                    k = k_g,
-    #                    decr = FALSE,
-    #                    loops = loops)
 
     if(isFALSE(calc_gene_cell_kNN)){
         gcg_nn <- Matrix::t(cgg_nn)
 
         if (k_gc != k_cg){
-          warning('The given values of k_gc and k_cg are different, But you set calc_cell_gene_kNN as FALSR,
-          so that the gene-cell graph adjacency matrix will be calculated as the transpose of cell-gene graph adjacency matrix.
-          This will ignore the k_gc value you have given. If you want to give k_gc and k_cg different values, set calc_cell_gene_kNN as TRUE please!')
+          warning('The given values of k_gc and k_cg are different, But the calc_cell_gene_kNN is FALSE,
+          then the gene-cell graph adjacency matrix will be calculated as the transpose of cell-gene graph adjacency matrix.
+          This will ignore the given k_gc value. If you want to give k_gc and k_cg different values, set calc_cell_gene_kNN as TRUE.')
         }
 
     } else if(isTRUE(calc_gene_cell_kNN)){
@@ -276,13 +198,9 @@ create_bigraph <- function(caobj,
                            BPPARAM = BPPARAM)$index
 
         gcg_nn <- indx_to_spmat(indx_mat = gcg_nn,
-                                row_names = rownames(caobj@std_coords_rows)[gene_idx],
-                                col_names = rownames(caobj@prin_coords_cols))
+                                row_names = org_genenames[gene_idx],
+                                col_names = org_cellnames)
 
-        # gcg_nn <- make_knn(gene_cell_assr,
-        #                    k = k_gc,
-        #                    decr = TRUE,
-        #                    loops = TRUE)
     } else {
         stop("calc_cell_gene_kNN has to be either TRUE or FALSE!")
     }
@@ -560,7 +478,7 @@ make_SNN <- function(caobj,
     k_cg <- k[3]
     k_gc <- k[4]
   } else {
-    stop("invalid k.")
+    stop("Invalid k. k should be either an interger or a vector with four integers. See ?make_SNN.")
   }
 
   stopifnot(mode %in% c("out", "in", "all"))
@@ -577,14 +495,13 @@ make_SNN <- function(caobj,
                         calc_gene_cell_kNN = calc_gene_cell_kNN,
                         marker_genes = marker_genes)
 
-  rm(distances)
 
   if(!is(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")
   }
 
 
-  # snn.matrix <- ComputeSNNasym(adj, SNN_prune, mode = mode)
+  snn.matrix <- ComputeSNNasym(adj, prune = SNN_prune, mode = mode)
   ## use memory mapping instead of copying
 
   ## to coincide with output of "igraph"

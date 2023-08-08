@@ -37,11 +37,7 @@ Imports:
   leiden,
   umap,
   dplyr,
-<<<<<<< HEAD
-  ggplot2,
-=======
   ggplot2 (>= 3.4.1),
->>>>>>> cle
   magrittr,
   methods,
   RcppEigen,
