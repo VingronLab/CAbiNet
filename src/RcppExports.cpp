@@ -12,12 +12,12 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // ComputeSNNasym
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN, double prune, String mode);
+Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double>>& SNN, double prune, String mode);
 RcppExport SEXP _CAbiNet_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<double> >::type SNN(SNNSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>>& >::type SNN(SNNSEXP);
     Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
     Rcpp::traits::input_parameter< String >::type mode(modeSEXP);
     rcpp_result_gen = Rcpp::wrap(ComputeSNNasym(SNN, prune, mode));
@@ -25,21 +25,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_overlap
-Eigen::SparseMatrix<double> calc_overlap(Eigen::SparseMatrix<int> cc_adj, Eigen::SparseMatrix<int> cg_adj);
-RcppExport SEXP _CAbiNet_calc_overlap(SEXP cc_adjSEXP, SEXP cg_adjSEXP) {
+void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj, Eigen::Map<Eigen::SparseMatrix<double>>& cg_adj, double threshold);
+RcppExport SEXP _CAbiNet_calc_overlap(SEXP cc_adjSEXP, SEXP cg_adjSEXP, SEXP thresholdSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cc_adj(cc_adjSEXP);
-    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cg_adj(cg_adjSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_overlap(cc_adj, cg_adj));
-    return rcpp_result_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>>& >::type cc_adj(cc_adjSEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>>& >::type cg_adj(cg_adjSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    calc_overlap(cc_adj, cg_adj, threshold);
+    return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CAbiNet_ComputeSNNasym", (DL_FUNC) &_CAbiNet_ComputeSNNasym, 3},
-    {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 2},
+    {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 3},
     {NULL, NULL, 0}
 };
 
