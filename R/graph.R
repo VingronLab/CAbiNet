@@ -468,7 +468,9 @@ make_SNN <- function(caobj,
                        prune_overlap = TRUE,
                        overlap = 0.2,
                        calc_gene_cell_kNN = FALSE,
-                       marker_genes = NULL) {
+                       marker_genes = NULL,
+                       method = BiocNeighbors::KmknnParam(),
+                       BPPARAM = BiocParallel::SerialParam()) {
 
   if (length(k) == 1){
     k_c <- k_g <- k_cg <- k_gc <- k
@@ -493,7 +495,9 @@ make_SNN <- function(caobj,
                         prune_overlap = prune_overlap,
                         select_genes = select_genes,
                         calc_gene_cell_kNN = calc_gene_cell_kNN,
-                        marker_genes = marker_genes)
+                        marker_genes = marker_genes,
+                        method = BiocNeighbors::KmknnParam(),
+                        BPPARAM = BiocParallel::SerialParam())
 
 
   if(!is(adj, "dgCMatrix")){
@@ -504,8 +508,8 @@ make_SNN <- function(caobj,
   snn.matrix <- ComputeSNNasym(adj, prune = SNN_prune, mode = mode)
   ## use memory mapping instead of copying
 
-  ## to coincide with output of "igraph"
-  diag(snn.matrix) = 1
+  # ## to coincide with output of "igraph"
+  Matrix::diag(snn.matrix) = 1
 
   rownames(snn.matrix) <- rownames(adj)
   colnames(snn.matrix) <- rownames(adj)

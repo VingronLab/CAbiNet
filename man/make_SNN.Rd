@@ -14,7 +14,9 @@ make_SNN(
   prune_overlap = TRUE,
   overlap = 0.2,
   calc_gene_cell_kNN = FALSE,
-  marker_genes = NULL
+  marker_genes = NULL,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam()
 )
 }
 \arguments{
@@ -60,6 +62,12 @@ graph is transposed.}
 
 \item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
+
+\item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
+algorithm to use. see Details.}
+
+\item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
 }
 \value{
 A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix

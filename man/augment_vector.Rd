@@ -12,7 +12,7 @@ augment_vector(vectors)
 }
 \value{
 A new matrix of row vectors with one additional (first) dimension that is
-the square root of the difference between the squared max. vector norm and 
+the square root of the difference between the squared max. vector norm and
 the squared vector norm. This makes the norm of all vectors effectively
 the same.
 }
@@ -27,7 +27,7 @@ https://towardsdatascience.com/maximum-inner-product-search-using-nearest-neighb
 }
 \references{
 Yoram Bachrach, Yehuda Finkelstein, Ran Gilad-Bachrach, Liran Katzir,
- Noam Koenigstein, Nir Nice, Ulrich Paquet. 
- Speeding up the Xbox recommender system using a euclidean transformation 
+ Noam Koenigstein, Nir Nice, Ulrich Paquet.
+ Speeding up the Xbox recommender system using a euclidean transformation
  for inner-product spaces. RecSys 2014
 }

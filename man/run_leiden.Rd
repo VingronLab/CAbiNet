@@ -9,7 +9,8 @@ run_leiden(
   resolution = 1,
   n.int = 10,
   rand_seed = 2358,
-  cast_to_dense = TRUE
+  cast_to_dense = TRUE,
+  leiden_pack = "igraph"
 )
 }
 \arguments{
@@ -21,7 +22,9 @@ run_leiden(
 
 \item{rand_seed}{integer. Random seed.}
 
-\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense}
+
+\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
 matrix before running leiden clustering?
 Casting to dense speeds up the leiden algorithm.}
 }
@@ -29,7 +32,7 @@ Casting to dense speeds up the leiden algorithm.}
 Object of type "caclust" with cell and gene clusters saved.
 }
 \description{
-This function takes a caclust object with precomputed SNN-graph and 
+This function takes a caclust object with precomputed SNN-graph and
 clusters cells and genes simultaneously.
 }
 \seealso{

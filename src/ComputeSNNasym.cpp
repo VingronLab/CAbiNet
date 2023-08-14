@@ -197,8 +197,7 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double
 // }
 
 
-
-// Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::SparseMatrix<double> SNN,
+// Eigen::SparseMatrix<double> ComputeSNNasym_copy(Eigen::SparseMatrix<double> SNN,
 //                                            double prune,
 //                                            String mode) {
 //
