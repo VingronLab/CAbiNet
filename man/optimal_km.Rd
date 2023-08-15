@@ -18,12 +18,12 @@ optimal_km(x, k, num_seeds = 10, iter_max = 10, ...)
 \item{...}{Further arguments handed to stats::kmeans}
 }
 \value{
-Returns an object of class "kmeans" with is a list with several components 
-(see ?kmeans) which guves the local optimal kmeans clustering result within 
+Returns an object of class "kmeans" with is a list with several components
+(see ?kmeans) which guves the local optimal kmeans clustering result within
 #num_seeds trials.
 }
 \description{
 This function will select the optimal clustering result from several kmeans runs
-with different random seeds, The clustering result with the smallest 
+with different random seeds, The clustering result with the smallest
 within-cluster-sum of squared distances will be selected.
 }

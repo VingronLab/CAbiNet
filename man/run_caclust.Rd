@@ -26,7 +26,10 @@ run_caclust(
   num_seeds = 10,
   return_eig = TRUE,
   dims = NULL,
-  cast_to_dense = TRUE
+  cast_to_dense = TRUE,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam(),
+  leiden_pack = "leiden"
 )
 }
 \arguments{
@@ -101,7 +104,15 @@ Can be on of the following 3:
 
 \item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
 
-\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense}
+
+\item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
+algorithm to use. see Details.}
+
+\item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
+
+\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
 matrix before running leiden clustering?
 Casting to dense speeds up the leiden algorithm.}
 }

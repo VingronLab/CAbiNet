@@ -15,7 +15,7 @@ eigengap(e, v)
 The selected most important eigenvectors for downstream clustering, of type 'matrix/array'.
 }
 \description{
-Searching for the largest gap between conjuncted eigenvalues which are sorted 
-in an ascending order, the most important eigenvalues and eigenvectors are the ones 
+Searching for the largest gap between conjuncted eigenvalues which are sorted
+in an ascending order, the most important eigenvalues and eigenvectors are the ones
 before the detected eigengap.
 }

@@ -42,11 +42,11 @@ optimal_skm(
 \item{control}{a list of control parameters.  See \bold{Details}.}
 }
 \value{
-Returns an object inheriting from classes skmeans and pclust (see ?skmeans) which 
+Returns an object inheriting from classes skmeans and pclust (see ?skmeans) which
 gives the local optimal skmeans clustering result within several trials.
 }
 \description{
-This function will select the optimal clustering result from several 
-skmeans::skmeans runs with different random seeds, The clustering result with the smallest 
+This function will select the optimal clustering result from several
+skmeans::skmeans runs with different random seeds, The clustering result with the smallest
 within-cluster-sum of squared distances will be selected.
 }
