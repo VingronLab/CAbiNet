@@ -1,7 +1,10 @@
 
 #include <RcppEigen.h>
 #include <string>
+#include <Eigen/Dense>
 using namespace Rcpp;
+
+
 // [[Rcpp::depends(RcppEigen)]]
 
 // ' Calculates SNN from adjacency matrix with uneven number of neighbours per
@@ -25,15 +28,17 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double
                                            double prune,
                                            String mode) {
     Eigen::VectorXd k_i(SNN.rows());
-    Eigen::SparseMatrix<double>  res(SNN.rows(), SNN.cols());
+    // Eigen::SparseMatrix<double>  res(SNN.rows(), SNN.cols());
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  res_dense;
+
 
     if (mode == "out"){
         k_i = SNN * Eigen::VectorXd::Ones(SNN.cols());
-        res = SNN * SNN.transpose();
+        res_dense = SNN * SNN.transpose();
     }else if (mode == "in"){
 
         k_i = SNN.transpose() * Eigen::VectorXd::Ones(SNN.rows());
-        res =  SNN.transpose() * SNN;
+        res_dense =  SNN.transpose() * SNN;
     }else if (mode == "all"){
 
         Eigen::SparseMatrix<double> sym(SNN.rows(), SNN.cols());
@@ -56,31 +61,59 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double
         }
 
 
-        res = sym * (sym.transpose());
+        res_dense = sym * (sym.transpose()); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
         k_i = sym * Eigen::VectorXd::Ones(sym.cols());
         // std::cout << "all" << std::endl
     }
 
-    for (int i=0; i < res.outerSize(); ++i){  //number of columns ?
+    // for (int i=0; i < res.outerSize(); ++i){  //number of columns ?
+    //
+    //     for (Eigen::SparseMatrix<double>::InnerIterator it(res, i); it; ++it){  // Iterate over rows
+    //         int ki = it.row();
+    //         int kj = it.col();
+    //
+    //         double a;
+    //         a = k_i(ki);
+    //
+    //         double b;
+    //         b = k_i(kj);
+    //
+    //         it.valueRef() = it.value()/(a + (b - it.value()));
+    //         if(it.value() < prune){
+    //             it.valueRef() = 0;
+    //         }
+    //     }
+    // }
+    //
+    // res.prune(0.0); // actually remove pruned values
+    typedef Eigen::Triplet<double> Trip;
+    std::vector<Trip> trp;
+    double overlapping;
+    double a;
+    double b;
 
-        for (Eigen::SparseMatrix<double>::InnerIterator it(res, i); it; ++it){  // Iterate over rows
-            int ki = it.row();
-            int kj = it.col();
+    for (int i = 0; i < res_dense.cols(); ++i){  //number of columns ?
 
-            double a;
-            a = k_i(ki);
+        for (int j = 0; j < res_dense.rows(); ++j){  // Iterate over rows
 
-            double b;
-            b = k_i(kj);
+            a = k_i(j);
+            b = k_i(i);
 
-            it.valueRef() = it.value()/(a + (b - it.value()));
-            if(it.value() < prune){
-                it.valueRef() = 0;
+            if ((a + (b - res_dense(j, i))) != 0 ){
+                overlapping = res_dense(j, i)/(a + (b - res_dense(j, i)));
+            }else{
+                overlapping = 0;
+            }
+            if(overlapping >= prune){
+                trp.push_back(Trip(j,
+                               i,
+                               overlapping));;
             }
         }
     }
 
-    res.prune(0.0); // actually remove pruned values
+    Eigen::SparseMatrix<double> res(res_dense.rows(), res_dense.cols());
+    res.setFromTriplets(trp.begin(), trp.end());
 
     return res;
 }
