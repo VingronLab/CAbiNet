@@ -561,7 +561,6 @@ contour_plot <- function(umap_cells,
   if (isTRUE(color_genes)){
     color_by_genes <- color_by
     gene_colors <- colors
-    
   } else {
     color_by_genes <- "type"
 
