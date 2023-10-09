@@ -17,3 +17,7 @@ calc_overlap <- function(cc_adj, cg_adj, threshold) {
     invisible(.Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj, threshold))
 }
 
+calc_overlap_deprecated <- function(cc_adj, cg_adj) {
+    .Call('_CAbiNet_calc_overlap_deprecated', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
+}
+
