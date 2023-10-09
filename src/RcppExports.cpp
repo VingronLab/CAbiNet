@@ -36,10 +36,23 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// calc_overlap_deprecated
+Eigen::SparseMatrix<double> calc_overlap_deprecated(Eigen::SparseMatrix<int> cc_adj, Eigen::SparseMatrix<int> cg_adj);
+RcppExport SEXP _CAbiNet_calc_overlap_deprecated(SEXP cc_adjSEXP, SEXP cg_adjSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cc_adj(cc_adjSEXP);
+    Rcpp::traits::input_parameter< Eigen::SparseMatrix<int> >::type cg_adj(cg_adjSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_overlap_deprecated(cc_adj, cg_adj));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_CAbiNet_ComputeSNNasym", (DL_FUNC) &_CAbiNet_ComputeSNNasym, 3},
     {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 3},
+    {"_CAbiNet_calc_overlap_deprecated", (DL_FUNC) &_CAbiNet_calc_overlap_deprecated, 2},
     {NULL, NULL, 0}
 };
 

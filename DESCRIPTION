@@ -1,7 +1,7 @@
 Package: CAbiNet
 Type: Package
 Title: Biclustering and visualization of scRNAseq data
-Version: 0.99.0
+Version: 0.99.1
 Authors@R:
   c(person(given = "Clemens",
            family = "Kohl",

@@ -1,10 +1,11 @@
 import umap.umap_ as umap
 
-def python_umap(dm, n_neighbors, metric):
-                  
+def python_umap(dm, n_neighbors, metric, seed=2358):
+  
   reducer = umap.UMAP(
         n_neighbors=n_neighbors,
-        metric=metric
+        metric=metric,
+        random_state = int(seed)
         )
         
   embedding = reducer.fit_transform(dm)
