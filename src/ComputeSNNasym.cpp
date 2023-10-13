@@ -24,32 +24,34 @@ using namespace Rcpp;
 // ' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
 // ' @export
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double>>& SNN,
+Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>>& SNN,
                                            double prune,
                                            String mode) {
-    Eigen::VectorXd k_i(SNN.rows());
-    // Eigen::SparseMatrix<double>  res(SNN.rows(), SNN.cols());
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>  res_dense;
-
+    Eigen::VectorXi k_i(SNN.rows());
+    Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>  res_dense;
+    // Rcpp::Rcout << "initialization is done..." << std::endl;
 
     if (mode == "out"){
-        k_i = SNN * Eigen::VectorXd::Ones(SNN.cols());
+        k_i = SNN * Eigen::VectorXi::Ones(SNN.cols());
+        // Rcpp::Rcout << "k_i done..." << std::endl;
         res_dense = SNN * SNN.transpose();
-    }else if (mode == "in"){
+        // Rcpp::Rcout << "transpose done..." << std::endl;
+    }
+    else if (mode == "in"){
 
-        k_i = SNN.transpose() * Eigen::VectorXd::Ones(SNN.rows());
+        k_i = SNN.transpose() * Eigen::VectorXi::Ones(SNN.rows());
         res_dense =  SNN.transpose() * SNN;
     }else if (mode == "all"){
 
-        Eigen::SparseMatrix<double> sym(SNN.rows(), SNN.cols());
+        Eigen::SparseMatrix<int> sym(SNN.rows(), SNN.cols());
 
-        Eigen::SparseMatrix<double> transposed = SNN.transpose();
+        Eigen::SparseMatrix<int> transposed = SNN.transpose();
         // it is proved that initializing this transposed matrix here is better than initializing it earlier.
         sym = SNN + transposed;
 
         for (int i=0; i < sym.outerSize(); ++i){
 
-            for (Eigen::SparseMatrix<double>::InnerIterator it(sym, i); it; ++it){
+            for (Eigen::SparseMatrix<int>::InnerIterator it(sym, i); it; ++it){
 
                 int ki = it.row();
                 int kj = it.col();
@@ -61,36 +63,16 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<double
         }
 
 
-        res_dense = sym * (sym.transpose()); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
-        k_i = sym * Eigen::VectorXd::Ones(sym.cols());
-        // std::cout << "all" << std::endl
+        res_dense = sym * sym.transpose(); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
+        k_i = sym * Eigen::VectorXi::Ones(sym.cols());
+        // Rcpp::Rcout << "product done ..." << std::endl;
     }
 
-    // for (int i=0; i < res.outerSize(); ++i){  //number of columns ?
-    //
-    //     for (Eigen::SparseMatrix<double>::InnerIterator it(res, i); it; ++it){  // Iterate over rows
-    //         int ki = it.row();
-    //         int kj = it.col();
-    //
-    //         double a;
-    //         a = k_i(ki);
-    //
-    //         double b;
-    //         b = k_i(kj);
-    //
-    //         it.valueRef() = it.value()/(a + (b - it.value()));
-    //         if(it.value() < prune){
-    //             it.valueRef() = 0;
-    //         }
-    //     }
-    // }
-    //
-    // res.prune(0.0); // actually remove pruned values
     typedef Eigen::Triplet<double> Trip;
     std::vector<Trip> trp;
     double overlapping;
-    double a;
-    double b;
+    int a;
+    int b;
 
     for (int i = 0; i < res_dense.cols(); ++i){  //number of columns ?
 
