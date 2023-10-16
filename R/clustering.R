@@ -383,7 +383,9 @@ run_leiden <- function(caclust,
     clusters = igraph::cluster_leiden(g,
                                       n_iterations = n.int,
                                       objective_function = 'modularity',
+                                      weights = igraph::E(g)$weight,
                                       resolution_parameter =resolution)
+
     clusters = unlist(igraph::membership(clusters))
   }else{
     stop('leiden_pack should be either leiden or igraph!')

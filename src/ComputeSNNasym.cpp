@@ -34,7 +34,7 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>>&
     if (mode == "out"){
         k_i = SNN * Eigen::VectorXi::Ones(SNN.cols());
         // Rcpp::Rcout << "k_i done..." << std::endl;
-        res_dense = SNN * SNN.transpose();
+        res_dense = SNN * (SNN.transpose());
         // Rcpp::Rcout << "transpose done..." << std::endl;
     }
     else if (mode == "in"){
@@ -63,7 +63,7 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>>&
         }
 
 
-        res_dense = sym * sym.transpose(); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
+        res_dense = sym * (sym.transpose()); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
         k_i = sym * Eigen::VectorXi::Ones(sym.cols());
         // Rcpp::Rcout << "product done ..." << std::endl;
     }
@@ -71,8 +71,8 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>>&
     typedef Eigen::Triplet<double> Trip;
     std::vector<Trip> trp;
     double overlapping;
-    int a;
-    int b;
+    double a;
+    double b;
 
     for (int i = 0; i < res_dense.cols(); ++i){  //number of columns ?
 
