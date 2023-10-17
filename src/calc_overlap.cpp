@@ -16,14 +16,14 @@ using namespace Rcpp;
 //' @param threshold numeric value between 0 and 1. The cutoff of cell-nqighour-overlapping of each gene.
 //' @export
 // [[Rcpp::export]]
-void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
-                                         Eigen::Map<Eigen::SparseMatrix<double>>& cg_adj,
+void calc_overlap(Eigen::Map<Eigen::SparseMatrix<int>>& cc_adj,
+                                         Eigen::Map<Eigen::SparseMatrix<int>>& cg_adj,
                                         double threshold) {
 
   // initialize vector to store triplets
 
-  Eigen::SparseMatrix<double> overlap_mat_all = cc_adj * cg_adj;
-  Eigen::SparseMatrix<double> cc_tadj = cc_adj.transpose();
+  Eigen::SparseMatrix<int> overlap_mat_all = cc_adj * cg_adj;
+  Eigen::SparseMatrix<int> cc_tadj = cc_adj.transpose();
 
   // calcualte the rowSums of matrix cc_adj which is also the number of neighbourhoods of each cell
   std::vector<double> cell_nn_nums;
@@ -32,7 +32,7 @@ void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
 
       int k = 0;
 
-      for (Eigen::SparseMatrix<double>::InnerIterator it(cc_tadj, i); it; ++it){  // Iterate over rows
+      for (Eigen::SparseMatrix<int>::InnerIterator it(cc_tadj, i); it; ++it){  // Iterate over rows
           k += 1;
     }
 
@@ -45,7 +45,7 @@ void calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
   for (int i=0; i < cg_adj.outerSize(); i++){
 
     // only preserve the edges which are shown in cg_adj matrix
-    for (Eigen::Map<Eigen::SparseMatrix<double>>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
+    for (Eigen::Map<Eigen::SparseMatrix<int>>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
 
         double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
 
