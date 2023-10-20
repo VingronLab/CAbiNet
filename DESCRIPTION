@@ -55,7 +55,9 @@ Imports:
   S4Vectors,
   irlba,
   viridis,
-  BiocNeighbors
+  BiocNeighbors,
+  BiocParallel,
+  igraph
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
 Suggests:

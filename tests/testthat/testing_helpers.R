@@ -1,4 +1,5 @@
 
+Rcpp::sourceCpp("../../src/testing_funs.cpp")
 
 
 #' Make a kNN graph
