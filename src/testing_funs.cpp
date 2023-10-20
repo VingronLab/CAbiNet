@@ -4,7 +4,11 @@
 // #include <math> //for NAN
 #include <iostream>
 using namespace Rcpp;
+// [[Rcpp::depends(RcppEigen)]]
 
+//' WIP replacement for `determine_overlap` function
+//' @name calc_overlap_deprecated
+//' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> calc_overlap_deprecated(Eigen::SparseMatrix<int> cc_adj,
                                                     Eigen::SparseMatrix<int> cg_adj) {

@@ -14,9 +14,12 @@ ComputeSNNasym <- function(SNN, prune, mode) {
 #' @param threshold numeric value between 0 and 1. The cutoff of cell-nqighour-overlapping of each gene.
 #' @export
 calc_overlap <- function(cc_adj, cg_adj, threshold) {
-    invisible(.Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj, threshold))
+    .Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj, threshold)
 }
 
+#' WIP replacement for `determine_overlap` function
+#' @name calc_overlap_deprecated
+#' @export
 calc_overlap_deprecated <- function(cc_adj, cg_adj) {
     .Call('_CAbiNet_calc_overlap_deprecated', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
 }
