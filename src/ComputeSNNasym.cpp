@@ -24,7 +24,7 @@ using namespace Rcpp;
 // ' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
 // ' @export
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>>& SNN,
+Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
                                            double prune,
                                            String mode) {
     Eigen::VectorXi k_i(SNN.rows());
