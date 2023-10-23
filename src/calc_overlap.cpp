@@ -4,6 +4,7 @@
 #include <string>
 // #include <math> //for NAN
 #include <iostream>
+#include <Eigen/Sparse>
 using namespace Rcpp;
 // [[Rcpp::depends(RcppEigen)]]
 
@@ -16,14 +17,17 @@ using namespace Rcpp;
 //' @param threshold numeric value between 0 and 1. The cutoff of cell-nqighour-overlapping of each gene.
 //' @export
 // [[Rcpp::export]]
-void calc_overlap(Eigen::Map<Eigen::SparseMatrix<int>>& cc_adj,
-                                         Eigen::Map<Eigen::SparseMatrix<int>>& cg_adj,
+Eigen::SparseMatrix<double> calc_overlap(Eigen::Map<Eigen::SparseMatrix<int>> cc_adj,
+                                         Eigen::Map<Eigen::SparseMatrix<int>> cg_adj,
                                         double threshold) {
 
   // initialize vector to store triplets
-
   Eigen::SparseMatrix<int> overlap_mat_all = cc_adj * cg_adj;
+  // Rcpp::Rcout << "product done ..." << std::endl;
   Eigen::SparseMatrix<int> cc_tadj = cc_adj.transpose();
+
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp;
 
   // calcualte the rowSums of matrix cc_adj which is also the number of neighbourhoods of each cell
   std::vector<double> cell_nn_nums;
@@ -39,24 +43,34 @@ void calc_overlap(Eigen::Map<Eigen::SparseMatrix<int>>& cc_adj,
       cell_nn_nums.push_back(k);
   }
 
-
-
+  // create a new sparse matrix with double values 
+  // (modification values in the mapped cg_adj matrix cannot be returned to R, due to the sparsematrix in 'int' cannot be recognized by R)
   // loop over genes (its faster in column major matrix)
   for (int i=0; i < cg_adj.outerSize(); i++){
 
     // only preserve the edges which are shown in cg_adj matrix
     for (Eigen::Map<Eigen::SparseMatrix<int>>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
 
-        double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
+      double temp = overlap_mat_all.coeffRef(it.row(), i);
+      double value = temp/cell_nn_nums[it.row()];
 
-        if (value <= threshold){
+      if (value > threshold){
 
-            it.valueRef() = 0;
-        }
+          trp.push_back(Trip(it.row(),
+                             i,
+                             1));
+      }
     }
   }
 
-    return;
+  // build Matrix from triplets
+  Eigen::SparseMatrix<double> new_cg_adj(cg_adj.rows(), cg_adj.cols());
+  new_cg_adj.setFromTriplets(trp.begin(), trp.end());
+
+  // overlap.prune(0.0);
+  return new_cg_adj;
+
+
 }
 
 
@@ -129,56 +143,7 @@ void calc_overlap(Eigen::Map<Eigen::SparseMatrix<int>>& cc_adj,
 // }
 //
 
-// Eigen::SparseMatrix<double> calc_overlap(Eigen::Map<Eigen::SparseMatrix<double>>& cc_adj,
-//                                          Eigen::Map<Eigen::SparseMatrix<double>>& cg_adj,
-//                                         double threshold) {
-//
-//   // initialize vector to store triplets
-//   typedef Eigen::Triplet<double> Trip;
-//   std::vector<Trip> trp;
-//   Eigen::SparseMatrix<double> overlap_mat_all = cc_adj * cg_adj;
-//   Eigen::SparseMatrix<double> cc_tadj = cc_adj.transpose();
-//
-//   // calcualte the rowSums of matrix cc_adj which is also the number of neighbourhoods of each cell
-//   std::vector<double> cell_nn_nums;
-//
-//   for (int i=0; i < cc_tadj.outerSize(); i++){
-//
-//       int k = 0;
-//
-//       for (Eigen::SparseMatrix<double>::InnerIterator it(cc_tadj, i); it; ++it){  // Iterate over rows
-//           k += 1;
-//     }
-//
-//       cell_nn_nums.push_back(k);
-//   }
-//
-//
-//
-//   // loop over genes (its faster in column major matrix)
-//   for (int i=0; i < cg_adj.outerSize(); i++){
-//
-//     // only preserve the edges which are shown in cg_adj matrix
-//     for (Eigen::Map<Eigen::SparseMatrix<double>>::InnerIterator it(cg_adj, i); it; ++it){  // Iterate over rows
-//
-//         double value = overlap_mat_all.coeffRef(it.row(), i)/cell_nn_nums[it.row()];
-//
-//         if (value > threshold){
-//
-//             trp.push_back(Trip(it.row(),
-//                                i,
-//                                1));
-//         }
-//     }
-//   }
-//
-//   // build Matrix from triplets
-//   Eigen::SparseMatrix<double> overlap(cg_adj.rows(), cg_adj.cols());
-//   overlap.setFromTriplets(trp.begin(), trp.end());
-//
-//   overlap.prune(0.0);
-//   return overlap;
-// }
+
 
 // Eigen::SparseMatrix<double> calc_overlap_copy(Eigen::SparseMatrix<double> cc_adj,
 //                                          Eigen::SparseMatrix<double> cg_adj) {

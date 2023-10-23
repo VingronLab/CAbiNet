@@ -178,10 +178,11 @@ create_bigraph_manual <- function(cell_dists,
     
     
     if(isTRUE(select_genes) & isTRUE(prune_overlap)){
-        
+
         overlap_mat <- calc_overlap_deprecated( cc_adj = ccg_nn,
                                                cg_adj = cgg_nn)
-        
+        print('original overlap_mat:')
+        print(overlap_mat)
         # For the case overlap = 1, all the genes are supposed to removed such that
         # the algorithm allows for clustering for cells without genes.
         cgg_nn[overlap_mat <= overlap] <- 0
