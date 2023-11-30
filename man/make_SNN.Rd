@@ -14,7 +14,9 @@ make_SNN(
   prune_overlap = TRUE,
   overlap = 0.2,
   calc_gene_cell_kNN = FALSE,
-  marker_genes = NULL
+  marker_genes = NULL,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam()
 )
 }
 \arguments{
@@ -48,18 +50,24 @@ scores(Jaccard Index). Three options: "out", "in" and "all":
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
+than \code{overlap} of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
-by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
 \item{marker_genes}{character. Optional. Names of known marker genes that
 should be excempt from any pruning on the graph and be kept.}
+
+\item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
+algorithm to use. see Details.}
+
+\item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
 }
 \value{
 A sparse adjacency Matrix of type "dgCMatrix". The values in the matrix

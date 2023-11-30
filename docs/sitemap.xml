@@ -34,10 +34,16 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/add_caclust_sce.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/add_zero_dim.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/as.caclust.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/assign_clusters_GMM.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/augment_vector.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/biMAP.html</loc>
@@ -68,6 +74,9 @@
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/calc_overlap.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/calc_overlap_deprecated.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/cell_clusters.html</loc>
@@ -128,6 +137,9 @@
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/indx_to_spmat.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/is.empty.html</loc>

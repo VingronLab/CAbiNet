@@ -47,7 +47,7 @@ plot_feature_biMAP(
 
 \item{...}{Further arguments}
 
-\item{caclust_meta_name}{Name under which the caclust object is stored in 
+\item{caclust_meta_name}{Name under which the caclust object is stored in
 the metadata of the SingleCellExperiment object.}
 }
 \value{

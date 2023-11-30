@@ -1,3 +1,5 @@
+#' @include helpers.R
+NULL
 
 #' Mixes the colors of two clusters proportionally.
 #'
@@ -258,6 +260,7 @@ biMAP_plotter <- function(caclust,
   if(label_groups){
 
     label_coords <- umap_coords %>%
+      dplyr::filter(umap_coords$type == "cell") %>%
       dplyr::group_by_at(color_by) %>%
       dplyr::summarize(fraction_of_group = dplyr::n(),
                        median_x = stats::median(x = x),
@@ -561,7 +564,6 @@ contour_plot <- function(umap_cells,
   if (isTRUE(color_genes)){
     color_by_genes <- color_by
     gene_colors <- colors
-    
   } else {
     color_by_genes <- "type"
 

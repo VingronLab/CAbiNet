@@ -55,6 +55,9 @@ caclust(
   return_eig = TRUE,
   dims = NULL,
   cast_to_dense = TRUE,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam(),
+  leiden_pack = "igraph",
   ...
 )
 
@@ -81,6 +84,9 @@ caclust(
   return_eig = TRUE,
   dims = NULL,
   cast_to_dense = TRUE,
+  method = BiocNeighbors::KmknnParam(),
+  BPPARAM = BiocParallel::SerialParam(),
+  leiden_pack = "igraph",
   ...,
   caclust_meta_name = "caclust",
   cacomp_meta_name = "CA"
@@ -114,14 +120,14 @@ scores(Jaccard Index). Three options: "out", "in" and "all":
 an edge in the cell-gene kNN graph?}
 
 \item{prune_overlap}{TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
+than \code{overlap} of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.}
 
 \item{overlap}{Numeric between 0 and 1. Overlap cutoff applied if
 prune_overlap = TRUE.}
 
 \item{calc_gene_cell_kNN}{TRUE/FALSE. If TRUE a cell-gene graph is calculated
-by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+by choosing the \code{k_gc} nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.}
 
 \item{resolution}{float number. Resolution for leiden algorithm.}
@@ -157,23 +163,31 @@ Can be on of the following 3:
 
 \item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
 
-\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense 
-matrix before running leiden clustering?
-Casting to dense speeds up the leiden algorithm.}
+\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense}
 
 \item{...}{further arguments}
 
-\item{caclust_meta_name}{the name of caclust object stored in 
+\item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
+algorithm to use. see Details.}
+
+\item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
+
+\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
+matrix before running leiden clustering?
+Casting to dense speeds up the leiden algorithm.}
+
+\item{caclust_meta_name}{the name of caclust object stored in
 metadata(SingleCellExperiment object). Default: 'caclust.'}
 
-\item{cacomp_meta_name}{Character. The name of cacomp object stored in 
+\item{cacomp_meta_name}{Character. The name of cacomp object stored in
 metadata(SingleCellExperiment object). Default: 'caobj'.}
 }
 \value{
 A caclust object or SingleCellExperiment object
 }
 \description{
-`caclust()` performs biclustering on either a "cacomp" or 
+`caclust()` performs biclustering on either a "cacomp" or
 "SingleCellExperiment" object.
 }
 \details{

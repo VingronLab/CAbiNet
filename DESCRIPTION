@@ -1,7 +1,7 @@
 Package: CAbiNet
 Type: Package
 Title: Biclustering and visualization of scRNAseq data
-Version: 0.99.0
+Version: 0.99.1
 Authors@R:
   c(person(given = "Clemens",
            family = "Kohl",
@@ -54,7 +54,10 @@ Imports:
   RColorBrewer,
   S4Vectors,
   irlba,
-  viridis
+  viridis,
+  BiocNeighbors,
+  BiocParallel,
+  igraph
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.2.1
 Suggests:

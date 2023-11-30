@@ -12,7 +12,7 @@ over the contours."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
     
     <a class="navbar-brand me-2" href="../index.html">CAbiNet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,12 +107,12 @@ object or of class "SingleCellExperiment".</p></dd>
 
 <dt>meta_df</dt>
 <dd><p>optional. data.frame that should have either gene or cell names
-(or both) as rownames or a column named `name` and a column with the same name as 
+(or both) as rownames or a column named `name` and a column with the same name as
 `color_by`.</p></dd>
 
 
 <dt>color_by</dt>
-<dd><p>Either "type" or "cluster". "type" colors by the type 
+<dd><p>Either "type" or "cluster". "type" colors by the type
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.</p></dd>
 
@@ -134,7 +134,7 @@ provided a column from the data.frame can be specified.</p></dd>
 
 
 <dt>label_groups</dt>
-<dd><p>logical. If TRUE puts the group label on the median 
+<dd><p>logical. If TRUE puts the group label on the median
 coordinates of the point.</p></dd>
 
 
@@ -143,12 +143,12 @@ coordinates of the point.</p></dd>
 
 
 <dt>label_marker_genes</dt>
-<dd><p>logical or character vector. If TRUE, names of detected marker 
+<dd><p>logical or character vector. If TRUE, names of detected marker
 genes are displayed. If is character vector, the given marker genes are labeled.</p></dd>
 
 
 <dt>interactive</dt>
-<dd><p>If TRUE plot_scatter_biMAP returns an interactive (html) 
+<dd><p>If TRUE plot_scatter_biMAP returns an interactive (html)
 plot. If FALSE a ggplot object is returned.</p></dd>
 
 
@@ -157,13 +157,13 @@ plot. If FALSE a ggplot object is returned.</p></dd>
 
 
 <dt>caclust_meta_name</dt>
-<dd><p>Name under which the caclust object is stored in 
+<dd><p>Name under which the caclust object is stored in
 the metadata of the SingleCellExperiment object.</p></dd>
 
 
 <dt>subset</dt>
 <dd><p>Whether the biMAP embedding should be subset to the cells/genes
-in the SCE object. This might lead to unintended results. If unsure, we 
+in the SCE object. This might lead to unintended results. If unsure, we
 recommend to rerun CA and caclust instead.</p></dd>
 
 </dl></div>

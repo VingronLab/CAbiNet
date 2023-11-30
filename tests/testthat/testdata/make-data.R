@@ -1,11 +1,19 @@
+source("./tests/testthat/testing_helpers.R")
 
 library(APL)
 library(Matrix)
-df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB"),
-                 "B Cell"     = c(4, 0, 0, 0, 0),
-                 "CD8 T Cell" = c(0, 5, 0, 8, 8),
-                 "CD4 T Cell" = c(0, 6, 4, 0, 8),
-                 "HSC"       = c(2, 2, 2, 2, 8))
+# df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB"),
+#                  "B Cell"     = c(4, 0, 0, 0, 0),
+#                  "CD8 T Cell" = c(0, 5, 0, 8, 8),
+#                  "CD4 T Cell" = c(0, 6, 4, 0, 8),
+#                  "HSC"       = c(2, 2, 2, 2, 8))
+
+
+df <- data.frame(row.names = c("CD19", "CD3", "CD4", "CD8", "ACTB", "CD45"),
+                   "B Cell"     = c(4, 0, 0, 0, 0, 3),
+                   "CD8 T Cell" = c(0, 5, 0, 8, 6, 1),
+                   "CD4 T Cell" = c(0, 6, 4, 0, 7, 2),
+                   "HSC"        = c(1, 2, 3, 4, 8, 1))
 df <- as.matrix(df)
 
 dists = as.matrix(dist(df))
@@ -21,7 +29,7 @@ ca_dists <- calc_distances(caobj = ca)
 #####################
 # no loops 
 
-adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+adj <- create_bigraph_manual(cell_dists = ca_dists[["cc"]],
                       gene_dists = ca_dists[["gg"]],
                       cell_gene_assr = ca_dists[["cg"]],
                       gene_cell_assr = ca_dists[["gc"]],
@@ -98,7 +106,7 @@ saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_noLoops_gcKNN
 #####################
 # no loops transpose
 
-adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+adj <- create_bigraph_manual(cell_dists = ca_dists[["cc"]],
                       gene_dists = ca_dists[["gg"]],
                       cell_gene_assr = ca_dists[["cg"]],
                       gene_cell_assr = ca_dists[["gc"]],
@@ -154,7 +162,7 @@ saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_noLoops_trans
 # with loops
 
 
-adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+adj <- create_bigraph_manual(cell_dists = ca_dists[["cc"]],
                       gene_dists = ca_dists[["gg"]],
                       cell_gene_assr = ca_dists[["cg"]],
                       gene_cell_assr = ca_dists[["gc"]],
@@ -229,7 +237,7 @@ saveRDS(snn_igraph, "./tests/testthat/testdata/SNN_igraph_incoming_withLoops_gcK
 # with loops transpose 
 
 
-adj <- create_bigraph(cell_dists = ca_dists[["cc"]],
+adj <- create_bigraph_manual(cell_dists = ca_dists[["cc"]],
                       gene_dists = ca_dists[["gg"]],
                       cell_gene_assr = ca_dists[["cg"]],
                       gene_cell_assr = ca_dists[["gc"]],

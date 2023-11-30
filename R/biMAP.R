@@ -53,7 +53,8 @@ run_biMAP <- function(obj,
 
     umap_coords <- python_umap(dm = SNNdist,
                                 metric = "precomputed",
-                                n_neighbors = as.integer(k))
+                                n_neighbors = as.integer(k),
+                               seed = rand_seed)
 
     umap_coords <- as.data.frame(umap_coords)
     rownames(umap_coords) <- colnames(SNNdist)

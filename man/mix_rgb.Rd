@@ -7,7 +7,7 @@
 mix_rgb(df, colors, cell, color_by)
 }
 \arguments{
-\item{df}{data.frame of cells with clusters in `color_by` and assigned 
+\item{df}{data.frame of cells with clusters in `color_by` and assigned
 hex bin in `hexbin`.}
 
 \item{colors}{colors to be mixed.}

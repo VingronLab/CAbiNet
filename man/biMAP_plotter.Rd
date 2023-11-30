@@ -29,15 +29,15 @@ biMAP_plotter(
 \arguments{
 \item{caclust}{caclust object with biMAP stored.}
 
-\item{color_by}{Either "type" or "cluster". "type" colors by the type 
+\item{color_by}{Either "type" or "cluster". "type" colors by the type
 (cell or gene) while "cluster" colors by the assigned cluster. If meta_df is
 provided a column from the data.frame can be specified.}
 
 \item{meta_df}{optional. data.frame that should have either gene or cell names
-(or both) as rownames or a column named `name` and a column with the same name as 
+(or both) as rownames or a column named `name` and a column with the same name as
 `color_by`.}
 
-\item{type}{Determines the kind of plot outputted. Either "scatter" 
+\item{type}{Determines the kind of plot outputted. Either "scatter"
 (scatter plot), "contour" (density contour plot) or "hex" (binned hexagonals).}
 
 \item{cell_size}{integer. Size of the cells in the plot.}
@@ -59,12 +59,12 @@ adjusted by the number of cells in the bin?}
 
 \item{color_genes}{logical. If TRUE colors genes by color_by.}
 
-\item{label_groups}{logical. If TRUE puts the group label on the median 
+\item{label_groups}{logical. If TRUE puts the group label on the median
 coordinates of the point.}
 
 \item{group_label_size}{integer. Size of the group label.}
 
-\item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker 
+\item{label_marker_genes}{logical or character vector. If TRUE, names of detected marker
 genes are displayed. If is character vector, the given marker genes are labeled.}
 
 \item{colors}{Vector of hexadecimal color codes of the same length as the
