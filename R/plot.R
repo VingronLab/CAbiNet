@@ -1,3 +1,5 @@
+#' @include helpers.R
+NULL
 
 #' Mixes the colors of two clusters proportionally.
 #'
