@@ -12,7 +12,7 @@ run_caclust takes a cacomp object and biclusters cells and genes."><!-- mathjax 
     
     <a class="navbar-brand me-2" href="../index.html">CAbiNet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,10 @@ run_caclust takes a cacomp object and biclusters cells and genes."><!-- mathjax 
 <span>  num_seeds <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  return_eig <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dims <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cast_to_dense <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  cast_to_dense <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  method <span class="op">=</span> <span class="fu">BiocNeighbors</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocNeighbors/man/KmknnParam.html" class="external-link">KmknnParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  leiden_pack <span class="op">=</span> <span class="st">"leiden"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,7 +120,7 @@ an edge in the cell-gene kNN graph?</p></dd>
 
 <dt>prune_overlap</dt>
 <dd><p>TRUE/FALSE. If TRUE edges to genes that share less
-than `overlap` of genes with the nearest neighbours of the cell are removed.
+than <code>overlap</code> of genes with the nearest neighbours of the cell are removed.
 Pruning is only performed if select_genes = TRUE.</p></dd>
 
 
@@ -128,7 +131,7 @@ prune_overlap = TRUE.</p></dd>
 
 <dt>calc_gene_cell_kNN</dt>
 <dd><p>TRUE/FALSE. If TRUE a cell-gene graph is calculated
-by choosing the `k_gc` nearest cells for each gene. If FALSE the cell-gene
+by choosing the <code>k_gc</code> nearest cells for each gene. If FALSE the cell-gene
 graph is transposed.</p></dd>
 
 
@@ -186,7 +189,21 @@ Can be on of the following 3:</p><ul><li><p>"kmeans": k-means clustering</p></li
 
 
 <dt>cast_to_dense</dt>
-<dd><p>logical. Should the SNN-graph be converted to a dense 
+<dd><p>logical. Should the SNN-graph be converted to a dense</p></dd>
+
+
+<dt>method</dt>
+<dd><p><a href="https://rdrr.io/pkg/BiocNeighbors/man/BiocNeighborParam.html" class="external-link">BiocNeighbors::BiocNeighborParam</a> object specifying the
+algorithm to use. see Details.</p></dd>
+
+
+<dt>BPPARAM</dt>
+<dd><p>BiocParallel settings parameter. By default single core
+<code><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">BiocParallel::SerialParam()</a></code> but other parameters can be passed.</p></dd>
+
+
+<dt>leiden_pack</dt>
+<dd><p>character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
 matrix before running leiden clustering?
 Casting to dense speeds up the leiden algorithm.</p></dd>
 

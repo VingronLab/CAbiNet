@@ -14,7 +14,7 @@ You can install the package with:
 ``` r
 
 # please also install this version of APL from github:
-devtools::install_github("VingronLab/APL", ref = "cabinet")
+devtools::install_github("VingronLab/APL", ref = "cabinet-freeze")
 devtools::install_github("VingronLab/CAbiNet")
 ```
 

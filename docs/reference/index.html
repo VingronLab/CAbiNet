@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">CAbiNet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,12 +55,6 @@
         <dd>CAbiNet: Correspondence Analysis for Biclustering on Networks</dd>
       </dl><dl><dt>
           
-          <code><a href="ComputeSNNasym.html">ComputeSNNasym()</a></code> 
-        </dt>
-        <dd>Calculates SNN from adjacency matrix with uneven number of neighbours per
-row.</dd>
-      </dl><dl><dt>
-          
           <code><a href="NormLaplacian.html">NormLaplacian()</a></code> 
         </dt>
         <dd>Calculate Normalized Graph Laplacian</dd>
@@ -76,6 +70,11 @@ row.</dd>
         <dd>Add caclust object to SingleCellExperiment object</dd>
       </dl><dl><dt>
           
+          <code><a href="add_zero_dim.html">add_zero_dim()</a></code> 
+        </dt>
+        <dd>Add an extra 0 dimension to vector</dd>
+      </dl><dl><dt>
+          
           <code><a href="as.caclust.html">as.caclust()</a></code> 
         </dt>
         <dd>Try converting to caclust object from list or biclustlib.</dd>
@@ -84,6 +83,12 @@ row.</dd>
           <code><a href="assign_clusters_GMM.html">assign_clusters_GMM()</a></code> 
         </dt>
         <dd>Assign cluster to cells/genes</dd>
+      </dl><dl><dt>
+          
+          <code><a href="augment_vector.html">augment_vector()</a></code> 
+        </dt>
+        <dd>Transforms vectors such that the max. inner product (MIP) search is
+equal to a NN search with euclidean distances.</dd>
       </dl><dl><dt>
           
           <code><a href="biMAP.html">biMAP()</a></code> 
@@ -134,6 +139,11 @@ row.</dd>
           <code><a href="calc_overlap.html">calc_overlap()</a></code> 
         </dt>
         <dd>WIP replacement for `determine_overlap` function</dd>
+      </dl><dl><dt>
+          
+          <code><a href="calc_overlap_deprecated.html">calc_overlap_deprecated()</a></code> 
+        </dt>
+        <dd>Deprecated, slower old version of calc_overlap. Only included for testing.</dd>
       </dl><dl><dt>
           
           <code><a href="cell_clusters.html">cell_clusters()</a></code> 
@@ -232,6 +242,11 @@ It works faster on sparse matrix than on dense matrix.</dd>
         <dd>internal helper to plot hex biMAP</dd>
       </dl><dl><dt>
           
+          <code><a href="indx_to_spmat.html">indx_to_spmat()</a></code> 
+        </dt>
+        <dd>Convert index matrix to sparse matrix.</dd>
+      </dl><dl><dt>
+          
           <code><a href="is.empty.html">is.empty()</a></code> <code><a href="is.empty.html">is.empty()</a></code> 
         </dt>
         <dd>Helper function to check if object is empty.</dd>
@@ -240,11 +255,6 @@ It works faster on sparse matrix than on dense matrix.</dd>
           <code><a href="make_SNN.html">make_SNN()</a></code> 
         </dt>
         <dd>Create SNN-graph from caobj</dd>
-      </dl><dl><dt>
-          
-          <code><a href="make_knn.html">make_knn()</a></code> 
-        </dt>
-        <dd>Make a kNN graph</dd>
       </dl><dl><dt>
           
           <code><a href="metadata_biMAP.html">metadata_biMAP()</a></code> 

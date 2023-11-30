@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">CAbiNet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calc_overlap</span><span class="op">(</span><span class="va">cc_adj</span>, <span class="va">cg_adj</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calc_overlap</span><span class="op">(</span><span class="va">cc_adj</span>, <span class="va">cg_adj</span>, <span class="va">threshold</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,6 +56,10 @@
 
 <dt>cg_adj</dt>
 <dd><p>sparse matrix (dgCMatrix), cell-gene adjacency matrix</p></dd>
+
+
+<dt>threshold</dt>
+<dd><p>numeric value between 0 and 1. The cutoff of cell-nqighour-overlapping of each gene.</p></dd>
 
 </dl></div>
 
