@@ -66,8 +66,8 @@ use_condaenv(condaenv = file.path(miniconda_path(),"envs/r-reticulate"),
              required=TRUE)
 
 conda_install(envname = "r-reticulate", packages = "numpy")
-conda_install(envname = "r-reticulate", packages = "torch")
-conda_install(envname = "r-reticulate", packages = "umap")
+conda_install(envname = "r-reticulate", packages = "pytorch")
+conda_install(envname = "r-reticulate", packages = "scikit-learn")
 conda_install(envname = "r-reticulate", packages = "umap-learn")
 conda_install(envname = "r-reticulate", packages = "scipy")
 ```
