@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">CAbiNet</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,7 +93,7 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>obj</dt>
-<dd><p>caclust or SingleCellExperiment object containing clustering 
+<dd><p>caclust or SingleCellExperiment object containing clustering
 results. The SingleCellExperiment should also have a CA dimensional reduction.</p></dd>
 
 
@@ -106,31 +106,31 @@ results. The SingleCellExperiment should also have a CA dimensional reduction.</
 
 
 <dt>princ_coords</dt>
-<dd><p>Integer. If 1 then principal coordinates are used for 
+<dd><p>Integer. If 1 then principal coordinates are used for
 the rows, if 2 for the columns. Default 1 (rows).</p></dd>
 
 
 <dt>row_labels</dt>
-<dd><p>Numeric vector. Indices for the rows for which a label 
+<dd><p>Numeric vector. Indices for the rows for which a label
 should be added
 (label should be stored in rownames). Default NULL.</p></dd>
 
 
 <dt>col_labels</dt>
-<dd><p>Numeric vector. Indices for the columns for which a label 
+<dd><p>Numeric vector. Indices for the columns for which a label
 should be added
 (label should be stored in colnames).
 Default NULL (no columns).</p></dd>
 
 
 <dt>type</dt>
-<dd><p>String. Type of plot to draw. Either "ggplot" or "ggplotly". 
+<dd><p>String. Type of plot to draw. Either "ggplot" or "ggplotly".
 Default "ggplot".</p></dd>
 
 
 <dt>show_all</dt>
 <dd><p>logical. If FALSE cells/genes that are not in col_metadata/
-row_metadata are not plotted. If *_metadata is NULL, the cell or genes 
+row_metadata are not plotted. If *_metadata is NULL, the cell or genes
 respectively will still be plotted.</p></dd>
 
 
@@ -143,17 +143,17 @@ respectively will still be plotted.</p></dd>
 
 
 <dt>caobj</dt>
-<dd><p>An object of class "cacomp" with the relevant standardized and 
+<dd><p>An object of class "cacomp" with the relevant standardized and
 principal coordinates calculated.</p></dd>
 
 
 <dt>caclust_meta_name</dt>
-<dd><p>the name of caclust object stored in 
+<dd><p>the name of caclust object stored in
 metadata(SingleCellExperiment object). Default: 'caclust.'</p></dd>
 
 
 <dt>cacomp_meta_name</dt>
-<dd><p>Character. The name of cacomp object stored in 
+<dd><p>Character. The name of cacomp object stored in
 metadata(SingleCellExperiment object). Default: 'caobj'.</p></dd>
 
 </dl></div>
@@ -165,14 +165,14 @@ metadata(SingleCellExperiment object). Default: 'caobj'.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Choosing type "ggplotly" will generate an interactive html plot with the 
+    <p>Choosing type "ggplotly" will generate an interactive html plot with the
 package ggplotly.
 Type "ggplot" generates a static plot.
 Depending on whether `princ_coords` is set to 1 or 2 either
 the principal coordinates of either the rows (1) or the columns (2)
-are chosen. For the other the standard coordinates are plotted 
+are chosen. For the other the standard coordinates are plotted
 (assymetric biplot).
-Labels for rows and columns should be stored in the row and column names 
+Labels for rows and columns should be stored in the row and column names
 respectively.</p>
     </div>
 

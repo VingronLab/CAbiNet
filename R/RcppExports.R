@@ -17,8 +17,10 @@ calc_overlap <- function(cc_adj, cg_adj, threshold) {
     .Call('_CAbiNet_calc_overlap', PACKAGE = 'CAbiNet', cc_adj, cg_adj, threshold)
 }
 
-#' WIP replacement for `determine_overlap` function
+#' Deprecated, slower old version of calc_overlap. Only included for testing.
 #' @name calc_overlap_deprecated
+#' @param cc_adj the cell-cell graph adjacency matrix.
+#' @param cg_adj The cell-gene graph adjacency matrix.
 #' @export
 calc_overlap_deprecated <- function(cc_adj, cg_adj) {
     .Call('_CAbiNet_calc_overlap_deprecated', PACKAGE = 'CAbiNet', cc_adj, cg_adj)
