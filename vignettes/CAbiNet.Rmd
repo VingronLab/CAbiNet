@@ -56,7 +56,7 @@ devtools::install_github("VingronLab/APL", ref = "cabinet-freeze")
 devtools::install_github("VingronLab/CAbiNet")
 ```
 
-CAbiNet also has a number of python dependencies, namely umap, umap-learn, numpy, torch and scipy.
+CAbiNet also has a number of python dependencies, namely umap-learn, numpy, pytorch, scikit-learn and scipy.
 They should be installed automatically during the installation of CAbiNet. If there is an issue, you can also install them manually by running the following:
 
 ```{r reticulate, eval=FALSE}
