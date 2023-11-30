@@ -52,7 +52,7 @@ CAbiNet: Joint visualization of cells and genes based on a gene-cell graph.
 You can install the package from GitHub by running:
 ```{r git_install, eval=FALSE}
 # Until changes are merged into the Bioconductor version, please install the below version of APL.
-devtools::install_github("VingronLab/APL", ref = "cabinet")
+devtools::install_github("VingronLab/APL", ref = "cabinet-freeze")
 devtools::install_github("VingronLab/CAbiNet")
 ```
 
@@ -66,8 +66,8 @@ use_condaenv(condaenv = file.path(miniconda_path(),"envs/r-reticulate"),
              required=TRUE)
 
 conda_install(envname = "r-reticulate", packages = "numpy")
-conda_install(envname = "r-reticulate", packages = "pytorch")
-conda_install(envname = "r-reticulate", packages = "scikit-learn")
+conda_install(envname = "r-reticulate", packages = "torch")
+conda_install(envname = "r-reticulate", packages = "umap")
 conda_install(envname = "r-reticulate", packages = "umap-learn")
 conda_install(envname = "r-reticulate", packages = "scipy")
 ```
@@ -89,7 +89,7 @@ library(APL)
 library(scRNAseq)
 library(scran)
 library(scater)
-reticulate::import("umap")
+
 set.seed(2358)
 
 ```
@@ -144,11 +144,11 @@ The number of genes kept should no be set too low, as otherwise important marker
 
 ```{r CA_dimRed}
 # Correspondence Analysis
-caobj = cacomp(sce[top_genes,],
-               assay = "logcounts",
-               dims = 40,
-               top = nrow(sce[top_genes,]),
-               python = TRUE)
+caobj <- cacomp(sce[top_genes,],
+                assay = "logcounts",
+                dims = 40,
+                top = nrow(sce[top_genes,]),
+                python = TRUE)
 ```
 The parameter `python = TRUE` indicates that the singular value decomposition in CA is performed with a pytorch implementation. This can drastically speed up the computation, in particular for large datasets. If you did not install all python dependencies for APL, please set it to `FALSE`.
 
@@ -306,23 +306,24 @@ sce$cabinet_ct <- as.factor(sce$cabinet_ct)
 plot_biMAP(cabic,
            meta_df = colData(sce),
            color_by = "cabinet_ct",
-           label_marker_genes = markers)
+           label_marker_genes = markers,
+           color_genes = FALSE)
 ```
-The only remaining unnanotated cluster is bicluster 8. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub-cell type or a group of outliers/doublets.
+The only remaining unnanotated cluster is bicluster 2. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub-cell type or a group of outliers/doublets.
 We can also see the similar cell types Endothelial and Mural have been clustered in a single cluster (labelled Endothelial).
 
 Using a feature biMAP to visualize the expression of the two Marker genes Acta2 (Mural) and Cldn5 (Endothelial) we can confirm that this cluster could be further subdivided by the location of the marker genes.
 
 ```{r biMAP_feature}
 p1 <- plot_feature_biMAP(sce = sce,
-                   caclust = cabic,
-                   feature = 'Acta2',
-                   label_size = 4)
+                         caclust = cabic,
+                         feature = 'Acta2',
+                         label_size = 4)
 
 p2 <- plot_feature_biMAP(sce = sce,
-                   caclust = cabic,
-                   feature = 'Cldn5',
-                   label_size = 4)
+                         caclust = cabic,
+                         feature = 'Cldn5',
+                         label_size = 4)
 
 p1
 p2
