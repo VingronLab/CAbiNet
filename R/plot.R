@@ -258,6 +258,7 @@ biMAP_plotter <- function(caclust,
   if(label_groups){
 
     label_coords <- umap_coords %>%
+      dplyr::filter(umap_coords$type == "cell") %>%
       dplyr::group_by_at(color_by) %>%
       dplyr::summarize(fraction_of_group = dplyr::n(),
                        median_x = stats::median(x = x),

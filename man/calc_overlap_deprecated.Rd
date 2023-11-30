@@ -2,10 +2,15 @@
 % Please edit documentation in R/RcppExports.R
 \name{calc_overlap_deprecated}
 \alias{calc_overlap_deprecated}
-\title{WIP replacement for `determine_overlap` function}
+\title{Deprecated, slower old version of calc_overlap. Only included for testing.}
 \usage{
 calc_overlap_deprecated(cc_adj, cg_adj)
 }
+\arguments{
+\item{cc_adj}{the cell-cell graph adjacency matrix.}
+
+\item{cg_adj}{The cell-gene graph adjacency matrix.}
+}
 \description{
-WIP replacement for `determine_overlap` function
+Deprecated, slower old version of calc_overlap. Only included for testing.
 }

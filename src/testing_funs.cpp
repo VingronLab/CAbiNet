@@ -6,8 +6,10 @@
 using namespace Rcpp;
 // [[Rcpp::depends(RcppEigen)]]
 
-//' WIP replacement for `determine_overlap` function
+//' Deprecated, slower old version of calc_overlap. Only included for testing.
 //' @name calc_overlap_deprecated
+//' @param cc_adj the cell-cell graph adjacency matrix.
+//' @param cg_adj The cell-gene graph adjacency matrix.
 //' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double> calc_overlap_deprecated(Eigen::SparseMatrix<int> cc_adj,

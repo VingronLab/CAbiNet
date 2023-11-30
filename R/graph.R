@@ -39,7 +39,6 @@
 #' graph and cell-gene/gene-cell graph.
 #'
 #' @export
-
 create_bigraph <- function(caobj,
                          k_c,
                          k_g,
