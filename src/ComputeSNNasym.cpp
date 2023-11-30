@@ -53,8 +53,8 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
 
             for (Eigen::SparseMatrix<int>::InnerIterator it(sym, i); it; ++it){
 
-                int ki = it.row();
-                int kj = it.col();
+                // int ki = it.row();
+                // int kj = it.col();
 
                 // if (SNN(ki, kj) + SNN(kj,ji) >0){
                 it.valueRef() = 1;
