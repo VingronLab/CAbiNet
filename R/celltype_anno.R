@@ -1,3 +1,4 @@
+# TODO: Add a plotting function for goa results.
 
 #' Load the required gene set.
 #' @description

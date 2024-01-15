@@ -11,6 +11,7 @@ An object of class \code{spec_tbl_df} (inherits from \code{tbl_df}, \code{tbl}, 
 cellmarker_v2
 }
 \description{
-CellMarker V2
+All CellMarker V2 obtained from: http://bio-bigdata.hrbmu.edu.cn/CellMarker/CellMarker_download_files/file/Cell_marker_All.xlsx
+Unprocessed data.
 }
 \keyword{datasets}
