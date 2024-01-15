@@ -541,3 +541,62 @@ setMethod(f = "annotate_cabinet",
     return(obj)
 })
 
+#' turns string of a ratio in a number.
+#' @description 
+#' Adapted from DOSE::parse_ratio.
+#'
+#' @param ratio a string of the form "1/2"
+#'
+#' @returns
+#' The numeric value the string represented.
+parse_ratio <- function(ratio) {
+
+    ratio <- sub("^\\s*", "", as.character(ratio))
+    ratio <- sub("\\s*$", "", ratio)
+    numerator <- as.numeric(sub("/\\d+$", "", ratio))
+    denominator <- as.numeric(sub("^\\d+/", "", ratio))
+    return(numerator / denominator)
+}
+
+#' Plot gene overrepresentation analysis results.
+#'
+#' @description
+#' Plots the gene overrepresentation analysis results for each cluster.
+#'
+#' @param goa_res List of goa results for each cluster.
+#' @param nres Number of top gene sets to plot.
+#'
+#' @returns
+#' A ggplot2 object. Dotplot of the top `nres` gene sets per cluster.
+#' @export
+plot_goa_res <- function(goa_res,
+                         nres = 3) {
+
+    goa_res <- lapply(goa_res, function(x, nc = nres) {
+        subs <- min(nrow(x), nres)
+        x[seq_len(subs), ]
+    })
+
+    goa_res <- dplyr::bind_rows(goa_res, .id = "cluster")
+    goa_res$GeneRatio <- parse_ratio(goa_res$GeneRatio)
+
+    goa_res$gene_set <- factor(goa_res$gene_set,
+                               levels = unique(goa_res$gene_set))
+
+    p <- ggplot2::ggplot(goa_res, ggplot2::aes(
+        x = cluster,
+        y = gene_set,
+        size = GeneRatio,
+        color = padj
+    )) +
+    ggplot2::geom_point() +
+    viridis::scale_color_viridis(direction = -1) +
+    ggplot2::labs(
+        title = paste0("Top ", nres, " gene sets per cluster"),
+        x = "Cluster",
+        y = "Gene Set"
+    ) +
+    ggplot2::theme_bw()
+
+    return(p)
+}
