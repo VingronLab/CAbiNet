@@ -430,6 +430,7 @@ setMethod(f = "rm_monoclusters",
 
 #' Get caclust object from SingleCellExperiment object.
 #' @param obj SingleCellExperiment object
+#' @param ... further arguments
 #' @return caclust object
 #' @export
 setGeneric("get_caclust", function(obj,

@@ -440,7 +440,8 @@ run_annotate_cabinet <- function(cabic,
                                max_size = max_size)
 
     cabic <- annotate_by_goa(cabic = cabic,
-                             goa_res = goa_res)
+                             goa_res = goa_res,
+                             alpha = alpha)
 
     return(cabic)
 }

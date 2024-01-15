@@ -15,6 +15,8 @@ get_caclust(obj, ...)
 \arguments{
 \item{obj}{SingleCellExperiment object}
 
+\item{...}{further arguments}
+
 \item{caclust_meta_name}{Name under which the caclust object is stored in the metadata of the SingleCellExperiment object.}
 }
 \value{
