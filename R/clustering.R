@@ -519,15 +519,18 @@ run_caclust <- function(caobj,
 #' SingleCellExperiment with caclust object stored.
 #' @export
 #'
-add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
-  cell.clust <- cell_clusters(caclust)
-  gene.clust <- gene_clusters(caclust)
-  idx <- rownames(sce) %in% gene.clust
-  matched_genes <- match(rownames(sce)[idx], names(gene.clust))
+add_caclust_sce <- function(sce,
+                            caclust,
+                            caclust_meta_name = "caclust") {
 
-  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell.clust
-  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
-  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
+  cell_clust <- cell_clusters(caclust)
+  gene_clust <- gene_clusters(caclust)
+  idx <- rownames(sce) %in% gene_clust
+  matched_genes <- match(rownames(sce)[idx], names(gene_clust))
+
+  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell_clust
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- "not_in_caclust"
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene_clust[matched_genes]
 
   S4Vectors::metadata(sce)[[caclust_meta_name]] <- caclust
 

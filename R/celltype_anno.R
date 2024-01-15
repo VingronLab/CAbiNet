@@ -12,7 +12,7 @@ load_gene_set <- function(set = "CellMarker",
     stopifnot(org %in% c("mm", "hs"))
 
     if (set == "CellMarker") {
-        
+
         gs <- CAbiNet::cellmarker_v2
 
         if (org == "mm") gs <- gs[gs$species == "Mouse", ]
@@ -221,6 +221,8 @@ per_cluster_goa <- function(cabic,
                             min_size = 10,
                             max_size = 500) {
 
+    stopifnot(is(cabic, "caclust"))
+
     # Ensure that we deal only with clusters consisting of cells and genes.
     cabic <- rm_monoclusters(cabic)
 
@@ -333,7 +335,7 @@ annotate_by_goa <- function(cabic,
 
     cost_mat[is.na(cost_mat)] <- 1
     colnames(cost_mat) <- gsub("padj.", "", colnames(cost_mat), fixed = TRUE)
- 
+
     clusters <- as.character(cost_mat$cluster)
     cell_types <- colnames(cost_mat[, 2:ncol(cost_mat)])
 
@@ -396,7 +398,10 @@ annotate_by_goa <- function(cabic,
     # update results
     cabic@cell_clusters <- as.factor(ccs)
     cabic@gene_clusters <- as.factor(gcs)
-    cabic@bimap$cluster <- as.factor(bimap)
+
+    if (!is.empty(cabic@bimap)) {
+        cabic@bimap$cluster <- as.factor(bimap)
+    }
 
     stopifnot(validObject(cabic))
     return(cabic)
@@ -417,14 +422,15 @@ annotate_by_goa <- function(cabic,
 #' @returns
 #' An object of type `caclust` with annotated biclusters.
 #'
-#' @export
-annotate_cabinet <- function(cabic,
-                             universe,
-                             org,
-                             set = "CellMarker",
-                             alpha = 0.05,
-                             min_size = 10,
-                             max_size = 500) {
+run_annotate_cabinet <- function(cabic,
+                                 universe,
+                                 org,
+                                 set = "CellMarker",
+                                 alpha = 0.05,
+                                 min_size = 10,
+                                 max_size = 500) {
+
+    stopifnot(is(cabic, "caclust"))
 
     goa_res <- per_cluster_goa(cabic = cabic,
                                universe = universe,
@@ -438,3 +444,98 @@ annotate_cabinet <- function(cabic,
 
     return(cabic)
 }
+
+#' Perform gene overrepresentation analysis and annotate biclusters.
+#'
+#' @description
+#' Wrapper function for `per_cluster_goa` and `annotate_by_goa`.
+#'
+#' @param obj Either a `caclust` or `SingleCellExperiment` object.
+#' @param ... Further arguments.
+#' @inheritParams run_annotate_cabinet
+#'
+#' @details
+#' `annotate_cabinet` performs per cluster GOA with a hypergeometric
+#'  and annotates the biclustering results from CAbiNet.
+#'
+#' @returns
+#' An object of type `caclust` with annotated biclusters.
+#'
+#' @export
+setGeneric("annotate_cabinet", function(obj,
+                                        universe,
+                                        org,
+                                        set = "CellMarker",
+                                        alpha = 0.05,
+                                        min_size = 10,
+                                        max_size = 500,
+                                        ...) {
+    standardGeneric("annotate_cabinet")
+})
+
+
+#' @rdname annotate_cabinet
+#' @export
+setMethod(f = "annotate_cabinet",
+          signature = (obj = "caclust"),
+          function(obj,
+                   universe,
+                   org,
+                   set = "CellMarker",
+                   alpha = 0.05,
+                   min_size = 10,
+                   max_size = 500,
+                   ...) {
+
+    obj <- run_annotate_cabinet(cabic = obj,
+                            universe = universe,
+                            org = org,
+                            set = set,
+                            alpha = alpha,
+                            min_size = min_size,
+                            max_size = max_size)
+    return(obj)
+})
+
+#' @rdname annotate_cabinet
+#'
+#' @param caclust_meta_name Name under which the caclust object is stored in
+#' the metadata of the SingleCellExperiment object.
+#' @export
+setMethod(f = "annotate_cabinet",
+          signature = (obj = "SingleCellExperiment"),
+          function(obj,
+                   universe,
+                   org,
+                   set = "CellMarker",
+                   alpha = 0.05,
+                   min_size = 10,
+                   max_size = 500,
+                   ...,
+                   caclust_meta_name = "caclust") {
+
+    if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))) {
+      stop(
+        paste("The caclust object with name",
+              caclust_meta_name,
+              "is not found in metadata(sce),",
+              "please try a different 'caclust_meta_name'."))
+    }
+
+    caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
+
+    caclust <- run_annotate_cabinet(cabic = caclust,
+                                    universe = universe,
+                                    org = org,
+                                    set = set,
+                                    alpha = alpha,
+                                    min_size = min_size,
+                                    max_size = max_size)
+
+    obj <- add_caclust_sce(sce = obj,
+                           caclust = caclust,
+                           caclust_meta_name = caclust_meta_name)
+
+    return(obj)
+})
+
