@@ -140,7 +140,7 @@ plotReducedDim(sce, dimred="UMAP", colour_by="level1class")
 
 The dimensionality reduction in CAbiNet is performed with Correspondence Analysis (CA) by the package `r BiocStyle::Biocpkg('APL')`. The most important parameters in the dimensionality reduction step are the number of dimensions (`dims`) you want to keep (similar with the number of principal components in PCA) and the number of genes (`top`) with the highest inertia you want to keep. `top` is set to 5000 by default, in which case the top 5000 genes with highest inertia will be selected before performing CA. If you already picked the most highly variable genes in advance (as we did above), you can keep all genes in the count matrix which will be handed to the function.
 
-The number of genes kept should no be set too low, as otherwise important marker genes are often removed from the data.
+The number of genes kept should not be set too low, as otherwise important marker genes are often removed from the data.
 
 ```{r CA_dimRed}
 # Correspondence Analysis
@@ -203,10 +203,11 @@ cabic <- caclust(obj = caobj,
                  mode = "all",
                  overlap = 0.2,
                  algorithm = 'leiden',
+                 leiden_pack = 'igraph',
                  resolution = 1,
                  marker_genes = markers)
 ```
-After building the  cell-gene graph, the biclustering is performed with either the Leiden algorithm (`algorithm = "leiden"`) or Spectral clustrering (`algorithm = "spectral"`).
+After building the  cell-gene graph, the biclustering is performed with either the Leiden algorithm (`algorithm = "leiden"`) or Spectral clustrering (`algorithm = "spectral"`). For the up-to-date version of our package, we call "leiden" function from either R package BiocStyle::Biocpkg('leiden') or BiocStyle::Biocpkg('igraph'). The BiocStyle::Biocpkg('igraph') implementation can be applied by set "leiden_pack = 'igraph'" (as default, see ?caclust). From our testing, the BiocStyle::Biocpkg('igraph') implementation runs faster than package BiocStyle::Biocpkg('leiden') with the similar accuracy. Therefore, we recommend to run  
 
 The resulting caclust object contains biclustering results and the SNN graph:
 ```{r print_cabic}
@@ -309,6 +310,7 @@ plot_biMAP(cabic,
            label_marker_genes = markers,
            color_genes = FALSE)
 ```
+
 The only remaining unnanotated cluster is bicluster 2. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub-cell type or a group of outliers/doublets.
 We can also see the similar cell types Endothelial and Mural have been clustered in a single cluster (labelled Endothelial).
 
