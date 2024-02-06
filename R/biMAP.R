@@ -52,8 +52,8 @@ run_biMAP <- function(obj,
     reticulate::source_python(system.file("python/umap.py", package = "CAbiNet"), envir = globalenv())
 
     umap_coords <- python_umap(dm = SNNdist,
-                                metric = "precomputed",
-                                n_neighbors = as.integer(k),
+                               metric = "precomputed",
+                               n_neighbors = as.integer(k),
                                seed = rand_seed)
 
     umap_coords <- as.data.frame(umap_coords)
