@@ -288,8 +288,8 @@ make_SNN <- function(caobj,
                         select_genes = select_genes,
                         calc_gene_cell_kNN = calc_gene_cell_kNN,
                         marker_genes = marker_genes,
-                        method = BiocNeighbors::KmknnParam(),
-                        BPPARAM = BiocParallel::SerialParam())
+                        method = method,
+                        BPPARAM = BPPARAM)
 
 
   if(!is(adj, "dgCMatrix")){
