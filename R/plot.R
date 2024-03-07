@@ -716,9 +716,9 @@ setMethod(f = "plot_scatter_biMAP",
                    subset = FALSE){
 
             if(isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))){
-              stop(paste('The aclust object with name',
+              stop(paste('The caclust object with name',
                          caclust_meta_name,
-                         'is not found in metadata(sce), please try a different "biMAP_meta_name".'))
+                         'is not found in metadata(sce), please try a different "caclust_meta_name".'))
             }
 
             caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
