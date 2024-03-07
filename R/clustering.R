@@ -474,7 +474,9 @@ run_caclust <- function(caobj,
                       prune_overlap = prune_overlap,
                       overlap = overlap,
                       calc_gene_cell_kNN = calc_gene_cell_kNN,
-                      marker_genes = marker_genes)
+                      marker_genes = marker_genes,
+		      method = method,
+		      BPPARAM = BPPARAM)
 
   if (algorithm == "leiden"){
 
