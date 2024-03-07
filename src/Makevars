@@ -7,4 +7,4 @@
 #CXX_STD = CXX11
 
 # for kNN graph parallelization, depends on the machine you are using, for a 64bit machine:
-# PKG_CPPFLAGS = -DARMA_64BIT_WORD=1
+PKG_CPPFLAGS = -DARMA_64BIT_WORD=1
