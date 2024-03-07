@@ -308,11 +308,6 @@ convert_to_biclust <- function(caclust){
 }
 
 
-#' Helper function to check if object is empty.
-#' @param x object
-#' @return TRUE if x has length 0 and is not NULL. FALSE otherwise
-is.empty <- function(x) return(isTRUE(length(x) == 0 & !is.null(x)))
-
 #' Remove clusters only consisting of cells/genes
 #' 
 #' @description 
@@ -432,3 +427,41 @@ setMethod(f = "rm_monoclusters",
             return(obj)      
             
           })
+
+#' Get caclust object from SingleCellExperiment object.
+#' @param obj SingleCellExperiment object
+#' @param ... further arguments
+#' @return caclust object
+#' @export
+setGeneric("get_caclust", function(obj,
+                                   ...) {
+  standardGeneric("get_caclust")
+})
+
+#' @rdname get_caclust
+#' @export
+setMethod(f = "get_caclust",
+        signature = (obj = "caclust"),
+        function(obj,
+                 ...) {
+
+    return(obj)
+
+})
+
+#' @rdname get_caclust
+#' @param caclust_meta_name Name under which the caclust object is stored in the metadata of the SingleCellExperiment object.
+#' @export
+setMethod(f = "get_caclust",
+          signature = (obj = "SingleCellExperiment"),
+          function(obj,
+                   ...,
+                   caclust_meta_name = "caclust") {
+ 
+    if (isFALSE(caclust_meta_name %in% names(S4Vectors::metadata(obj)))) {
+      stop("caclust not found from input SingleCellExperiment object metadata, run caclust function first!")
+    }
+
+    return(S4Vectors::metadata(obj)[[caclust_meta_name]])
+
+})
