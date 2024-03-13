@@ -117,13 +117,18 @@ ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
   Eigen::VectorXi k_i(SNN.rows());
   Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> res_dense;
 
+  // Only outgoing edges considered
   if (mode == "out") {
     k_i = SNN * Eigen::VectorXi::Ones(SNN.cols());
     res_dense = SNN * (SNN.transpose());
+
+  // Only ingoing edges considered
   } else if (mode == "in") {
 
     k_i = SNN.transpose() * Eigen::VectorXi::Ones(SNN.rows());
     res_dense = SNN.transpose() * SNN;
+
+  // In- and outgoing edges considered
   } else if (mode == "all") {
 
     Eigen::SparseMatrix<int> sym(SNN.rows(), SNN.cols());
