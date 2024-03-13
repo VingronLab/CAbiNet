@@ -297,10 +297,10 @@ make_SNN <- function(caobj,
   }
 
 
-  snn.matrix <- ComputeSNNasym(adj, prune = SNN_prune, mode = mode)
-  ## use memory mapping instead of copying
+  snn.matrix <- ComputeSNNasym(adj = adj, prune = SNN_prune, mode = mode)
+  # use memory mapping instead of copying
 
-  # ## to coincide with output of "igraph"
+  # to coincide with output of "igraph"
   Matrix::diag(snn.matrix) = 1
 
   rownames(snn.matrix) <- rownames(adj)
@@ -314,4 +314,28 @@ make_SNN <- function(caobj,
                  cell_idxs = cidxs,
                  gene_idxs = gidxs)
   return(caclust)
+}
+
+# TODO: Add documentation
+ComputeSNNasym <- function(adj,
+                           mode = "all",
+                           prune = 1/15,
+                           return_dense = FALSE) {
+  
+  adj_size <- dim(adj)
+  is_large <- any(adj_size >= 80000)
+
+  if (isTRUE(is_large) || isTRUE(return_dense)) {
+
+    snn <- ComputeSNNasym_dense(SNN = adj,
+                                prune = prune,
+                                mode = mode)
+  } else {
+
+    snn <- ComputeSNNasym_sparse(SNN = adj,
+                                prune = prune,
+                                mode = mode)
+  }
+
+  return(snn)
 }
