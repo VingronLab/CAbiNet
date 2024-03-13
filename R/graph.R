@@ -292,7 +292,7 @@ make_SNN <- function(caobj,
                         BPPARAM = BPPARAM)
 
 
-  if(!is(adj, "dgCMatrix")){
+  if(!inherits(adj, "dgCMatrix")){
     adj <- as(adj, "dgCMatrix")
   }
 
@@ -335,7 +335,8 @@ ComputeSNNasym <- function(adj,
                            mode = "all",
                            prune = 1 / 15,
                            return_dense = FALSE) {
-    stopifnot(is("dgCMatrix", adj))
+
+    stopifnot(inherits(adj, "dgCMatrix"))
     adj_size <- dim(adj)
     is_large <- any(adj_size >= 80000)
 

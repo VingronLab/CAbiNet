@@ -24,9 +24,11 @@ using namespace Rcpp;
 // vertices by both in-coming and out-going edges. ' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double>
-ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
-                      double prune,
+ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
                       String mode) {
+
+  Rcpp::Rcout << "Using Triplets" << std::endl;
+
   // row Sums (of edges)
   Eigen::VectorXi k_i(SNN.rows());
   // Contains the edges two nodes have in common
@@ -122,10 +124,10 @@ ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
 // vertices by both in-coming and out-going edges. ' @export
 // [[Rcpp::export]]
 Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>
-ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
-                     float prune,
+ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN, float prune,
                      String mode) {
 
+  Rcpp::Rcout << "Using dense matrix" << std::endl;
   // row Sums (of edges)
   Eigen::VectorXi k_i(SNN.rows());
   // Contains the edges two nodes have in common
