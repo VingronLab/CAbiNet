@@ -11,16 +11,29 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// ComputeSNNasym
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune, String mode);
-RcppExport SEXP _CAbiNet_ComputeSNNasym(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
+// ComputeSNNasym_sparse
+Eigen::SparseMatrix<double> ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune, String mode);
+RcppExport SEXP _CAbiNet_ComputeSNNasym_sparse(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<int>> >::type SNN(SNNSEXP);
     Rcpp::traits::input_parameter< double >::type prune(pruneSEXP);
     Rcpp::traits::input_parameter< String >::type mode(modeSEXP);
-    rcpp_result_gen = Rcpp::wrap(ComputeSNNasym(SNN, prune, mode));
+    rcpp_result_gen = Rcpp::wrap(ComputeSNNasym_sparse(SNN, prune, mode));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ComputeSNNasym_dense
+Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN, float prune, String mode);
+RcppExport SEXP _CAbiNet_ComputeSNNasym_dense(SEXP SNNSEXP, SEXP pruneSEXP, SEXP modeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<int>> >::type SNN(SNNSEXP);
+    Rcpp::traits::input_parameter< float >::type prune(pruneSEXP);
+    Rcpp::traits::input_parameter< String >::type mode(modeSEXP);
+    rcpp_result_gen = Rcpp::wrap(ComputeSNNasym_dense(SNN, prune, mode));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -51,7 +64,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_CAbiNet_ComputeSNNasym", (DL_FUNC) &_CAbiNet_ComputeSNNasym, 3},
+    {"_CAbiNet_ComputeSNNasym_sparse", (DL_FUNC) &_CAbiNet_ComputeSNNasym_sparse, 3},
+    {"_CAbiNet_ComputeSNNasym_dense", (DL_FUNC) &_CAbiNet_ComputeSNNasym_dense, 3},
     {"_CAbiNet_calc_overlap", (DL_FUNC) &_CAbiNet_calc_overlap, 3},
     {"_CAbiNet_calc_overlap_deprecated", (DL_FUNC) &_CAbiNet_calc_overlap_deprecated, 2},
     {NULL, NULL, 0}

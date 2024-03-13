@@ -316,12 +316,27 @@ make_SNN <- function(caobj,
   return(caclust)
 }
 
-# TODO: Add documentation
+
+#' Calculate SNN graph from an adjacency matrix.
+#' @description
+#' This function decides based on the size of the adjacency matrix
+#'  whether to use a dense or sparse matrix for the results and calculates the
+#' SNN similarity between nodes.
+#' @param adj A sparse adjacency matrix of type "dgCMatrix".
+#' @param mode Whethter to use only incoming edges ("in"),
+#' outgoing edges ("out") or both ("all").
+#' @param prune Cutoff between 0 and 1. Nodes that have a Jaccard similarity
+#'  between them less than `prune` will be set to 0.
+#' @param return_dense Whether to return a dense matrix or not. Overrides the
+#'  automatic decision if set to TRUE.
+#' @return Either a sparse matrix or a dense matrix representing
+#'  the SNN similarity.
 ComputeSNNasym <- function(adj,
                            mode = "all",
                            prune = 1/15,
                            return_dense = FALSE) {
   
+  stopifnot(is("dgCMatrix", adj))
   adj_size <- dim(adj)
   is_large <- any(adj_size >= 80000)
 
