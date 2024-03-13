@@ -333,24 +333,25 @@ make_SNN <- function(caobj,
 #'  the SNN similarity.
 ComputeSNNasym <- function(adj,
                            mode = "all",
-                           prune = 1/15,
+                           prune = 1 / 15,
                            return_dense = FALSE) {
-  
-  stopifnot(is("dgCMatrix", adj))
-  adj_size <- dim(adj)
-  is_large <- any(adj_size >= 80000)
+    stopifnot(is("dgCMatrix", adj))
+    adj_size <- dim(adj)
+    is_large <- any(adj_size >= 80000)
 
-  if (isTRUE(is_large) || isTRUE(return_dense)) {
+    if (isTRUE(is_large) || isTRUE(return_dense)) {
+        snn <- ComputeSNNasym_dense(
+            SNN = adj,
+            prune = prune,
+            mode = mode
+        )
+    } else {
+        snn <- ComputeSNNasym_sparse(
+            SNN = adj,
+            prune = prune,
+            mode = mode
+        )
+    }
 
-    snn <- ComputeSNNasym_dense(SNN = adj,
-                                prune = prune,
-                                mode = mode)
-  } else {
-
-    snn <- ComputeSNNasym_sparse(SNN = adj,
-                                prune = prune,
-                                mode = mode)
-  }
-
-  return(snn)
+    return(snn)
 }
