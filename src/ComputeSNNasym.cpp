@@ -73,6 +73,7 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
     double overlapping;
     double a;
     double b;
+    int idx;
 
     for (int i = 0; i < res_dense.cols(); ++i){  //number of columns ?
 
@@ -90,11 +91,13 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
                 trp.push_back(Trip(j,
                                i,
                                overlapping));;
+		idx++;
             }
         }
     }
 
     Eigen::SparseMatrix<double> res(res_dense.rows(), res_dense.cols());
+    res.reserve(idx);
     res.setFromTriplets(trp.begin(), trp.end());
 
     return res;
