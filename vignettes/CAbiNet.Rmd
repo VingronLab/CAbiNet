@@ -207,7 +207,7 @@ cabic <- caclust(obj = caobj,
                  resolution = 1,
                  marker_genes = markers)
 ```
-After building the  cell-gene graph, the biclustering is performed with either the Leiden algorithm (`algorithm = "leiden"`) or Spectral clustrering (`algorithm = "spectral"`). For the up-to-date version of our package, we call "leiden" function from either R package BiocStyle::Biocpkg('leiden') or BiocStyle::Biocpkg('igraph'). The BiocStyle::Biocpkg('igraph') implementation can be applied by set "leiden_pack = 'igraph'" (as default, see ?caclust). From our testing, the BiocStyle::Biocpkg('igraph') implementation runs faster than package BiocStyle::Biocpkg('leiden') with the similar accuracy. Therefore, we recommend to run  
+After building the  cell-gene graph, the biclustering is performed with either the Leiden algorithm (`algorithm = "leiden"`) or Spectral clustrering (`algorithm = "spectral"`). For the up-to-date version of the package, we call the "leiden" function from either the R package `r BiocStyle::Rpackage('leiden')` or `r BiocStyle::Rpackage('igraph')`. The `r BiocStyle::Rpackage('igraph')` implementation can be applied by set "leiden_pack = 'igraph'" (as default, see ?caclust). From our testing, the `r BiocStyle::Rpackage('igraph')` implementation runs faster than package `r BiocStyle::Rpackage('leiden')` with similar accuracy. Therefore, we recommend to set `leiden_pack = "igraph"`.
 
 The resulting caclust object contains biclustering results and the SNN graph:
 ```{r print_cabic}

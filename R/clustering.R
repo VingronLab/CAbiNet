@@ -324,7 +324,8 @@ run_spectral <- function(caclust,
 #' @param resolution float number. Resolution for leiden algorithm.
 #' @param n.int Integer. Number of iterations for leiden algorithm.
 #' @param rand_seed integer. Random seed.
-#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense Casting sparse SNN adjacency matrix to dense speeds up the leiden algorithm. It is valid when leiden_pack='leiden'.
+#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense matrix.
+#' Casting the sparse SNN adjacency matrix to a dense matrix speeds up the leiden algorithm. It is only used when leiden_pack='leiden'.
 #' @param leiden_pack character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
 #' @param cast_to_dense logical. Casting sparse SNN adjacency matrix to dense speeds up the leiden algorithm.
 #'
