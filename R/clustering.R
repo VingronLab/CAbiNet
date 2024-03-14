@@ -372,8 +372,7 @@ run_leiden <- function(caclust,
 
     SNN <- caclust@SNN
 
-    g = igraph::graph_from_adjacency_matrix(
-                                            SNN,
+    g = igraph::graph_from_adjacency_matrix(SNN,
                                             mode = "undirected",
                                             weighted = TRUE,
                                             diag = TRUE,
@@ -384,7 +383,7 @@ run_leiden <- function(caclust,
                                       n_iterations = n.int,
                                       objective_function = 'modularity',
                                       weights = igraph::E(g)$weight,
-                                      resolution_parameter =resolution)
+                                      resolution_parameter = resolution)
 
     clusters = unlist(igraph::membership(clusters))
   }else{

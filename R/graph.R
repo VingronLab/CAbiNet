@@ -218,7 +218,7 @@ create_bigraph <- function(caobj,
 
 }
 
-
+# TODO: Fix documentation
 #' Create SNN-graph from caobj
 #'
 #' @family biclustering
@@ -346,6 +346,10 @@ ComputeSNNasym <- function(adj,
             prune = prune,
             mode = mode
         )
+
+        # This might cause memory issues.
+        snn <- as(snn, "denseMatrix")
+
     } else {
         snn <- ComputeSNNasym_sparse(
             SNN = adj,

@@ -93,7 +93,7 @@ setClass("caclust",
          representation(
            cell_clusters = "factor",
            gene_clusters = "factor",
-           SNN = "dgCMatrix",
+           SNN = "Matrix",
            eigen = 'matrix',
            parameters = "list",
            cell_prob = "matrix",
