@@ -1,9 +1,8 @@
 
+#include <Eigen/Dense>
 #include <RcppEigen.h>
 #include <string>
-#include <Eigen/Dense>
 using namespace Rcpp;
-
 
 // [[Rcpp::depends(RcppEigen)]]
 
@@ -17,90 +16,95 @@ using namespace Rcpp;
 // ' @param SNN A sparse matrix (adjacency matrix)
 // ' @param prune numeric. Below which Jaccard similarity edges should be
 // ' removed.
-// ' @param  mode The type of neighboring vertices to use for calculating similarity
-// '  scores(Jaccard Index). Three options: "out", "in" and "all":
-// ' * "out": Select neighbouring vertices by out-going edges;
-// ' * "in": Selecting neighbouring vertices by in-coming edges;
-// ' * "all": Selecting neigbouring vertices by both in-coming and out-going edges.
-// ' @export
+// ' @param  mode The type of neighboring vertices to use for calculating
+// similarity '  scores(Jaccard Index). Three options: "out", "in" and "all": '
+// * "out": Select neighbouring vertices by out-going edges; ' * "in": Selecting
+// neighbouring vertices by in-coming edges; ' * "all": Selecting neigbouring
+// vertices by both in-coming and out-going edges. ' @export
 // [[Rcpp::export]]
-Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
-                                           double prune,
-                                           String mode) {
-    Eigen::VectorXi k_i(SNN.rows());
-    Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>  res_dense;
-    // Rcpp::Rcout << "initialization is done..." << std::endl;
+Eigen::SparseMatrix<double>
+ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
+               String mode) {
+  // row Sums (of edges)
+  Eigen::VectorXi k_i(SNN.rows());
+  // Contains the edges two nodes have in common
+  // in absolute numbers
+  Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> res_dense;
 
-    if (mode == "out"){
-        k_i = SNN * Eigen::VectorXi::Ones(SNN.cols());
-        // Rcpp::Rcout << "k_i done..." << std::endl;
-        res_dense = SNN * (SNN.transpose());
-        // Rcpp::Rcout << "transpose done..." << std::endl;
-    }
-    else if (mode == "in"){
+  // Only outgoing edges considered
+  if (mode == "out") {
+    k_i = SNN * Eigen::VectorXi::Ones(SNN.cols());
+    res_dense = SNN * (SNN.transpose());
 
-        k_i = SNN.transpose() * Eigen::VectorXi::Ones(SNN.rows());
-        res_dense =  SNN.transpose() * SNN;
-    }else if (mode == "all"){
+    // Only ingoing edges considered
+  } else if (mode == "in") {
 
-        Eigen::SparseMatrix<int> sym(SNN.rows(), SNN.cols());
+    k_i = SNN.transpose() * Eigen::VectorXi::Ones(SNN.rows());
+    res_dense = SNN.transpose() * SNN;
 
-        Eigen::SparseMatrix<int> transposed = SNN.transpose();
-        // it is proved that initializing this transposed matrix here is better than initializing it earlier.
-        sym = SNN + transposed;
+    // In- and outgoing edges considered
+  } else if (mode == "all") {
 
-        for (int i=0; i < sym.outerSize(); ++i){
+    // Sums up in- and outgoing edges
+    Eigen::SparseMatrix<int> sym(SNN.rows(), SNN.cols());
 
-            for (Eigen::SparseMatrix<int>::InnerIterator it(sym, i); it; ++it){
+    // it is proven that initializing this transposed matrix here is better than
+    // initializing it earlier.
+    Eigen::SparseMatrix<int> transposed = SNN.transpose();
+    sym = SNN + transposed;
 
-                // int ki = it.row();
-                // int kj = it.col();
+    for (int i = 0; i < sym.outerSize(); ++i) {
 
-                // if (SNN(ki, kj) + SNN(kj,ji) >0){
-                it.valueRef() = 1;
-                // }
-            }
-        }
+      for (Eigen::SparseMatrix<int>::InnerIterator it(sym, i); it; ++it) {
 
-
-        res_dense = sym * (sym.transpose()); // the product of two matrices might not be sparse anymore. Storing the results into a sparse matrix might raise up bad_alloc error
-        k_i = sym * Eigen::VectorXi::Ones(sym.cols());
-        // Rcpp::Rcout << "product done ..." << std::endl;
+        it.valueRef() = 1;
+      }
     }
 
-    typedef Eigen::Triplet<double> Trip;
-    std::vector<Trip> trp;
-    double overlapping;
-    double a;
-    double b;
-    int idx;
+    // the product of two matrices might not be
+    // sparse anymore. Storing the results into a
+    // sparse matrix might raise up bad_alloc error
+    res_dense = sym * (sym.transpose());
 
-    for (int i = 0; i < res_dense.cols(); ++i){  //number of columns ?
+    k_i = sym * Eigen::VectorXi::Ones(sym.cols());
+  }
 
-        for (int j = 0; j < res_dense.rows(); ++j){  // Iterate over rows
+  // Number of non-zero elements in each column.
+  std::vector<int> nzs(res_dense.cols());
 
-            a = k_i(j);
-            b = k_i(i);
+  typedef Eigen::Triplet<double> Trip;
+  std::vector<Trip> trp;
+  double overlapping;
+  double a;
+  double b;
 
-            if ((a + (b - res_dense(j, i))) != 0 ){
-                overlapping = res_dense(j, i)/(a + (b - res_dense(j, i)));
-            }else{
-                overlapping = 0;
-            }
-            if(overlapping >= prune){
-                trp.push_back(Trip(j,
-                               i,
-                               overlapping));;
-		idx++;
-            }
-        }
+  for (int i = 0; i < res_dense.cols(); ++i) { // number of columns ?
+
+    int cnt = 0;
+    for (int j = 0; j < res_dense.rows(); ++j) { // Iterate over rows
+
+      a = k_i(j);
+      b = k_i(i);
+
+      if ((a + (b - res_dense(j, i))) != 0) {
+        overlapping = res_dense(j, i) / (a + (b - res_dense(j, i)));
+      } else {
+        overlapping = 0;
+      }
+      if (overlapping >= prune) {
+        trp.push_back(Trip(j, i, overlapping));
+        cnt++;
+      }
     }
 
-    Eigen::SparseMatrix<double> res(res_dense.rows(), res_dense.cols());
-    res.reserve(idx);
-    res.setFromTriplets(trp.begin(), trp.end());
+    nzs[i] = cnt;
+  }
 
-    return res;
+  Eigen::SparseMatrix<double> res(res_dense.rows(), res_dense.cols());
+  res.reserve(nzs);
+  res.setFromTriplets(trp.begin(), trp.end());
+
+  return res;
 }
 
 // Eigen::SparseMatrix<double> ComputeSNNasym_idx(Eigen::MatrixXd<int> cc_idx,
@@ -124,11 +128,13 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
 //     gc_idx_dim = gc_idx.rows() * gc_idx.cols();
 //   }
 //
-//   tripletList.reserve( cc_idx.rows()*cc_idx.cols() + cg_idx.rows()*cg_idx.cols() + gg_idx.rows()*gg_idx.cols() + gc_idx_dim );
+//   tripletList.reserve( cc_idx.rows()*cc_idx.cols() +
+//   cg_idx.rows()*cg_idx.cols() + gg_idx.rows()*gg_idx.cols() + gc_idx_dim );
 //
-//   // write cc-knn graph into triplets, the SNN graph are composed of four sub-subgraphs
-//   // with the subgraphs in the order of cc-knn, cg-knn, gc-knn, gg-knn from left to right, from up to down
-//   for (int j=0; j< cc_idx.cols(); ++j){
+//   // write cc-knn graph into triplets, the SNN graph are composed of four
+//   sub-subgraphs
+//   // with the subgraphs in the order of cc-knn, cg-knn, gc-knn, gg-knn from
+//   left to right, from up to down for (int j=0; j< cc_idx.cols(); ++j){
 //     for(int i=0; i< cc_idx.rows(); ++i) {
 //       tripletList.push_back(T(i, cc_idx(i, j) - 1, 1));
 //     }
@@ -193,7 +199,8 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
 //     }
 //
 //   for (int i=0; i < SNN.outerSize(); ++i){  //number of columns ?
-//     for (Eigen::SparseMatrix<double>::InnerIterator it(SNN, i); it; ++it){  // Iterate over rows
+//     for (Eigen::SparseMatrix<double>::InnerIterator it(SNN, i); it; ++it){ //
+//     Iterate over rows
 //
 //       int ki = it.row();
 //       int kj = it.col();
@@ -214,8 +221,8 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
 //   return SNN;
 // }
 
-
-// Eigen::SparseMatrix<double> ComputeSNNasym_copy(Eigen::SparseMatrix<double> SNN,
+// Eigen::SparseMatrix<double> ComputeSNNasym_copy(Eigen::SparseMatrix<double>
+// SNN,
 //                                            double prune,
 //                                            String mode) {
 //
@@ -248,7 +255,8 @@ Eigen::SparseMatrix<double> ComputeSNNasym(Eigen::Map<Eigen::SparseMatrix<int>> 
 //     // std::cout << "all" << std::endl
 //     }
 //   for (int i=0; i < SNN.outerSize(); ++i){  //number of columns ?
-//     for (Eigen::SparseMatrix<double>::InnerIterator it(SNN, i); it; ++it){  // Iterate over rows
+//     for (Eigen::SparseMatrix<double>::InnerIterator it(SNN, i); it; ++it){ //
+//     Iterate over rows
 //
 //       int ki = it.row();
 //       int kj = it.col();
