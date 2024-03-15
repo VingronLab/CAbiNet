@@ -372,7 +372,7 @@ run_leiden <- function(caclust,
 
     SNN <- caclust@SNN
 
-    if (is(SNN, "dgeMatrix")) {
+    if (!is(SNN, "dgCMatrix")) {
       SNN <- as.matrix(SNN)
     }
 
