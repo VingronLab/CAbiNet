@@ -372,6 +372,10 @@ run_leiden <- function(caclust,
 
     SNN <- caclust@SNN
 
+    if (is(SNN, "dgeMatrix")) {
+      SNN <- as.matrix(SNN)
+    }
+
     g = igraph::graph_from_adjacency_matrix(SNN,
                                             mode = "undirected",
                                             weighted = TRUE,

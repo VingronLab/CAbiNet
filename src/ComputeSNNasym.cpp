@@ -24,7 +24,8 @@ using namespace Rcpp;
 // vertices by both in-coming and out-going edges. ' @export
 // [[Rcpp::export]]
 Eigen::SparseMatrix<double>
-ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
+ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
+                      double prune,
                       String mode) {
 
   Rcpp::Rcout << "Using Triplets" << std::endl;
@@ -73,6 +74,9 @@ ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
     k_i = sym * Eigen::VectorXi::Ones(sym.cols());
   }
 
+  // Number of non-zero elements
+  std::vector<int> nzs(res_dense.cols());
+
   typedef Eigen::Triplet<double> Trip;
   std::vector<Trip> trp;
   double overlapping;
@@ -82,6 +86,7 @@ ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
 
   for (int i = 0; i < res_dense.cols(); ++i) { // number of columns ?
 
+    int cnt = 0;
     for (int j = 0; j < res_dense.rows(); ++j) { // Iterate over rows
 
       a = (double)k_i(j);
@@ -95,12 +100,14 @@ ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
       }
       if (overlapping >= prune) {
         trp.push_back(Trip(j, i, overlapping));
-        ;
+        cnt++;
       }
     }
+    nzs[i] = cnt;
   }
 
   Eigen::SparseMatrix<double> res(res_dense.rows(), res_dense.cols());
+  res.reserve(nzs);
   res.setFromTriplets(trp.begin(), trp.end());
 
   return res;
@@ -124,7 +131,8 @@ ComputeSNNasym_sparse(Eigen::Map<Eigen::SparseMatrix<int>> SNN, double prune,
 // vertices by both in-coming and out-going edges. ' @export
 // [[Rcpp::export]]
 Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>
-ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN, float prune,
+ComputeSNNasym_dense(Eigen::Map<Eigen::SparseMatrix<int>> SNN,
+                     float prune,
                      String mode) {
 
   Rcpp::Rcout << "Using dense matrix" << std::endl;
