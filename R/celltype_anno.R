@@ -259,69 +259,18 @@ per_cluster_goa <- function(cabic,
     return(goa_res)
 }
 
-#' Annotate CAbiNet results by gene overrepresentation
-#'  analysis results.
-#'
+#' Assign cell types to clusters using the Hungarian algorithm.
 #' @description
-#' `annotate_by_goa` takes a biclustering results such as outputted by `caclust`
-#' and annotates it with the gene overrepresentation analysis results (goa).
-#'
-#' @param cabic Biclustering results of type `caclust`
+#' Uses the hungarian algorithm (assignment problem)
+#' to assign a cell type from the gene set overrepresentation
+#' analysis to one (and only one) cluster.
 #' @param goa_res List of goa results for each bicluster.
-#' @param alpha Adjusted p-value cutoff.
-#'  Only results with padj < alpha will be used.
-#'
-#' @description
-#' Conflicts between clusters that have the
-#'  same highest ranking gene set are solved
-#'  with the Hungarian/Munkres algorithm.
-#'
 #' @returns
-#' Object of type `caclust` with annotated biclusters.
-#'
+#' A data frame with the assigned cell types and adjusted p-values.
 #' @export
-annotate_by_goa <- function(cabic,
-                            goa_res,
-                            alpha = 0.05) {
-
-    stopifnot(is(cabic, "caclust"))
-
-    if (is.empty(cabic@bimap)) {
-        warning("biMAP not yet computed. Please run biMAP()")
-    }
-
-
-    if (!is.empty(cabic@bimap)) {
-        bimap <- as.character(cabic@bimap$cluster)
-    }
-
-    # cell clusters
-    ccs <- cell_clusters(cabic)
-    unccs <- sort(unique(ccs))
-
-    ccs <- as.character(ccs)
-    unccs <- as.character(unccs)
-
-    # gene clusters
-    gcs <- gene_clusters(cabic)
-    ungcs <- sort(unique(gcs))
-
-    gcs <- as.character(gcs)
-    ungcs <- as.character(ungcs)
-
-    # Combine clusters
-    allcs <- sort(unique(c(unccs, ungcs)))
-
-    # Create dataframe with all goa results
-    nclust  <- length(goa_res)
-
-    goa_res <- lapply(goa_res, function(x, nc = nclust) {
-        subs <- min(nrow(x), nc)
-        x[seq_len(subs), ]
-    })
+assign_cts <- function(goa_res){
 
     # Solve assignment problem with the hungarian algorithm.
-
     # Build cost matrix.
     goa_res <- dplyr::bind_rows(goa_res, .id = "cluster")
 
@@ -347,6 +296,84 @@ annotate_by_goa <- function(cabic,
     cluster_anno <- data.frame(cluster = clusters[assignments[, 1]],
                                cell_type = cell_types[assignments[, 2]],
                                padj = cost_mat[assignments])
+
+    return(cluster_anno)
+
+}
+
+#' Annotate CAbiNet results by gene overrepresentation
+#'  analysis results.
+#'
+#' @description
+#' `annotate_by_goa` takes a biclustering results such as outputted by `caclust`
+#' and annotates it with the gene overrepresentation analysis results (goa).
+#'
+#' @param cabic Biclustering results of type `caclust`
+#' @param goa_res List of goa results for each bicluster.
+#' @param alpha Adjusted p-value cutoff.
+#'  Only results with padj < alpha will be used.
+#'
+#' @description
+#' Conflicts between clusters that have the
+#'  same highest ranking gene set are solved
+#'  with the Hungarian/Munkres algorithm.
+#'
+#' @returns
+#' Object of type `caclust` with annotated biclusters.
+#'
+#' @export
+setGeneric("annotate_by_goa", function(obj,
+                                       goa_res,
+                                       alpha = 0.05) {
+    standardGeneric("annotate_by_goa")
+})
+
+#' @rdname annotate_by_goa
+#' @export
+setMethod(f = "annotate_by_goa",
+  signature = (obj = "caclust"),
+  function(obj,
+           goa_res,
+          alpha = 0.05) {
+
+    stopifnot(is(obj, "caclust"))
+
+    if (is.empty(obj@bimap)) {
+        warning("biMAP not yet computed. Please run biMAP()")
+    }
+
+
+    if (!is.empty(obj@bimap)) {
+        bimap <- as.character(obj@bimap$cluster)
+    }
+
+    # cell clusters
+    ccs <- cell_clusters(obj)
+    unccs <- sort(unique(ccs))
+
+    ccs <- as.character(ccs)
+    unccs <- as.character(unccs)
+
+    # gene clusters
+    gcs <- gene_clusters(obj)
+    ungcs <- sort(unique(gcs))
+
+    gcs <- as.character(gcs)
+    ungcs <- as.character(ungcs)
+
+    # Combine clusters
+    allcs <- sort(unique(c(unccs, ungcs)))
+
+    # Create dataframe with all goa results
+    nclust  <- length(goa_res)
+
+    goa_res <- lapply(goa_res, function(x, nc = nclust) {
+        subs <- min(nrow(x), nc)
+        x[seq_len(subs), ]
+    })
+
+    # Solve assignment problem with the hungarian algorithm.
+    cluster_anno <- assign_cts(goa_res)
 
     # Rename clusters based on GSE.
     for (c in seq_len(length(allcs))) {
@@ -380,7 +407,7 @@ annotate_by_goa <- function(cabic,
             }
         }
 
-        if (!is.empty(cabic@bimap)) {
+        if (!is.empty(obj@bimap)) {
 
             sel <- which(bimap == allcs[c])
 
@@ -392,59 +419,22 @@ annotate_by_goa <- function(cabic,
         }
     }
 
-    names(gcs) <- rownames(cabic@SNN)[cabic@gene_idxs]
-    names(ccs) <- rownames(cabic@SNN)[cabic@cell_idxs]
+    names(gcs) <- rownames(obj@SNN)[obj@gene_idxs]
+    names(ccs) <- rownames(obj@SNN)[obj@cell_idxs]
 
     # update results
-    cabic@cell_clusters <- as.factor(ccs)
-    cabic@gene_clusters <- as.factor(gcs)
+    obj@cell_clusters <- as.factor(ccs)
+    obj@gene_clusters <- as.factor(gcs)
 
-    if (!is.empty(cabic@bimap)) {
-        cabic@bimap$cluster <- as.factor(bimap)
+    if (!is.empty(obj@bimap)) {
+        obj@bimap$cluster <- as.factor(bimap)
     }
 
-    stopifnot(validObject(cabic))
-    return(cabic)
-}
+    stopifnot(validObject(obj))
+    return(obj)
+})
 
-#' Perform gene overrepresentation analysis and annotate biclusters.
-#'
-#' @description
-#' Wrapper function for `per_cluster_goa` and `annotate_by_goa`.
-#'
-#' @inheritParams per_cluster_goa
-#' @inheritParams annotate_by_goa
-#'
-#' @details
-#' `annotate_cabinet` performs per cluster GOA with a hypergeometric
-#'  and annotates the biclustering results from CAbiNet.
-#'
-#' @returns
-#' An object of type `caclust` with annotated biclusters.
-#'
-run_annotate_cabinet <- function(cabic,
-                                 universe,
-                                 org,
-                                 set = "CellMarker",
-                                 alpha = 0.05,
-                                 min_size = 10,
-                                 max_size = 500) {
 
-    stopifnot(is(cabic, "caclust"))
-
-    goa_res <- per_cluster_goa(cabic = cabic,
-                               universe = universe,
-                               set = set,
-                               org = org,
-                               min_size = min_size,
-                               max_size = max_size)
-
-    cabic <- annotate_by_goa(cabic = cabic,
-                             goa_res = goa_res,
-                             alpha = alpha)
-
-    return(cabic)
-}
 
 #' Perform gene overrepresentation analysis and annotate biclusters.
 #'
@@ -453,31 +443,31 @@ run_annotate_cabinet <- function(cabic,
 #'
 #' @param obj Either a `caclust` or `SingleCellExperiment` object.
 #' @param ... Further arguments.
-#' @inheritParams run_annotate_cabinet
+#' @inheritParams per_cluster_goa
+#' @inheritParams annotate_by_goa
 #'
 #' @details
-#' `annotate_cabinet` performs per cluster GOA with a hypergeometric
+#' `annotate_biclustering` performs per cluster GOA with a hypergeometric
 #'  and annotates the biclustering results from CAbiNet.
 #'
 #' @returns
 #' An object of type `caclust` with annotated biclusters.
-#'
 #' @export
-setGeneric("annotate_cabinet", function(obj,
-                                        universe,
-                                        org,
-                                        set = "CellMarker",
-                                        alpha = 0.05,
-                                        min_size = 10,
-                                        max_size = 500,
-                                        ...) {
-    standardGeneric("annotate_cabinet")
+setGeneric("annotate_biclustering", function(obj,
+                                            universe,
+                                            org,
+                                            set = "CellMarker",
+                                            alpha = 0.05,
+                                            min_size = 10,
+                                            max_size = 500,
+                                            ...) {
+    standardGeneric("annotate_biclustering")
 })
 
 
-#' @rdname annotate_cabinet
+#' @rdname annotate_biclustering
 #' @export
-setMethod(f = "annotate_cabinet",
+setMethod(f = "annotate_biclustering",
           signature = (obj = "caclust"),
           function(obj,
                    universe,
@@ -488,22 +478,29 @@ setMethod(f = "annotate_cabinet",
                    max_size = 500,
                    ...) {
 
-    obj <- run_annotate_cabinet(cabic = obj,
-                            universe = universe,
-                            org = org,
-                            set = set,
-                            alpha = alpha,
-                            min_size = min_size,
-                            max_size = max_size)
-    return(obj)
+    stopifnot(is(obj, "caclust"))
+
+    goa_res <- per_cluster_goa(cabic = obj,
+                               universe = universe,
+                               set = set,
+                               org = org,
+                               min_size = min_size,
+                               max_size = max_size)
+
+    cabic <- annotate_by_goa(obj = obj,
+                             goa_res = goa_res,
+                             alpha = alpha)
+
+    return(cabic)
+
 })
 
-#' @rdname annotate_cabinet
+#' @rdname annotate_biclustering
 #'
 #' @param caclust_meta_name Name under which the caclust object is stored in
 #' the metadata of the SingleCellExperiment object.
 #' @export
-setMethod(f = "annotate_cabinet",
+setMethod(f = "annotate_biclustering",
           signature = (obj = "SingleCellExperiment"),
           function(obj,
                    universe,
@@ -525,13 +522,17 @@ setMethod(f = "annotate_cabinet",
 
     caclust <- S4Vectors::metadata(obj)[[caclust_meta_name]]
 
-    caclust <- run_annotate_cabinet(cabic = caclust,
-                                    universe = universe,
-                                    org = org,
-                                    set = set,
-                                    alpha = alpha,
-                                    min_size = min_size,
-                                    max_size = max_size)
+    goa_res <- per_cluster_goa(cabic = caclust,
+                               universe = universe,
+                               set = set,
+                               org = org,
+                               min_size = min_size,
+                               max_size = max_size)
+
+    caclust <- annotate_by_goa(obj = caclust,
+                               goa_res = goa_res,
+                               alpha = alpha)
+
 
     obj <- add_caclust_sce(sce = obj,
                            caclust = caclust,
@@ -539,6 +540,11 @@ setMethod(f = "annotate_cabinet",
 
     return(obj)
 })
+
+
+#' @rdname annotate_biclustering
+#' @export
+annotate_cabinet <- selectMethod("annotate_biclustering", signature = "caclust")
 
 #' turns string of a ratio in a number.
 #' @description 

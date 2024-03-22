@@ -2,6 +2,7 @@
 % Please edit documentation in R/CAclust.R
 \docType{package}
 \name{CAbiNet}
+\alias{CAbiNet-package}
 \alias{CAbiNet}
 \title{CAbiNet: Correspondence Analysis for Biclustering on Networks}
 \description{
@@ -14,3 +15,20 @@ co-embedded in a biMAP.
 The mypackage functions ...
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://vingronlab.github.io/CAbiNet/}
+}
+
+}
+\author{
+\strong{Maintainer}: Clemens Kohl \email{kohl@molgen.mpg.de}
+
+Authors:
+\itemize{
+  \item Yan Zhao \email{zhao@molgen.mpg.de}
+  \item Martin Vingron \email{vingron@molgen.mpg.de}
+}
+
+}

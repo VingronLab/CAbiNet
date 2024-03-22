@@ -22,11 +22,9 @@ run_leiden(
 
 \item{rand_seed}{integer. Random seed.}
 
-\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense}
+\item{cast_to_dense}{logical. Casting sparse SNN adjacency matrix to dense speeds up the leiden algorithm.}
 
-\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
-matrix before running leiden clustering?
-Casting to dense speeds up the leiden algorithm.}
+\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.}
 }
 \value{
 Object of type "caclust" with cell and gene clusters saved.
