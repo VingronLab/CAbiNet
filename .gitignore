@@ -13,3 +13,7 @@ inst/doc
 /doc/
 /Meta/
 docs
+renv.lock
+/renv/
+.Rprofile
+__pycache__
