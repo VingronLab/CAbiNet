@@ -11,12 +11,12 @@ annotate_by_goa(obj, goa_res, alpha = 0.05)
 \S4method{annotate_by_goa}{caclust}(obj, goa_res, alpha = 0.05)
 }
 \arguments{
+\item{obj}{Biclustering results of type `caclust`}
+
 \item{goa_res}{List of goa results for each bicluster.}
 
 \item{alpha}{Adjusted p-value cutoff.
 Only results with padj < alpha will be used.}
-
-\item{cabic}{Biclustering results of type `caclust`}
 }
 \value{
 Object of type `caclust` with annotated biclusters.

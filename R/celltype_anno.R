@@ -310,7 +310,7 @@ assign_cts <- function(goa_res){
 #' `annotate_by_goa` takes a biclustering results such as outputted by `caclust`
 #' and annotates it with the gene overrepresentation analysis results (goa).
 #'
-#' @param cabic Biclustering results of type `caclust`
+#' @param obj Biclustering results of type `caclust`
 #' @param goa_res List of goa results for each bicluster.
 #' @param alpha Adjusted p-value cutoff.
 #'  Only results with padj < alpha will be used.
