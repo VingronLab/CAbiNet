@@ -224,7 +224,9 @@ per_cluster_goa <- function(cabic,
     stopifnot(is(cabic, "caclust"))
 
     # Ensure that we deal only with clusters consisting of cells and genes.
-    cabic <- rm_monoclusters(cabic)
+    suppressWarnings({
+      cabic <- rm_monoclusters(cabic)
+    })
 
     # Load gene sets
     gs <- load_gene_set(set = set, org = org)
