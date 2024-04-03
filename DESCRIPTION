@@ -68,7 +68,7 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate:
-    'CAclust.R'
+    'CAbiNet-package.R'
     'RcppExports.R'
     'classes.R'
     'biMAP.R'
