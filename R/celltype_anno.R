@@ -410,8 +410,14 @@ setMethod(f = "annotate_by_goa",
 
     # Rename clusters based on GSE.
     for (c in seq_len(length(allcs))) {
-
-        noanno <- paste0("cluster", allcs[c])
+        
+        # Only add cluster if it doesnt have a name.
+        is_a_nr <- suppressWarnings(!is.na(as.numeric(allcs[c])))
+        if (isTRUE(is_a_nr)) {
+          noanno <- paste0("cluster", allcs[c])
+        } else {
+          noanno <- allcs[c]
+        }
 
         ct <- cluster_anno[cluster_anno$cluster == allcs[c], "cell_type"]
         padj <- cluster_anno[cluster_anno$cluster == allcs[c], "padj"]

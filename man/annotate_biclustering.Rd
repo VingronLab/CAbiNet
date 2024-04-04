@@ -15,6 +15,7 @@ annotate_biclustering(
   alpha = 0.05,
   min_size = 10,
   max_size = 500,
+  verbose = TRUE,
   ...
 )
 
@@ -26,6 +27,7 @@ annotate_biclustering(
   alpha = 0.05,
   min_size = 10,
   max_size = 500,
+  verbose = TRUE,
   ...
 )
 
@@ -37,6 +39,7 @@ annotate_biclustering(
   alpha = 0.05,
   min_size = 10,
   max_size = 500,
+  verbose = TRUE,
   ...,
   caclust_meta_name = "caclust"
 )
@@ -49,6 +52,7 @@ annotate_biclustering(
   alpha = 0.05,
   min_size = 10,
   max_size = 500,
+  verbose = TRUE,
   ...
 )
 }
@@ -68,6 +72,8 @@ Only results with padj < alpha will be used.}
 
 \item{max_size}{Max number of genes in the gene set.
 Set to Inf if you want to keep all genes.}
+
+\item{verbose}{Toggles verbosity of warnings.}
 
 \item{...}{Further arguments.}
 

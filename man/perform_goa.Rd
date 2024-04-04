@@ -5,7 +5,7 @@
 \title{Adapted from `DOSE:::enricher_interal`.
 Performs Gene Overrepresentation Analysis.}
 \usage{
-perform_goa(gois, gene_sets, universe, min_size, max_size)
+perform_goa(gois, gene_sets, universe, min_size, max_size, verbose = TRUE)
 }
 \arguments{
 \item{gois}{Genes of interest. Usually the co-clustered genes.}
@@ -18,6 +18,8 @@ perform_goa(gois, gene_sets, universe, min_size, max_size)
 
 \item{max_size}{Max number of genes in the gene set.
 Set to Inf if you want to keep all genes.}
+
+\item{verbose}{Toggles verbosity of warnings.}
 }
 \value{
 A data frame with the results of the go-analysis.

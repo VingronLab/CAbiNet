@@ -12,7 +12,8 @@ per_cluster_goa(
   org,
   set = "CellMarker",
   min_size = 10,
-  max_size = 500
+  max_size = 500,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ as obtained from `caclust`.}
 
 \item{max_size}{Max number of genes in the gene set.
 Set to Inf if you want to keep all genes.}
+
+\item{verbose}{Toggles verbosity of warnings.}
 }
 \value{
 A list contain the goa results for each cluster.
