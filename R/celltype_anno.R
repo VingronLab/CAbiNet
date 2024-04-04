@@ -131,7 +131,6 @@ perform_goa <- function(gois,
     gene_sets <- filter_gene_sets(gene_sets = gene_sets,
                                   min_size = min_size, # 10
                                   max_size = max_size) # 500
-
     # number of clustered genes in each gene set
     gois_in_set <- sapply(gene_sets, intersect, gois)
 
@@ -139,47 +138,62 @@ perform_goa <- function(gois,
     gois_in_set <- filter_gene_sets(gene_sets = gois_in_set,
                                     min_size = 1,
                                     max_size = Inf)
+    if(length(gois_in_set) == 0){
+	print(names(gois_in_set))
+	warning('No cell types can be assigned to the detected marker genes!')
+	enrich_res <- data.frame(gene_set = "None",
+                             pval = NA,
+                             padj = NA,
+                             GeneRatio = NA,
+                             BgRatio = NA,
+                             ngois_in_set = 0,
+                             ngenes_in_set = NA,
+                             ngois = length(gois),
+                             ngenes_in_sets = length(all_gs))
+	return(enrich_res)
 
-    # subset gene sets to thos with gois in them
-    # make sure the two sets are the same order.
-    gs_names <- sort(unique(names(gois_in_set)))
-    gene_sets <- gene_sets[gs_names]
-    gois_in_set <- gois_in_set[gs_names]
+	}else{
 
-    # Build parameter data frame
-    ngois <- length(gois)                   # clustered genes
-    group1 <- lengths(gene_sets)            # the size of gene sets
-    group2 <- length(all_gs)                # total genes in gene sets
-    overlap <- lengths(gois_in_set)         # nr gois in gene_set
+	# subset gene sets to thos with gois in them
+    	# make sure the two sets are the same order.
+    	gs_names <- sort(unique(names(gois_in_set)))
+    	gene_sets <- gene_sets[gs_names]
+    	gois_in_set <- gois_in_set[gs_names]
 
-    phyper_df <- data.frame(
-        gois_in_set = overlap - 1,          # white balls drawn / gois in gs
-        genes_in_set = group1,              # total white balls / genes in gs
-        genes_universe = group2 - group1,   # total black balls / all genes in gene set - gs
-        ngois = ngois                       # balls drawn / number gois
-    )
-    rownames(phyper_df) <- names(gene_sets)
+    	# Build parameter data frame
+    	ngois <- length(gois)                   # clustered genes
+    	group1 <- lengths(gene_sets)            # the size of gene sets
+    	group2 <- length(all_gs)                # total genes in gene sets
+    	overlap <- lengths(gois_in_set)         # nr gois in gene_set
 
-    # Hypergeometric test
-    pvalues <- apply(phyper_df, 1, function(n) {
-        stats::phyper(n[1], n[2], n[3], n[4], lower.tail = FALSE)
-    })
+    	phyper_df <- data.frame(
+        	gois_in_set = overlap - 1,          # white balls drawn / gois in gs
+        	genes_in_set = group1,              # total white balls / genes in gs
+        	genes_universe = group2 - group1,   # total black balls / all genes in gene set - gs
+        	ngois = ngois                       # balls drawn / number gois
+    	)	
+    	rownames(phyper_df) <- names(gene_sets)
 
-    # adjust p-values
-    p_adj <- stats::p.adjust(pvalues, method = "BH")
+    	# Hypergeometric test
+    	pvalues <- apply(phyper_df, 1, function(n) {
+        	stats::phyper(n[1], n[2], n[3], n[4], lower.tail = FALSE)
+    	})
+
+    	# adjust p-values
+    	p_adj <- stats::p.adjust(pvalues, method = "BH")
 
 
-    ## gene ratio and background ratio
-    gene_ratio <- apply(data.frame(a = overlap, b = ngois), 1, function(x) {
-        paste(x[1], "/", x[2], sep = "", collapse = "")
-    })
+    	## gene ratio and background ratio
+    	gene_ratio <- apply(data.frame(a = overlap, b = ngois), 1, function(x) {
+        	paste(x[1], "/", x[2], sep = "", collapse = "")
+    	})
 
-    bg_ratio <- apply(data.frame(a = group1, b = group2), 1, function(x) {
-        paste(x[1], "/", x[2], sep = "", collapse = "")
-    })
+    	bg_ratio <- apply(data.frame(a = group1, b = group2), 1, function(x) {
+        	paste(x[1], "/", x[2], sep = "", collapse = "")
+    	})
 
-    # return results either as data frame or list
-    enrich_res <- data.frame(gene_set = names(gene_sets),
+    	# return results either as data frame or list
+    	enrich_res <- data.frame(gene_set = names(gene_sets),
                              pval = pvalues,
                              padj = p_adj,
                              GeneRatio = gene_ratio,
@@ -189,11 +203,13 @@ perform_goa <- function(gois,
                              ngois = ngois,
                              ngenes_in_sets = group2)
 
-    rownames(enrich_res) <- NULL
+    	rownames(enrich_res) <- NULL
 
-    ord <- order(enrich_res$padj)
+    	ord <- order(enrich_res$padj)
 
-    return(enrich_res[ord, ])
+    	return(enrich_res[ord, ])
+    
+    }
 }
 
 #' Perform gene set overrepresentation analysis
