@@ -101,6 +101,7 @@ format_gene_sets <- function(gene_sets) {
 #' @param gois Genes of interest. Usually the co-clustered genes.
 #' @param universe All genes in data set.
 #' @param gene_sets Named list of gene sets and their genes.
+#' @param verbose Toggles verbosity of warnings.
 #' @inheritParams filter_gene_sets
 #'
 #' @details
@@ -117,7 +118,8 @@ perform_goa <- function(gois,
                         gene_sets,
                         universe,
                         min_size,
-                        max_size) {
+                        max_size,
+                        verbose = TRUE) {
 
     # subset gene sets to genes in universe
     gene_sets <- lapply(gene_sets, intersect, universe)
@@ -138,77 +140,78 @@ perform_goa <- function(gois,
     gois_in_set <- filter_gene_sets(gene_sets = gois_in_set,
                                     min_size = 1,
                                     max_size = Inf)
-    if(length(gois_in_set) == 0){
-	print(names(gois_in_set))
-	warning('No cell types can be assigned to the detected marker genes!')
-	enrich_res <- data.frame(gene_set = "None",
-                             pval = NA,
-                             padj = NA,
-                             GeneRatio = NA,
-                             BgRatio = NA,
-                             ngois_in_set = 0,
-                             ngenes_in_set = NA,
-                             ngois = length(gois),
-                             ngenes_in_sets = length(all_gs))
-	return(enrich_res)
+    if (length(gois_in_set) == 0) {
+        if (isTRUE(verbose)) {
+            warning("No genes of interest are found in any gene set!")
+        }
+        enrich_res <- data.frame(gene_set = "None",
+                                 pval = NA,
+                                 padj = NA,
+                                 GeneRatio = NA,
+                                 BgRatio = NA,
+                                 ngois_in_set = 0,
+                                 ngenes_in_set = length(gene_sets),
+                                 ngois = length(gois),
+                                 ngenes_in_sets = length(all_gs))
+        return(enrich_res)
 
-	}else{
+	} else {
 
-	# subset gene sets to thos with gois in them
-    	# make sure the two sets are the same order.
-    	gs_names <- sort(unique(names(gois_in_set)))
-    	gene_sets <- gene_sets[gs_names]
-    	gois_in_set <- gois_in_set[gs_names]
+        # subset gene sets to those with gois in them
+        # make sure the two sets are the same order.
+        gs_names <- sort(unique(names(gois_in_set)))
+        gene_sets <- gene_sets[gs_names]
+        gois_in_set <- gois_in_set[gs_names]
 
-    	# Build parameter data frame
-    	ngois <- length(gois)                   # clustered genes
-    	group1 <- lengths(gene_sets)            # the size of gene sets
-    	group2 <- length(all_gs)                # total genes in gene sets
-    	overlap <- lengths(gois_in_set)         # nr gois in gene_set
+        # Build parameter data frame
+        ngois <- length(gois)                   # clustered genes
+        group1 <- lengths(gene_sets)            # the size of gene sets
+        group2 <- length(all_gs)                # total genes in gene sets
+        overlap <- lengths(gois_in_set)         # nr gois in gene_set
 
-    	phyper_df <- data.frame(
-        	gois_in_set = overlap - 1,          # white balls drawn / gois in gs
-        	genes_in_set = group1,              # total white balls / genes in gs
-        	genes_universe = group2 - group1,   # total black balls / all genes in gene set - gs
-        	ngois = ngois                       # balls drawn / number gois
-    	)	
-    	rownames(phyper_df) <- names(gene_sets)
+        phyper_df <- data.frame(
+            gois_in_set = overlap - 1, # white balls drawn / gois in gs
+            genes_in_set = group1, # total white balls / genes in gs
+            genes_universe = group2 - group1, # total black balls / all genes in gene set - gs
+            ngois = ngois # balls drawn / number gois
+        )
+        rownames(phyper_df) <- names(gene_sets)
 
-    	# Hypergeometric test
-    	pvalues <- apply(phyper_df, 1, function(n) {
-        	stats::phyper(n[1], n[2], n[3], n[4], lower.tail = FALSE)
-    	})
+        # Hypergeometric test
+        pvalues <- apply(phyper_df, 1, function(n) {
+            stats::phyper(n[1], n[2], n[3], n[4], lower.tail = FALSE)
+        })
 
-    	# adjust p-values
-    	p_adj <- stats::p.adjust(pvalues, method = "BH")
+        # adjust p-values
+        p_adj <- stats::p.adjust(pvalues, method = "BH")
 
 
-    	## gene ratio and background ratio
-    	gene_ratio <- apply(data.frame(a = overlap, b = ngois), 1, function(x) {
-        	paste(x[1], "/", x[2], sep = "", collapse = "")
-    	})
+        ## gene ratio and background ratio
+        gene_ratio <- apply(data.frame(a = overlap, b = ngois), 1, function(x) {
+            paste(x[1], "/", x[2], sep = "", collapse = "")
+        })
 
-    	bg_ratio <- apply(data.frame(a = group1, b = group2), 1, function(x) {
-        	paste(x[1], "/", x[2], sep = "", collapse = "")
-    	})
+        bg_ratio <- apply(data.frame(a = group1, b = group2), 1, function(x) {
+            paste(x[1], "/", x[2], sep = "", collapse = "")
+        })
 
-    	# return results either as data frame or list
-    	enrich_res <- data.frame(gene_set = names(gene_sets),
-                             pval = pvalues,
-                             padj = p_adj,
-                             GeneRatio = gene_ratio,
-                             BgRatio = bg_ratio,
-                             ngois_in_set = overlap,
-                             ngenes_in_set = group1,
-                             ngois = ngois,
-                             ngenes_in_sets = group2)
+        # return results either as data frame or list
+        enrich_res <- data.frame(gene_set = names(gene_sets),
+                                 pval = pvalues,
+                                 padj = p_adj,
+                                 GeneRatio = gene_ratio,
+                                 BgRatio = bg_ratio,
+                                 ngois_in_set = overlap,
+                                 ngenes_in_set = group1,
+                                 ngois = ngois,
+                                 ngenes_in_sets = group2)
 
-    	rownames(enrich_res) <- NULL
+        rownames(enrich_res) <- NULL
 
-    	ord <- order(enrich_res$padj)
+        ord <- order(enrich_res$padj)
 
-    	return(enrich_res[ord, ])
-    
+        return(enrich_res[ord, ])
+
     }
 }
 
@@ -269,7 +272,8 @@ per_cluster_goa <- function(cabic,
                            gene_sets = gene_sets,
                            universe = universe,
                            min_size = min_size,
-                           max_size = max_size)
+                           max_size = max_size,
+                           verbose = FALSE)
 
         goa_res[[clst_name]] <- goa
     }
@@ -286,7 +290,7 @@ per_cluster_goa <- function(cabic,
 #' @returns
 #' A data frame with the assigned cell types and adjusted p-values.
 #' @export
-assign_cts <- function(goa_res){
+assign_cts <- function(goa_res) {
 
     # Solve assignment problem with the hungarian algorithm.
     # Build cost matrix.
@@ -565,7 +569,7 @@ setMethod(f = "annotate_biclustering",
 annotate_cabinet <- selectMethod("annotate_biclustering", signature = "caclust")
 
 #' turns string of a ratio in a number.
-#' @description 
+#' @description
 #' Adapted from DOSE::parse_ratio.
 #'
 #' @param ratio a string of the form "1/2"
