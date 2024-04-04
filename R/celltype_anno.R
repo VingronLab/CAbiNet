@@ -142,9 +142,10 @@ perform_goa <- function(gois,
                                     max_size = Inf)
     if (length(gois_in_set) == 0) {
         if (isTRUE(verbose)) {
-            warning("No genes of interest are found in any gene set!")
+            warning("No genes of interest are found in any gene set!",
+                    " Returning empty results data.frame.")
         }
-        enrich_res <- data.frame(gene_set = "None",
+        enrich_res <- data.frame(gene_set = "No_Cell_Type_Found",
                                  pval = NA,
                                  padj = NA,
                                  GeneRatio = NA,
@@ -238,7 +239,8 @@ per_cluster_goa <- function(cabic,
                             org,
                             set = "CellMarker",
                             min_size = 10,
-                            max_size = 500) {
+                            max_size = 500,
+                            verbose = TRUE) {
 
     stopifnot(is(cabic, "caclust"))
 
@@ -273,7 +275,7 @@ per_cluster_goa <- function(cabic,
                            universe = universe,
                            min_size = min_size,
                            max_size = max_size,
-                           verbose = FALSE)
+                           verbose = verbose)
 
         goa_res[[clst_name]] <- goa
     }
@@ -307,10 +309,19 @@ assign_cts <- function(goa_res) {
     cost_mat[is.na(cost_mat)] <- 1
     colnames(cost_mat) <- gsub("padj.", "", colnames(cost_mat), fixed = TRUE)
 
-    clusters <- as.character(cost_mat$cluster)
-    cell_types <- colnames(cost_mat[, 2:ncol(cost_mat)])
+    if ("No_Cell_Type_Found" %in% colnames(cost_mat)) {
+        rm_col <- which(colnames(cost_mat) == "No_Cell_Type_Found")
+        cost_mat <- cost_mat[, -rm_col, drop = FALSE]
+    }
 
-    cost_mat <- as.matrix(cost_mat[, 2:ncol(cost_mat)])
+    if (ncol(cost_mat) == 1) {
+      stop("GOA results do not contain any cell types! Check if any genes are in the gene sets!")
+    }
+
+    clusters <- as.character(cost_mat$cluster)
+    cell_types <- colnames(cost_mat)[2:ncol(cost_mat)]
+
+    cost_mat <- as.matrix(cost_mat[, 2:ncol(cost_mat)], drop = FALSE)
 
     # solve assignment problem
     assignments <- RcppHungarian::HungarianSolver(cost_mat)$pairs
@@ -356,7 +367,7 @@ setMethod(f = "annotate_by_goa",
   signature = (obj = "caclust"),
   function(obj,
            goa_res,
-          alpha = 0.05) {
+           alpha = 0.05) {
 
     stopifnot(is(obj, "caclust"))
 
@@ -482,6 +493,7 @@ setGeneric("annotate_biclustering", function(obj,
                                             alpha = 0.05,
                                             min_size = 10,
                                             max_size = 500,
+                                            verbose = TRUE,
                                             ...) {
     standardGeneric("annotate_biclustering")
 })
@@ -498,6 +510,7 @@ setMethod(f = "annotate_biclustering",
                    alpha = 0.05,
                    min_size = 10,
                    max_size = 500,
+                   verbose = TRUE,
                    ...) {
 
     stopifnot(is(obj, "caclust"))
@@ -507,7 +520,8 @@ setMethod(f = "annotate_biclustering",
                                set = set,
                                org = org,
                                min_size = min_size,
-                               max_size = max_size)
+                               max_size = max_size,
+                               verbose = verbose)
 
     cabic <- annotate_by_goa(obj = obj,
                              goa_res = goa_res,
@@ -531,6 +545,7 @@ setMethod(f = "annotate_biclustering",
                    alpha = 0.05,
                    min_size = 10,
                    max_size = 500,
+                   verbose = TRUE,
                    ...,
                    caclust_meta_name = "caclust") {
 
@@ -549,7 +564,8 @@ setMethod(f = "annotate_biclustering",
                                set = set,
                                org = org,
                                min_size = min_size,
-                               max_size = max_size)
+                               max_size = max_size,
+                               verbose = verbose)
 
     caclust <- annotate_by_goa(obj = caclust,
                                goa_res = goa_res,
