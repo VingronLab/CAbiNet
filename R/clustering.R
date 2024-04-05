@@ -324,10 +324,10 @@ run_spectral <- function(caclust,
 #' @param resolution float number. Resolution for leiden algorithm.
 #' @param n.int Integer. Number of iterations for leiden algorithm.
 #' @param rand_seed integer. Random seed.
-#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense
+#' @param cast_to_dense logical. Should the SNN-graph be converted to a dense matrix.
+#' Casting the sparse SNN adjacency matrix to a dense matrix speeds up the leiden algorithm. It is only used when leiden_pack='leiden'.
 #' @param leiden_pack character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
-#' matrix before running leiden clustering?
-#' Casting to dense speeds up the leiden algorithm.
+#' @param cast_to_dense logical. Casting sparse SNN adjacency matrix to dense speeds up the leiden algorithm.
 #'
 #' @return
 #' Object of type "caclust" with cell and gene clusters saved.
@@ -475,7 +475,9 @@ run_caclust <- function(caobj,
                       prune_overlap = prune_overlap,
                       overlap = overlap,
                       calc_gene_cell_kNN = calc_gene_cell_kNN,
-                      marker_genes = marker_genes)
+                      marker_genes = marker_genes,
+		      method = method,
+		      BPPARAM = BPPARAM)
 
   if (algorithm == "leiden"){
 
@@ -519,15 +521,18 @@ run_caclust <- function(caobj,
 #' SingleCellExperiment with caclust object stored.
 #' @export
 #'
-add_caclust_sce <- function(sce, caclust, caclust_meta_name = 'caclust'){
-  cell.clust <- cell_clusters(caclust)
-  gene.clust <- gene_clusters(caclust)
-  idx <- rownames(sce) %in% gene.clust
-  matched_genes <- match(rownames(sce)[idx], names(gene.clust))
+add_caclust_sce <- function(sce,
+                            caclust,
+                            caclust_meta_name = "caclust") {
 
-  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell.clust
-  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- 'not_in_caclust'
-  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene.clust[matched_genes]
+  cell_clust <- cell_clusters(caclust)
+  gene_clust <- gene_clusters(caclust)
+  idx <- rownames(sce) %in% gene_clust
+  matched_genes <- match(rownames(sce)[idx], names(gene_clust))
+
+  SummarizedExperiment::colData(sce)[[caclust_meta_name]] <- cell_clust
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]] <- "not_in_caclust"
+  SummarizedExperiment::rowData(sce)[[caclust_meta_name]][idx] <- gene_clust[matched_genes]
 
   S4Vectors::metadata(sce)[[caclust_meta_name]] <- caclust
 

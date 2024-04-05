@@ -104,7 +104,7 @@ Can be on of the following 3:
 
 \item{dims}{Integer. Number of dimensions to choose from SVD of graph laplacian.}
 
-\item{cast_to_dense}{logical. Should the SNN-graph be converted to a dense}
+\item{cast_to_dense}{logical. Casting sparse SNN adjacency matrix to dense speeds up the leiden algorithm.}
 
 \item{method}{\link[BiocNeighbors:BiocNeighborParam]{BiocNeighbors::BiocNeighborParam} object specifying the
 algorithm to use. see Details.}
@@ -112,9 +112,7 @@ algorithm to use. see Details.}
 \item{BPPARAM}{\link{BiocParallel} settings parameter. By default single core
 \code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} but other parameters can be passed.}
 
-\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.
-matrix before running leiden clustering?
-Casting to dense speeds up the leiden algorithm.}
+\item{leiden_pack}{character. Optional values are 'igraph'(default) and 'leiden', the package used for leiden clustering.}
 }
 \value{
 Returns caclust objec with clustering results stored. The cell and gene

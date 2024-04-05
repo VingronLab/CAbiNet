@@ -1,4 +1,4 @@
-
+#define ARMA_64BIT_WORD 1
 #include <RcppEigen.h>
 #include <vector> //std::vector
 #include <string>

@@ -46,14 +46,19 @@ run_biMAP <- function(obj,
   genec <- names(gene_clusters(obj))
 
   if (method == "SNNdist"){
+    
+    is_umap <- reticulate::py_module_available("umap")
+    if(is_umap == FALSE) {
+      stop("Please install the 'umap-learn' package to run biMAP")
+    }
 
     SNNdist <- as.matrix(1 - get_snn(obj))
 
     reticulate::source_python(system.file("python/umap.py", package = "CAbiNet"), envir = globalenv())
 
     umap_coords <- python_umap(dm = SNNdist,
-                                metric = "precomputed",
-                                n_neighbors = as.integer(k),
+                               metric = "precomputed",
+                               n_neighbors = as.integer(k),
                                seed = rand_seed)
 
     umap_coords <- as.data.frame(umap_coords)

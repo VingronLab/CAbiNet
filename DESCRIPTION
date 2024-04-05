@@ -30,7 +30,8 @@ biocViews:
 License: GPL (>= 3)
 Encoding: UTF-8
 Depends:
-  APL
+    APL,
+    R (>= 2.10)
 Imports:
   Rcpp (>= 1.0.8),
   Matrix,
@@ -41,6 +42,7 @@ Imports:
   magrittr,
   methods,
   RcppEigen,
+  RcppHungarian,
   biclust,
   reticulate,
   ggrepel,
@@ -59,18 +61,20 @@ Imports:
   BiocParallel,
   igraph
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.1
 Suggests:
     rmarkdown,
     knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate:
-    'CAclust.R'
+    'CAbiNet-package.R'
     'RcppExports.R'
     'classes.R'
     'biMAP.R'
+    'celltype_anno.R'
     'clustering.R'
+    'data.R'
     'graph.R'
     'helpers.R'
     'importPackages.R'
@@ -87,3 +91,4 @@ Config/reticulate:
     )
   )
 URL: https://vingronlab.github.io/CAbiNet/
+LazyData: true
