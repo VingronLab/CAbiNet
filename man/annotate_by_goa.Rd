@@ -2,13 +2,16 @@
 % Please edit documentation in R/celltype_anno.R
 \name{annotate_by_goa}
 \alias{annotate_by_goa}
+\alias{annotate_by_goa,caclust-method}
 \title{Annotate CAbiNet results by gene overrepresentation
  analysis results.}
 \usage{
-annotate_by_goa(cabic, goa_res, alpha = 0.05)
+annotate_by_goa(obj, goa_res, alpha = 0.05)
+
+\S4method{annotate_by_goa}{caclust}(obj, goa_res, alpha = 0.05)
 }
 \arguments{
-\item{cabic}{Biclustering results of type `caclust`}
+\item{obj}{Biclustering results of type `caclust`}
 
 \item{goa_res}{List of goa results for each bicluster.}
 

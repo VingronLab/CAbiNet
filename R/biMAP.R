@@ -46,6 +46,11 @@ run_biMAP <- function(obj,
   genec <- names(gene_clusters(obj))
 
   if (method == "SNNdist"){
+    
+    is_umap <- reticulate::py_module_available("umap")
+    if(is_umap == FALSE) {
+      stop("Please install the 'umap-learn' package to run biMAP")
+    }
 
     SNNdist <- as.matrix(1 - get_snn(obj))
 

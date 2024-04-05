@@ -11,6 +11,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom SummarizedExperiment assay colData rowData
 #' @importClassesFrom biclust Biclust
+#' @importFrom BiocParallel SerialParam
 NULL
 
 
