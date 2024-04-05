@@ -37,10 +37,19 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/add_zero_dim.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/annotate_biclustering.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/annotate_by_goa.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/as.caclust.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/assign_clusters_GMM.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/assign_cts.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/augment_vector.html</loc>
@@ -82,6 +91,9 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/cell_clusters.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/cellmarker_v2.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/check_caclust.html</loc>
   </url>
   <url>
@@ -106,10 +118,19 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/feature_biMAP.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/filter_gene_sets.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/format_gene_sets.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/gene_clusters.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/get_bimap.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/get_caclust.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/get_cell_prob.html</loc>
@@ -145,6 +166,9 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/is.empty.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/load_gene_set.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/make_SNN.html</loc>
   </url>
   <url>
@@ -169,10 +193,22 @@
     <loc>https://vingronlab.github.io/CAbiNet/reference/optimal_skm.html</loc>
   </url>
   <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/parse_ratio.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/per_cluster_goa.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/perform_goa.html</loc>
+  </url>
+  <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/plot_contour_biMAP.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/plot_feature_biMAP.html</loc>
+  </url>
+  <url>
+    <loc>https://vingronlab.github.io/CAbiNet/reference/plot_goa_res.html</loc>
   </url>
   <url>
     <loc>https://vingronlab.github.io/CAbiNet/reference/plot_hex_biMAP.html</loc>
