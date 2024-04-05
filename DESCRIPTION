@@ -1,7 +1,7 @@
 Package: CAbiNet
 Type: Package
 Title: Biclustering and visualization of scRNAseq data
-Version: 0.99.1
+Version: 0.99.2
 Authors@R:
   c(person(given = "Clemens",
            family = "Kohl",
@@ -87,10 +87,10 @@ VignetteBuilder: knitr
 Config/reticulate:
   list(
     packages = list(
-      list(package = "umap"),
-      list(package = 'numpy'),
+      list(package = "numpy"),
       list(package = "scipy"),
-      list(package = "torch"),
+      list(package = "pytorch"),
+      list(package = "scikit-learn"),
       list(package = "umap-learn")
     )
   )
