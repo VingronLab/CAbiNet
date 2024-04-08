@@ -62,11 +62,13 @@ They should be installed automatically during the installation of CAbiNet. If th
 ```{r reticulate, eval=FALSE}
 library(reticulate)
 install_miniconda()
-use_condaenv(condaenv = file.path(miniconda_path(),"envs/r-reticulate"),
-             required=TRUE)
+use_condaenv(
+  condaenv = file.path(miniconda_path(), "envs/r-reticulate"),
+  required = TRUE
+)
 
 conda_install(envname = "r-reticulate", packages = "numpy")
-conda_install(envname = "r-reticulate", packages = "pytorch")
+conda_install(envname = "r-reticulate", packages = "torch")
 conda_install(envname = "r-reticulate", packages = "scikit-learn")
 conda_install(envname = "r-reticulate", packages = "umap-learn")
 conda_install(envname = "r-reticulate", packages = "scipy")
@@ -91,7 +93,6 @@ library(scran)
 library(scater)
 
 set.seed(2358)
-
 ```
 
 Loading the data:
@@ -104,36 +105,35 @@ sce
 
 CAbiNet is based on Correspondence Analysis, which is sensitive to outliers in the count matrix. We therefore strongly suggest to pre-process your data before applying CAbiNet. Here we offer some routine pre-processing steps for scRNA-seq data analysis with packages `r BiocStyle::Biocpkg('scran')` and `r BiocStyle::Biocpkg('scater')`. You can modify these steps according to your own demands.
 ```{r preprocess}
+mt_genes <- grepl("^mt-", rownames(sce), ignore.case = TRUE)
 
-mt_genes <- grepl("^mt-",  rownames(sce), ignore.case = TRUE)
-
-qc_df <- perCellQCMetrics(sce, subsets=list(Mito=mt_genes))
+qc_df <- perCellQCMetrics(sce, subsets = list(Mito = mt_genes))
 
 reasons <- perCellQCFilters(qc_df,
-                            sum.field = "sum",
-                            detected.field = "detected",
-                            sub.fields=c("subsets_Mito_percent"))
+  sum.field = "sum",
+  detected.field = "detected",
+  sub.fields = c("subsets_Mito_percent")
+)
 
 colData(sce) <- cbind(colData(sce), qc_df)
 sce$discard <- reasons$discard
 
-sce <- sce[,!reasons$discard]
+sce <- sce[, !reasons$discard]
 
-cnts<- as.matrix(counts(sce))
-genes_detect <- rowSums(cnts > 0) > (ncol(cnts)*0.01)
-sce <- sce[genes_detect,]
+cnts <- as.matrix(counts(sce))
+genes_detect <- rowSums(cnts > 0) > (ncol(cnts) * 0.01)
+sce <- sce[genes_detect, ]
 
 clust <- quickCluster(sce)
-sce <- computeSumFactors(sce, cluster=clust, min.mean=0.1)
+sce <- computeSumFactors(sce, cluster = clust, min.mean = 0.1)
 sce <- logNormCounts(sce)
 
 dec <- modelGeneVar(sce)
 top_genes <- getTopHVGs(dec, prop = 0.8)
-sce <- fixedPCA(sce, subset.row=top_genes)
-sce <- runUMAP(sce, dimred="PCA")
+sce <- fixedPCA(sce, subset.row = top_genes)
+sce <- runUMAP(sce, dimred = "PCA")
 
-plotReducedDim(sce, dimred="UMAP", colour_by="level1class")
-
+plotReducedDim(sce, dimred = "UMAP", colour_by = "level1class")
 ```
 
 ## Dimensionality Reduction in CAbiNet
@@ -144,11 +144,12 @@ The number of genes kept should not be set too low, as otherwise important marke
 
 ```{r CA_dimRed}
 # Correspondence Analysis
-caobj <- cacomp(sce[top_genes,],
-                assay = "logcounts",
-                dims = 40,
-                top = nrow(sce[top_genes,]),
-                python = TRUE)
+caobj <- cacomp(sce[top_genes, ],
+  assay = "logcounts",
+  dims = 40,
+  top = nrow(sce[top_genes, ]),
+  python = TRUE
+)
 ```
 The parameter `python = TRUE` indicates that the singular value decomposition in CA is performed with a pytorch implementation. This can drastically speed up the computation, in particular for large datasets. If you did not install all python dependencies for APL, please set it to `FALSE`.
 
@@ -159,11 +160,13 @@ CAbiNet builds up a shared-nearest-neighbour (SNN) gene-cell graph based on the 
 The simplest way to run CAbiNet is therefore:
 ```{r biclustering, eval = FALSE}
 # SNN graph & biclustering
-cabic <- caclust(obj = caobj,
-                 k = c(70, 35, 70, 70),
-                 select_genes = FALSE,
-                 algorithm = 'leiden',
-                 resolution = 1)
+cabic <- caclust(
+  obj = caobj,
+  k = c(70, 35, 70, 70),
+  select_genes = FALSE,
+  algorithm = "leiden",
+  resolution = 1
+)
 ```
 
 If a large number of genes have been kept during pre-processing, the biMAP can become too crowded and it can be hard to identify marker genes of interest.
@@ -171,12 +174,14 @@ CAbiNet therefore includes a method to remove genes that do not add much informa
 
 ```{r biclustering_select, eval = FALSE}
 # SNN graph & biclustering
-cabic <- caclust(obj = caobj,
-                 k = c(70, 35, 70, 70),
-                 select_genes = TRUE,
-                 prune_overlap = FALSE,
-                 algorithm = 'leiden',
-                 resolution = 1)
+cabic <- caclust(
+  obj = caobj,
+  k = c(70, 35, 70, 70),
+  select_genes = TRUE,
+  prune_overlap = FALSE,
+  algorithm = "leiden",
+  resolution = 1
+)
 ```
 
 Furthermore, we offer an optional graph pruning procedure with parameters `prune_overlap` and `overlap` to remove sporadic edges between cells and genes. Setting `prune_overlap` as `TRUE` and `overlap` as a fraction between 0 and 1 allows you to trim out edges between cells and genes that are shared with less than 'overlap'-fraction cell neighours. Note this function only works when `select_genes` is set as `TRUE`.
@@ -184,28 +189,31 @@ Furthermore, we offer an optional graph pruning procedure with parameters `prune
 In many cases we also have a set of marker genes that we would like to use for cell type annotation. In order to prevent the marker genes to be removed during the graph pruning we can make the algorithm aware of them using the `marker_genes` parameter.
 
 ```{r biclustering_prune, eval = TRUE}
-
 # Marker genes from A. Zeisel et al., Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq, 2015, Science
-markers <- c("Gad1",
-             "Tbr1",
-             "Spink8",
-             "Mbp",
-             "Aldoc",
-             "Aif1",
-             "Cldn5",
-             "Acta2")
+markers <- c(
+  "Gad1",
+  "Tbr1",
+  "Spink8",
+  "Mbp",
+  "Aldoc",
+  "Aif1",
+  "Cldn5",
+  "Acta2"
+)
 
 # SNN graph & biclustering
-cabic <- caclust(obj = caobj,
-                 k = c(70, 35, 70, 70),
-                 select_genes = TRUE,
-                 prune_overlap = TRUE,
-                 mode = "all",
-                 overlap = 0.2,
-                 algorithm = 'leiden',
-                 leiden_pack = 'igraph',
-                 resolution = 1,
-                 marker_genes = markers)
+cabic <- caclust(
+  obj = caobj,
+  k = c(70, 35, 70, 70),
+  select_genes = TRUE,
+  prune_overlap = TRUE,
+  mode = "all",
+  overlap = 0.2,
+  algorithm = "leiden",
+  leiden_pack = "igraph",
+  resolution = 1,
+  marker_genes = markers
+)
 ```
 After building the  cell-gene graph, the biclustering is performed with either the Leiden algorithm (`algorithm = "leiden"`) or Spectral clustrering (`algorithm = "spectral"`). For the up-to-date version of the package, we call the "leiden" function from either the R package `r BiocStyle::Rpackage('leiden')` or `r BiocStyle::Rpackage('igraph')`. The `r BiocStyle::Rpackage('igraph')` implementation can be applied by set "leiden_pack = 'igraph'" (as default, see ?caclust). From our testing, the `r BiocStyle::Rpackage('igraph')` implementation runs faster than package `r BiocStyle::Rpackage('leiden')` with similar accuracy. Therefore, we recommend to set `leiden_pack = "igraph"`.
 
@@ -216,7 +224,6 @@ cabic
 
 The cluster assignments for the cells or genes can be obtained with the functions `gene_clusters()` and `cell_clusters()`:
 ```{r clusters}
-
 sce$cabinet <- cell_clusters(cabic)
 
 cat("Gene clusters:\n")
@@ -238,21 +245,22 @@ Removing monoclusters should be done *before* computing the biMAP. As an added b
 
 We now compute the biMAP embedding and visualize it in a scatter plot:
 ```{r bimap}
-
 # Compute biMAP embedding.
 cabic <- biMAP(cabic, k = 30)
 
 # plot results
 plot_biMAP(cabic,
-           color_genes = TRUE,
-           label_marker_genes = markers)
+  color_genes = TRUE,
+  label_marker_genes = markers
+)
 
 # only plot the cell clusters
 plot_scatter_biMAP(cabic,
-                   gene_alpha = 0.5,
-                   color_genes = FALSE,
-                   color_by = "level1class",
-                   meta_df = colData(sce))
+  gene_alpha = 0.5,
+  color_genes = FALSE,
+  color_by = "level1class",
+  meta_df = colData(sce)
+)
 ```
 
 `plot_biMAP` and `plot_scatter_biMAP` both produce a scatter plot of the embedding. For very large data sets it can become difficult to differentiate between cells and genes in such a plot. If we are mainly interested in identifying the marker genes of the clusters, we can instead use the hex biMAP for a less busy visualization:
@@ -265,32 +273,43 @@ plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
 ## Cell type annotation
 
 CAbiNet allows for intuitive cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP. By the position of genes and cells in the biMAP, we can easily tell the marker genes of each cell group without having to perform differential gene expression analysis.
+```{r}
+anncabic <- annotate_biclustering(
+  obj = cabic,
+  universe = rownames(sce),
+  org = "mm",
+  set = "CellMarker"
+)
+```
+
 
 ```{r}
-
-cts <- c("Interneurons",
-         "S1 Pyramidal",
-         "CA 1 Pyramidal",
-         "Oligodendrocytes",
-         "Astrocytes",
-         "Microglia",
-         "Endothelial",
-         "Mural")
+cts <- c(
+  "Interneurons",
+  "S1 Pyramidal",
+  "CA 1 Pyramidal",
+  "Oligodendrocytes",
+  "Astrocytes",
+  "Microglia",
+  "Endothelial",
+  "Mural"
+)
 
 ## make sure the cell types and marker genes are in a one-to-one order.
-df <- data.frame(cell_type = cts,
-                 marker_gene = markers)
+df <- data.frame(
+  cell_type = cts,
+  marker_gene = markers
+)
 
 genecls <- gene_clusters(cabic)
-biclusters <- vector(mode="numeric", length = nrow(df))
+biclusters <- vector(mode = "numeric", length = nrow(df))
 
-for (i in seq_along(df$marker_gene)){
+for (i in seq_along(df$marker_gene)) {
   biclusters[i] <- genecls[df$marker_gene[i]]
 }
 
 df$cabinet <- biclusters
 df
-
 ```
 
 
@@ -298,17 +317,18 @@ df
 ```{r}
 sce$cabinet_ct <- as.numeric(sce$cabinet)
 
-for (i in seq_along(df$cabinet)){
+for (i in seq_along(df$cabinet)) {
   sel <- which(sce$cabinet_ct == df$cabinet[i])
   sce$cabinet_ct[sel] <- df$cell_type[i]
 }
 sce$cabinet_ct <- as.factor(sce$cabinet_ct)
 
 plot_biMAP(cabic,
-           meta_df = colData(sce),
-           color_by = "cabinet_ct",
-           label_marker_genes = markers,
-           color_genes = FALSE)
+  meta_df = colData(sce),
+  color_by = "cabinet_ct",
+  label_marker_genes = markers,
+  color_genes = FALSE
+)
 ```
 
 The only remaining unnanotated cluster is bicluster 2. This cluster consists mostly of cells that have been annotated as astrocytes, but also oligodendrocytes and pyramidal CA1 cells. It could be that this is a either a distinct sub-cell type or a group of outliers/doublets.
@@ -317,15 +337,19 @@ We can also see the similar cell types Endothelial and Mural have been clustered
 Using a feature biMAP to visualize the expression of the two Marker genes Acta2 (Mural) and Cldn5 (Endothelial) we can confirm that this cluster could be further subdivided by the location of the marker genes.
 
 ```{r biMAP_feature}
-p1 <- plot_feature_biMAP(sce = sce,
-                         caclust = cabic,
-                         feature = 'Acta2',
-                         label_size = 4)
+p1 <- plot_feature_biMAP(
+  sce = sce,
+  caclust = cabic,
+  feature = "Acta2",
+  label_size = 4
+)
 
-p2 <- plot_feature_biMAP(sce = sce,
-                         caclust = cabic,
-                         feature = 'Cldn5',
-                         label_size = 4)
+p2 <- plot_feature_biMAP(
+  sce = sce,
+  caclust = cabic,
+  feature = "Cldn5",
+  label_size = 4
+)
 
 p1
 p2
@@ -333,31 +357,38 @@ p2
 
 If you do not have a list of marker genes for the cell types in your data, you can explore the visualization interactively, or just display the names of the marker genes in the plot. Co-clustered genes can be labeled in the biMAP. For example, if you don't have a list of known marker genes at hand, you can display the names of potential marker genes by
 ```{r label_mkg}
-plot_biMAP(cabic, color_by = "cluster",
-           label_marker_genes = TRUE,
-           group_label_size = 6,
-           color_genes = TRUE,
-           max.overlaps = 20)
+plot_biMAP(cabic,
+  color_by = "cluster",
+  label_marker_genes = TRUE,
+  group_label_size = 6,
+  color_genes = TRUE,
+  max.overlaps = 20
+)
 ```
 
 Sometimes the name of genes overlap with each other and can be difficult to read the names in the plot. Exploring the biMAP interactively allows you to zoom in or out at a group of points to inspect the information there in more detail:
 ```{r label_mkg_live}
-plot_biMAP(cabic, color_by = "cluster",
-           color_genes = TRUE,
-           interactive = TRUE)
+plot_biMAP(cabic,
+  color_by = "cluster",
+  color_genes = TRUE,
+  interactive = TRUE
+)
 ```
 
 # Integration with Bioconductor packages
 
 When intergrating the clustering results and cell type annotations with the SCE object, gene expression levels can also be visualized by violin plots.
 ```{r downstream}
-scater::plotExpression(sce, features = markers[markers %in% rownames(sce)]  ,
-                       x = 'cabinet', colour_by = 'cabinet') +
-                       theme(axis.text.x = element_text(angle = 0, hjust = 1))
-scater::plotExpression(sce, features = markers[markers %in% rownames(sce)]  ,
-                       x = 'level1class', colour_by = 'level1class') +
-                       theme(axis.text.x = element_text(angle = 30, hjust = 1))
-
+scater::plotExpression(sce,
+  features = markers[markers %in% rownames(sce)],
+  x = "cabinet", colour_by = "cabinet"
+) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1))
+scater::plotExpression(sce,
+  features = markers[markers %in% rownames(sce)],
+  x = "level1class", colour_by = "level1class"
+) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 Since CAbiNet only co-clusters the up-regulated genes with cell groups, the information of down-regulated genes is missing. To find out all the dysregulated genes, you can make use of the cell clustering results from CAbiNet and differential gene expression results from other packges to study the dysregulated genes for different cell clusters.
 
