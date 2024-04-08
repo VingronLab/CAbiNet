@@ -12,7 +12,7 @@ inst/doc
 *.Rproj
 /doc/
 /Meta/
-docs
+#docs
 renv.lock
 /renv/
 .Rprofile
