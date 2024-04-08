@@ -68,7 +68,7 @@ use_condaenv(
 )
 
 conda_install(envname = "r-reticulate", packages = "numpy")
-conda_install(envname = "r-reticulate", packages = "torch")
+conda_install(envname = "r-reticulate", packages = "pytorch")
 conda_install(envname = "r-reticulate", packages = "scikit-learn")
 conda_install(envname = "r-reticulate", packages = "umap-learn")
 conda_install(envname = "r-reticulate", packages = "scipy")
@@ -144,7 +144,8 @@ The number of genes kept should not be set too low, as otherwise important marke
 
 ```{r CA_dimRed}
 # Correspondence Analysis
-caobj <- cacomp(sce[top_genes, ],
+caobj <- cacomp(
+  sce[top_genes, ],
   assay = "logcounts",
   dims = 40,
   top = nrow(sce[top_genes, ]),
@@ -273,15 +274,6 @@ plot_hex_biMAP(cabic, color_genes = TRUE, hex_n = 20)
 ## Cell type annotation
 
 CAbiNet allows for intuitive cell type annotation. Instead of having to make a large number of feature plots, we can simply display the position of a set of marker genes directly in the biMAP. By the position of genes and cells in the biMAP, we can easily tell the marker genes of each cell group without having to perform differential gene expression analysis.
-```{r}
-anncabic <- annotate_biclustering(
-  obj = cabic,
-  universe = rownames(sce),
-  org = "mm",
-  set = "CellMarker"
-)
-```
-
 
 ```{r}
 cts <- c(
@@ -355,16 +347,34 @@ p1
 p2
 ```
 
-If you do not have a list of marker genes for the cell types in your data, you can explore the visualization interactively, or just display the names of the marker genes in the plot. Co-clustered genes can be labeled in the biMAP. For example, if you don't have a list of known marker genes at hand, you can display the names of potential marker genes by
+If you do not have a list of known marker genes for the cell types in your data, you can use the `annotate_biclustering()` function. It uses the "CellMarker" gene set to automatically annotate the biclusters with the best matching cell type in the set:
+```{r auto_anno}
+ann_cabic <- annotate_biclustering(
+  obj = cabic,
+  universe = rownames(sce),
+  org = "mm",
+  set = "CellMarker"
+)
+
+plot_biMAP(
+  ann_cabic,
+  color_genes = TRUE,
+  label_marker_genes = markers
+)
+```
+
+Last but not least, you can explore the visualization interactively, or just display the names of the marker genes in the plot. Co-clustered genes can be labeled in the biMAP. For example, if you don't have a list of known marker genes at hand, you can display the names of potential marker genes by
 ```{r label_mkg}
-plot_biMAP(cabic,
+plot_biMAP(
+  cabic,
   color_by = "cluster",
   label_marker_genes = TRUE,
   group_label_size = 6,
   color_genes = TRUE,
-  max.overlaps = 20
+  max.overlaps = 40
 )
 ```
+
 
 Sometimes the name of genes overlap with each other and can be difficult to read the names in the plot. Exploring the biMAP interactively allows you to zoom in or out at a group of points to inspect the information there in more detail:
 ```{r label_mkg_live}
