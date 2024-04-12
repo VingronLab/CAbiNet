@@ -89,7 +89,7 @@ Config/reticulate:
     packages = list(
       list(package = "numpy"),
       list(package = "scipy"),
-      list(package = "pytorch"),
+      list(package = "torch"),
       list(package = "scikit-learn"),
       list(package = "umap-learn")
     )
