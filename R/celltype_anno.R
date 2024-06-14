@@ -326,6 +326,8 @@ assign_cts <- function(goa_res) {
     # solve assignment problem
     assignments <- RcppHungarian::HungarianSolver(cost_mat)$pairs
 
+    assignments <- assignments[assignments[, 2] > 0, ]
+
     cluster_anno <- data.frame(cluster = clusters[assignments[, 1]],
                                cell_type = cell_types[assignments[, 2]],
                                padj = cost_mat[assignments])
