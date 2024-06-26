@@ -10,8 +10,11 @@ load_gene_set <- function(set = "CellMarker",
                           org) {
 
     stopifnot(org %in% c("mm", "hs"))
+    if (is.data.frame(set)) {
+      stopifnot(ncol(set) == 2)
+      break
 
-    if (set == "CellMarker") {
+    } else if (set == "CellMarker") {
 
         gs <- CAbiNet::cellmarker_v2
 
@@ -156,7 +159,7 @@ perform_goa <- function(gois,
                                  ngenes_in_sets = length(all_gs))
         return(enrich_res)
 
-	} else {
+    } else {
 
         # subset gene sets to those with gois in them
         # make sure the two sets are the same order.
@@ -366,10 +369,10 @@ setGeneric("annotate_by_goa", function(obj,
 #' @rdname annotate_by_goa
 #' @export
 setMethod(f = "annotate_by_goa",
-  signature = (obj = "caclust"),
-  function(obj,
-           goa_res,
-           alpha = 0.05) {
+          signature = (obj = "caclust"),
+          function(obj,
+                   goa_res,
+                   alpha = 0.05) {
 
     stopifnot(is(obj, "caclust"))
 
