@@ -2,7 +2,9 @@
 #' Load the required gene set.
 #' @description
 #' Loads the speciefied gene set and subsets to the required organism.
-#' @param set Name of the gene set. Currently only supports "CellMarker"
+#' @param set Name of the gene set. Currently only supports "CellMarker".
+#' Alternatively a custom gene set data frame with two columns 
+#' (cell_type, gene_name)
 #' @param org Short name of the organism. "mm" for mouse, "hs" for human.
 #' @returns
 #' data frame with columns "cell_type" and "gene".
@@ -10,8 +12,11 @@ load_gene_set <- function(set = "CellMarker",
                           org) {
 
     stopifnot(org %in% c("mm", "hs"))
-
-    if (set == "CellMarker") {
+    if (is.data.frame(set)) {
+      stopifnot(ncol(set) == 2)
+      message("Using custom gene set.")
+      gs <- set
+    } else if (set == "CellMarker") {
 
         gs <- CAbiNet::cellmarker_v2
 
@@ -156,7 +161,7 @@ perform_goa <- function(gois,
                                  ngenes_in_sets = length(all_gs))
         return(enrich_res)
 
-	} else {
+    } else {
 
         # subset gene sets to those with gois in them
         # make sure the two sets are the same order.
@@ -328,7 +333,7 @@ assign_cts <- function(goa_res) {
     # solve assignment problem
     assignments <- RcppHungarian::HungarianSolver(cost_mat)$pairs
 
-    assignments <- assignments[assignments[, 2] > 0, ]
+    assignments <- assignments[assignments[, 2] > 0, , drop = FALSE]
 
     cluster_anno <- data.frame(cluster = clusters[assignments[, 1]],
                                cell_type = cell_types[assignments[, 2]],
@@ -368,10 +373,10 @@ setGeneric("annotate_by_goa", function(obj,
 #' @rdname annotate_by_goa
 #' @export
 setMethod(f = "annotate_by_goa",
-  signature = (obj = "caclust"),
-  function(obj,
-           goa_res,
-           alpha = 0.05) {
+          signature = (obj = "caclust"),
+          function(obj,
+                   goa_res,
+                   alpha = 0.05) {
 
     stopifnot(is(obj, "caclust"))
 
