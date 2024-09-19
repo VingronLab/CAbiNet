@@ -322,6 +322,8 @@ assign_cts <- function(goa_res) {
     cell_types <- colnames(cost_mat)[2:ncol(cost_mat)]
 
     cost_mat <- as.matrix(cost_mat[, 2:ncol(cost_mat)], drop = FALSE)
+    # larger differences between low padjs
+    cost_mat <- log10(cost_mat)
 
     # solve assignment problem
     assignments <- RcppHungarian::HungarianSolver(cost_mat)$pairs
@@ -330,7 +332,7 @@ assign_cts <- function(goa_res) {
 
     cluster_anno <- data.frame(cluster = clusters[assignments[, 1]],
                                cell_type = cell_types[assignments[, 2]],
-                               padj = cost_mat[assignments])
+                               padj = 10**cost_mat[assignments])
 
     return(cluster_anno)
 
