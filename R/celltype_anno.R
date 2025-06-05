@@ -83,7 +83,7 @@ format_gene_sets <- function(gene_sets) {
 
         sel <- which(gene_sets[, 1] == gs[i])
         genes <- drop(gene_sets[sel, 2])
-        gene_list[[gs[i]]] <- genes
+        gene_list[[gs[i]]] <- unique(genes)
     }
 
     names(gene_list) <- gsub(" ", "_", names(gene_list))
